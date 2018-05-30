@@ -1,0 +1,127 @@
+function saveHyscorean(handles)
+
+set(handles.ProcessingInfo, 'String', 'Status: Saving session'); drawnow;
+CrushFlag = false;
+SaveHyscoreanSettings = handles.SaveHyscoreanSettings;
+% Prepare saving directory and path
+%----------------------------------------------------------------------
+
+%Load default/predefined save path
+load Hyscorean_default_savepath.mat
+
+% Prepare saving procedures
+DateFormatOut = 'yyyymmdd';
+Date = datestr(date,DateFormatOut);
+
+%Get file identifier
+Identifier = SaveHyscoreanSettings.IdentifierName;
+
+SaveDirectory = sprintf('%s_%s',Date,Identifier);
+FullPath = fullfile(SavePath,SaveDirectory);
+
+% If directory does not exist create it
+if ~exist(FullPath,'dir')
+    mkdir(FullPath)
+end
+
+
+% Save current settings
+%----------------------------------------------------------------------
+  Settings = getSettings(handles);
+  %Send settings structure to base workspace
+  assignin('base', 'Settings', Settings);
+  %Format savename so until it is different from the rest in the folder
+  SaveName = sprintf('%s_%s_settings.mat',Date,Identifier);
+  CopyIndex = 1;
+  while true
+    if ~exist(fullfile(FullPath,SaveName),'file')
+      break
+    end
+    CopyIndex = CopyIndex + 1;
+    CrushFlag = true;
+    SaveName = sprintf('%s_%s_settings_%i.mat',Date,Identifier,CopyIndex);
+    
+  end
+  save(fullfile(FullPath,SaveName),'Settings');
+
+  set(handles.ProcessingInfo, 'String', 'Status: Saving session... 25%'); drawnow;
+
+  
+% Save data
+%----------------------------------------------------------------------  
+Spectrum = handles.Processed.spectrum;
+ProcessedSignal = handles.Processed.Signal;
+Axis1 = handles.Processed.axis1;
+Axis2 = handles.Processed.axis2;
+%Format savename so until it is different from the rest in the folder
+  SaveName = sprintf('%s_%s_OutputData.mat',Date,Identifier);
+  if CrushFlag
+      SaveName = sprintf('%s_%s_OutputData_%i.mat',Date,Identifier,CopyIndex);
+  end
+  save(fullfile(FullPath,SaveName),'Spectrum','ProcessedSignal','Axis1','Axis2');
+
+  set(handles.ProcessingInfo, 'String', 'Status: Saving session... 50%'); drawnow;
+
+% Save main figure
+%----------------------------------------------------------------------  
+GhostFigure = figure('Visible','off','Position',[100 100 790 450]); % Invisible figure
+copyobj(handles.mainPlot,GhostFigure)
+
+set(GhostFigure,'CreateFcn','set(gcbf,''Visible'',''on'')'); % Make it visible upon loading
+%Format savename so until it is different from the rest in the folder
+  SaveName = sprintf('%s_%s_spectrum',Date,Identifier);  
+  if CrushFlag
+      SaveName = sprintf('%s_%s_spectrum_%i',Date,Identifier,CopyIndex);
+  end
+
+%Save as Matlab figure (.fig)
+savefig(GhostFigure,fullfile(FullPath,[SaveName '.fig']), 'compact');
+%Export as PDF (.pdf)
+% export_fig(fullfile(FullPath,SaveName),'-pdf','-transparent')
+print(GhostFigure,fullfile(FullPath,SaveName),'-dpdf')
+%Delete the ghost figure
+delete(GhostFigure);
+
+set(handles.ProcessingInfo, 'String', 'Status: Saving session... 75%'); drawnow;
+
+
+% Create report
+%----------------------------------------------------------------------  
+reportdata = Settings;
+%Load data into report structure
+reportdata.Processed = handles.Processed;
+reportdata.GraphicalSettings = handles.GraphicalSettings;
+%Add experimental parameters if they have been processed
+if isfield(handles,'ExperimentParameters')
+  reportdata.ExperimentParameters = handles.ExperimentParameters;
+  reportdata.PlotPulses= handles.PlotPulses;
+end
+%Add regularization parameters if they have been employed
+if isfield(handles,'RegularizationParameters')
+  reportdata.RegularizationParameters = handles.RegularizationParameters;
+end
+reportdata.TauValues = handles.Data.TauValues;
+
+reportdata.currentTaus = handles.currentTaus;
+reportdata.BrukerParameters = handles.Data.BrukerParameters;
+reportdata.mainPlotHandle = handles.mainPlot;
+%Cosntruct report
+%Format savename so until it is different from the rest in the folder
+  ReportName = sprintf('%s_%s_report',Date,Identifier);
+  if CrushFlag
+      ReportName = sprintf('%s_%s_report_%i',Date,Identifier,CopyIndex);
+  end
+  reportdata.filename = ReportName;
+  reportdata.path = FullPath;
+  
+  %Add name and patyh of the original data file
+    reportdata.OriginalFileName = handles.FilePaths.Files;
+  reportdata.OriginalFilePath = handles.FilePaths.Path;
+
+%Send structure to workspace
+assignin('base', 'reportdata', reportdata);
+
+%Generate report
+ report Hyscorean_report -fpdf ;
+ 
+ set(handles.ProcessingInfo, 'String', 'Status: Session saved'); drawnow;

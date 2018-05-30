@@ -1,0 +1,17 @@
+function Selections = getTauCombinations(TauValues)
+
+nn = 1;
+%1-tau combinations
+for i=1:length(TauValues)
+  Selections{nn} = sprintf('Tau-%i ns',TauValues(i));
+  nn = nn + 1;
+end
+
+
+%2-tau combinations
+for i=1:length(TauValues)
+  for j=i:length(TauValues)
+  Selections{nn} = sprintf('Tau-[%i,%i] ns',TauValues(i),TauValues(i));
+  nn = nn + 1;
+  end
+end
