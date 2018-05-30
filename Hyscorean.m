@@ -1282,17 +1282,13 @@ for i=1:length(Names)
   IsotopeTags(i).Color =  uint8(Colors(i,:) * 255 + 0.5);
 end
 
-pre = '<HTML><FONT color="';
-post = '</FONT></HTML>';
-
-listboxStr = cell(numel( IsotopeTags ),1);
-
+ListBoxStrings = cell(numel( IsotopeTags ),1);
 for i = 1:numel( IsotopeTags )
-   str = [pre reshape( dec2hex( IsotopeTags(i).Color,2 )',1, 6) '"><SUP>' IsotopeTags(i).isotope '</SUP>' IsotopeTags(i).name post];
-   listboxStr{i} = str;
+   String = ['<HTML><FONT color=' reshape( dec2hex( IsotopeTags(i).Color,2 )',1, 6) '></FONT><SUP>' IsotopeTags(i).isotope '</SUP>' IsotopeTags(i).name '</HTML>'];
+   ListBoxStrings{i} = String;
 end
 handles.IsotopeTags = IsotopeTags;
-set(hObject,'string',listboxStr)
+% set(hObject,'string',ListBoxStrings)
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
