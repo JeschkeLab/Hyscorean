@@ -116,7 +116,7 @@ if options.BackgroundCorrection2D
   TimeIndex2 = find(ZeroTimeAxis2 == 0);
   options.zt1= TimeIndex1;
   options.zt2= TimeIndex2;
-  BackgroundNew = fit_bckg_2D_new(Integral,options);
+  BackgroundNew = fitBackground2D_new(Integral,options);
   Integral = Integral(TimeIndex1:end,TimeIndex2:end);
   Integral = real(Integral)-BackgroundNew;
 
@@ -125,49 +125,49 @@ else
   % Inverted Background correction (1st - t2 , 2nd - t1)
   if options.InvertCorrection
     % 1st Background correction
-    Parameters.dim = 2;
-    Parameters.model = options.BackgroundMethod1;
+    Parameters.Dimension = 2;
+    Parameters.BackgroundModel = options.BackgroundMethod1;
     Parameters.homdim = options.BackgroundFractalDimension1;
-    Parameters.order = options.BackgroundPolynomOrder1;
+    Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
     [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis2,sum(Integral,1),Parameters);
     Parameters.start = StartIndex1;
     
-    Background = fit_bckg_2D(Integral,Parameters);
+    Background = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background;
   
     % 2nd Background correction
-    Parameters.dim = 1;
-    Parameters.model = options.BackgroundMethod2;
+    Parameters.Dimension = 1;
+    Parameters.BackgroundModel = options.BackgroundMethod2;
     Parameters.homdim = options.BackgroundFractalDimension2;
-    Parameters.order = options.BackgroundPolynomOrder2;
+    Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
     [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
     
     Parameters.start = StartIndex1;
-    Background = fit_bckg_2D(Integral,Parameters);
+    Background = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background;
     
   else  % Standard Background correction (1st - t1 , 2nd - t2)
     
     % 1st Background correction
-    Parameters.dim = 1;
-    Parameters.model = options.BackgroundMethod1;
+    Parameters.Dimension = 1;
+    Parameters.BackgroundModel = options.BackgroundMethod1;
     Parameters.homdim = options.BackgroundFractalDimension1;
-    Parameters.order = options.BackgroundPolynomOrder1;    
+    Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;    
     [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
     Parameters.start = StartIndex1;
       
-    Background1 = fit_bckg_2D(Integral,Parameters);
+    Background1 = fitBackground2D(Integral,Parameters);
     Integral = real(Integral)-Background1;
   
     % 2nd Background correction
-    Parameters.dim = 2;
-    Parameters.model = options.BackgroundMethod2;
+    Parameters.Dimension = 2;
+    Parameters.BackgroundModel = options.BackgroundMethod2;
     Parameters.homdim = options.BackgroundFractalDimension2;
-    Parameters.order = options.BackgroundPolynomOrder2;
+    Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
     [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(Integral,1),Parameters);
     Parameters.start = StartIndex1;
     
-    Background2 = fit_bckg_2D(real(Integral),Parameters);
+    Background2 = fitBackground2D(real(Integral),Parameters);
     Integral = real(Integral)-Background2;
     
   end

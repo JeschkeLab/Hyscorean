@@ -732,10 +732,11 @@ switch get(hObject,'Value')
     set(handles.BackgroundParameter1,'enable','on')
     set(handles.BackgroundParameter1,'String','1')
   case 3
-    set(handles.BackgroundParameterText1,'String','')
-    set(handles.BackgroundParameter1,'enable','off')
-  case 4
     set(handles.BackgroundParameterText1,'String','Polynomial Order')
+    set(handles.BackgroundParameter1,'String','1')
+    set(handles.BackgroundParameter1,'enable','on')
+  case 4
+    set(handles.BackgroundParameterText1,'String','Exponential Order')
     set(handles.BackgroundParameter1,'enable','on')
     set(handles.BackgroundParameter1,'String','1')
 end
@@ -774,10 +775,11 @@ switch get(hObject,'Value')
     set(handles.BackgroundParameter2,'enable','on')
     set(handles.BackgroundParameter2,'String','1')
   case 3
-    set(handles.BackgroundParameterText2,'String','')
-    set(handles.BackgroundParameter2,'enable','off')
-  case 4
     set(handles.BackgroundParameterText2,'String','Polynomial Order')
+    set(handles.BackgroundParameter2,'String','1')
+    set(handles.BackgroundParameter2,'enable','on')
+  case 4
+    set(handles.BackgroundParameterText2,'String','Exponential Order')
     set(handles.BackgroundParameter2,'enable','on')
     set(handles.BackgroundParameter2,'String','1')
 end

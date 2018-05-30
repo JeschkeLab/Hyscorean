@@ -56,7 +56,7 @@ for nofitp0 = nfa:nfe,
 	
     options.start = nofitp0;
 	% Background fit    
-	bckg = fit_bckg_2D(vexp,options);
+	bckg = fitBackground2D(vexp,options);
     
 	
 	td_exp2 = vexp - bckg; % subtract background

@@ -59,7 +59,7 @@ if handles.TauSelectionSwitch && strcmp(type,'experimental') %no need to repeate
         options.BackgroundFractalDimension1 = str2double(get(handles.BackgroundParameter1,'string'));
       case 3
         options.BackgroundMethod1 = 2;
-        options.BackgroundPolynomOrder1 = [];
+        options.BackgroundPolynomOrder1 = str2double(get(handles.BackgroundParameter1,'string'));
         options.BackgroundFractalDimension1 = [];
       case 4
         options.BackgroundMethod1 = 3;
@@ -75,14 +75,14 @@ if handles.TauSelectionSwitch && strcmp(type,'experimental') %no need to repeate
       case 2
         options.BackgroundMethod2 = 1;
         options.BackgroundPolynomOrder2 = [];
-        options.BackgroundFractalDimension2 = str2double(get(handles.BackgroundParameter1,'string'));
+        options.BackgroundFractalDimension2 = str2double(get(handles.BackgroundParameter2,'string'));
       case 3
         options.BackgroundMethod2 = 2;
-        options.BackgroundPolynomOrder2 = [];
+        options.BackgroundPolynomOrder2 = str2double(get(handles.BackgroundParameter2,'string'));
         options.BackgroundFractalDimension2 = [];
       case 4
         options.BackgroundMethod2 = 3;
-        options.BackgroundPolynomOrder2 = str2double(get(handles.BackgroundParameter1,'string'));
+        options.BackgroundPolynomOrder2 = str2double(get(handles.BackgroundParameter2,'string'));
         options.BackgroundFractalDimension2 = [];
     end
     %Set-up rest of options
