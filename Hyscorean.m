@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 29-May-2018 12:13:17
+% Last Modified by GUIDE v2.5 30-May-2018 14:40:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -154,7 +154,7 @@ set(handles.AddTagList,'enable','on')
 set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
-
+set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'on')
 set(hObject,'enable','on')
 
 guidata(hObject, handles)
@@ -1466,3 +1466,10 @@ function FieldOffset_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 set(hObject,'string','');
+
+
+% --- Executes during object creation, after setting all properties.
+function GraphicsPanel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to GraphicsPanel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
