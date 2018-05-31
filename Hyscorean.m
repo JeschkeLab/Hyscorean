@@ -142,7 +142,7 @@ if ~isfield(handles,'Data')
  set(handles.ProcessingInfo,'String','Error: No data loaded.')
  return
 end
-set(hObject,'enable','inactive')
+% set(hObject,'enable','inactive')
 set(handles.ProcessingInfo, 'String', 'Status: Processing...');drawnow;
 [handles] = processHYSCORE(handles);
 updateHyscoreanGUI(handles,handles.Processed)
@@ -155,7 +155,7 @@ set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
 set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'on')
-set(hObject,'enable','on')
+% set(hObject,'enable','on')
 
 guidata(hObject, handles)
 

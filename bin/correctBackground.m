@@ -132,19 +132,19 @@ else
     [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis2,sum(Integral,1),Parameters);
     Parameters.start = StartIndex1;
     
-    Background = fitBackground2D(Integral,Parameters);
-    Integral = real(Integral) - Background;
+    Background1 = fitBackground2D(Integral,Parameters);
+    Integral = real(Integral) - Background1;
   
     % 2nd Background correction
     Parameters.Dimension = 1;
     Parameters.BackgroundModel = options.BackgroundMethod2;
     Parameters.homdim = options.BackgroundFractalDimension2;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
-    [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
+    [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
     
-    Parameters.start = StartIndex1;
-    Background = fitBackground2D(Integral,Parameters);
-    Integral = real(Integral) - Background;
+    Parameters.start = StartIndex2;
+    Background2 = fitBackground2D(Integral,Parameters);
+    Integral = real(Integral) - Background2;
     
   else  % Standard Background correction (1st - t1 , 2nd - t2)
     
@@ -157,15 +157,15 @@ else
     Parameters.start = StartIndex1;
       
     Background1 = fitBackground2D(Integral,Parameters);
-    Integral = real(Integral)-Background1;
+    Integral = real(Integral) - Background1;
   
     % 2nd Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod2;
     Parameters.homdim = options.BackgroundFractalDimension2;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
-    [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(Integral,1),Parameters);
-    Parameters.start = StartIndex1;
+    [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(Integral,1),Parameters);
+    Parameters.start = StartIndex2;
     
     Background2 = fitBackground2D(real(Integral),Parameters);
     Integral = real(Integral)-Background2;
@@ -185,6 +185,11 @@ else
 end
 Integral = Integral(TimeIndex1:end,TimeIndex2:end);
 Data.NonCorrectedIntegral = NonCorrectedIntegral(TimeIndex1:end,TimeIndex2:end);
+Data.Background1 = Background1;
+Data.Background2 = Background2;
+Data.BackgroundStartIndex1 = StartIndex1;
+Data.BackgroundStartIndex2 = StartIndex2;
+Data.BackgroundCorrected = real(Integral);
 Data.CorrectedTimeAxis2 = ZeroTimeAxis2(TimeIndex2:end);
 Data.CorrectedTimeAxis1 = ZeroTimeAxis1(TimeIndex1:end);
 

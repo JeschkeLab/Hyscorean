@@ -22,7 +22,7 @@ function varargout = Hyscorean_detachedSignalPlot(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_detachedSignalPlot
 
-% Last Modified by GUIDE v2.5 29-May-2018 12:34:35
+% Last Modified by GUIDE v2.5 31-May-2018 15:18:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -287,3 +287,14 @@ function HammingWindow_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of HammingWindow
+
+
+% --- Executes on button press in PlotBackground.
+function PlotBackground_Callback(hObject, eventdata, handles)
+% hObject    handle to PlotBackground (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PlotBackground
+HyscoreanSignalPlot(handles,handles.Processed)
+guidata(hObject, handles);
