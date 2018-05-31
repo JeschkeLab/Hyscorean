@@ -135,6 +135,9 @@ else
     Background1 = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background1;
   
+    Data.FirstBackgroundCorrected = real(Integral);
+
+    
     % 2nd Background correction
     Parameters.Dimension = 1;
     Parameters.BackgroundModel = options.BackgroundMethod2;
@@ -159,6 +162,9 @@ else
     Background1 = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background1;
   
+    Data.FirstBackgroundCorrected = real(Integral);
+
+    
     % 2nd Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod2;
