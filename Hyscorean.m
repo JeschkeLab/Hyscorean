@@ -1305,10 +1305,10 @@ function HyscoreanFigure_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to HyscoreanFigure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-Root = which('Hyscorean');
-Pos = strfind(Root,'\Hyscorean 1.0');
-Root = Root(1:Pos); 
-addpath(fullfile(Root,'\Hyscorean 1.0\bin'))
+% Root = which('Hyscorean');
+% Pos = strfind(Root,'\Hyscorean 1.0');
+% Root = Root(1:Pos); 
+% addpath(fullfile(Root,'\Hyscorean 1.0\bin'))
 
 
 % --- Executes on button press in ClearTags.

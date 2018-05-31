@@ -2,36 +2,50 @@ function HyscoreanSignalPlot(handles,Processed)
 cla(handles.signal_t1)
       hold(handles.signal_t1,'on')
 
+ if ~isfield(handles,'PlotProcessedSignal')     
+    handles.PlotProcessedSignal = true;
+ end
 if ~get(handles.ChangeSignalPlotDimension,'Value')
   
   position1 = round(get(handles.t1_Slider,'Value'));
   TimeAxis1 = Processed.TimeAxis1(1:length(Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
-
+  ylimMax = max(max(real(Processed.Signal)));
+  ylimMin = min(min(real(Processed.Signal)));
   if handles.PlotProcessedSignal
     %Time-domain signal trace along t1
     trace1 = Processed.Signal(:,position1);
     trace1 = trace1(1:length(trace1)-str2double(get(handles.ZeroFilling1,'String')));
     plot(handles.signal_t1,TimeAxis1',trace1,'k','Linewidth',1)
-
+    set(handles.signal_t1,'xlim',[min(TimeAxis1) max(TimeAxis1)])
   end
   if get(handles.NonCorrectedTrace,'value')
     trace1 = real(handles.Data.NonCorrectedIntegral(:,position1));
     trace1 = trace1 - mean(real(handles.Data.NonCorrectedIntegral(end,:)));
-    trace1 = trace1/real(handles.Data.NonCorrectedIntegral(1,1) - mean(real(handles.Data.NonCorrectedIntegral(end,:))));
+    trace1 = trace1/max(max(real(handles.Data.NonCorrectedIntegral)));
 %     trace1 = trace1/max(abs(trace1));
     Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(trace1));
     plot(handles.signal_t1,Axis,trace1,'Color',[0.2 0.2 0.9])
       hold(handles.signal_t1,'on')
-
+      if ylimMax < max(max(real(handles.Data.NonCorrectedIntegral)))
+        ylimMax = max(max(real(handles.Data.NonCorrectedIntegral)));
+      end
+      if ylimMin > min(min(real(handles.Data.NonCorrectedIntegral)))
+        ylimMin =  min(min(real(handles.Data.NonCorrectedIntegral)));
+      end
   end
   if get(handles.PreProcessedTrace,'value')
     trace1 = real(handles.Data.PreProcessedSignal(:,position1));
     trace1 = trace1 - mean(real(handles.Data.PreProcessedSignal(end,:)));
-    trace1 = trace1/real(handles.Data.PreProcessedSignal(1,1) - mean(real(handles.Data.PreProcessedSignal(end,:))));
+    trace1 = trace1/max(max(real(handles.Data.PreProcessedSignal)));
     Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(trace1));
     plot(handles.signal_t1,Axis,trace1,'Color',[0.9 0.2 0.2])
       hold(handles.signal_t1,'on')
-
+      if ylimMax < max(max(real(handles.Data.PreProcessedSignal)))
+        ylimMax = max(max(real(handles.Data.PreProcessedSignal)));
+      end
+      if ylimMin > min(min(real(handles.Data.PreProcessedSignal)))
+        ylimMin =  min(min(real(handles.Data.PreProcessedSignal)));
+      end
   end
   
   if get(handles.PlotApodizationWindow,'value')
@@ -57,8 +71,8 @@ if ~get(handles.ChangeSignalPlotDimension,'Value')
 hold(handles.signal_t1,'off')
 
 % set(handles.signal_t1,'ytick',[])
-set(handles.signal_t1,'ytick',[],'ylim',[1.1*min(min(Processed.Signal)) 1.1*max(max(Processed.Signal))])
-set(handles.signal_t1,'xlim',[min(TimeAxis1) max(TimeAxis1)])
+    set(handles.signal_t1,'ytick',[],'ylim',[1.1*ylimMin 1.1*ylimMax])
+    set(handles.signal_t1,'xlim',[min(TimeAxis1) max(TimeAxis1)])
 
 xlabel(handles.signal_t1,'t_1 [\mus]','FontSize',8);
 set(handles.trace2Info,'string',sprintf('Trace along t1 at t2 = %g ns',round(1000*Processed.TimeAxis2(position1),1)))
