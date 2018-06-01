@@ -100,11 +100,53 @@ end
 if isfield(handles,'RegularizationParameters')
   reportdata.RegularizationParameters = handles.RegularizationParameters;
 end
+reportdata.Data = handles.Data;
 reportdata.TauValues = handles.Data.TauValues;
-
+reportdata.TimeStep1 = handles.Data.TimeStep1;
+reportdata.TimeStep2 = handles.Data.TimeStep2;
+Offset = get(handles.FieldOffset,'string');
+reportdata.FieldOffset = str2double(Offset(1:end-2));
 reportdata.currentTaus = handles.currentTaus;
 reportdata.BrukerParameters = handles.Data.BrukerParameters;
 reportdata.mainPlotHandle = handles.mainPlot;
+BackgroundAxis = linspace(min(reportdata.Data.CorrectedTimeAxis1),max(reportdata.Data.CorrectedTimeAxis1),length(reportdata.Data.Background1));      
+reportdata.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
+reportdata.BackgroundStart2 =round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex2),0);
+reportdata.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
+%Extract pulse lengths
+PulseSpelText = reportdata.BrukerParameters.PlsSPELGlbTxt;
+Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
+Pulse180DefinitionIndex = strfind(PulseSpelText,'p1   = ');
+Shift = 7;
+while ~isspace(PulseSpelText(Pulse90DefinitionIndex + Shift))
+  Pulse90String(Shift - 2) =  PulseSpelText(Pulse90DefinitionIndex + Shift);
+  Shift = Shift + 1;
+end
+Shift = 7;
+while ~isspace(PulseSpelText(Pulse180DefinitionIndex + Shift))
+  Pulse180String(Shift - 2) =  PulseSpelText(Pulse180DefinitionIndex + Shift);
+  Shift = Shift + 1;
+end
+reportdata.Pulse90Length  = str2double(Pulse90String);
+reportdata.Pulse180Length  = str2double(Pulse180String);
+%Store apodization window 
+WindowDecay = str2double(get(handles.Hammingedit,'string'));
+arg=linspace(0,pi,WindowDecay);
+if get(handles.HammingWindow,'Value')
+  Window=0.54*ones(1,WindowDecay)+0.46*cos(arg);
+else
+  ChebishevWindow = ifftshift(chebwin(WindowDecay*2));
+  Window = ChebishevWindow(1:WindowDecay)';
+end
+TimeAxis1 = handles.Processed.TimeAxis1(1:length(handles.Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
+Window = Window/max(Window);
+if WindowDecay>=length(TimeAxis1)
+  Window=Window(1:length(TimeAxis1));
+end
+if WindowDecay<length(TimeAxis1)
+  Window=[Window zeros(1,length(TimeAxis1)-WindowDecay)];
+end
+reportdata.ApodizationWindow = Window;
 %Cosntruct report
 %Format savename so until it is different from the rest in the folder
   ReportName = sprintf('%s_%s_report',Date,Identifier);
