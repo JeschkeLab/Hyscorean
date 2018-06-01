@@ -50,7 +50,7 @@ if ~get(handles.ChangeSignalPlotDimension,'Value')
       trace1 = trace1 - mean(real(handles.Data.Background1(end,:)));
       trace1 = trace1/max(max(real(handles.Data.NonCorrectedIntegral)));
       Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(trace1));      
-      plot(handles.signal_t1,Axis,trace1,'Color',[0.2 0.2 0.9])     
+      plot(handles.signal_t1,Axis,trace1,'Color',[0.2 0.2 0.9],'LineStyle','--')     
       hold(handles.signal_t1,'on')
       P1 = Axis(handles.Data.BackgroundStartIndex1)*[1 1];
       P2 = [1.1*ylimMin 1.1*ylimMax];
@@ -100,7 +100,7 @@ if ~get(handles.ChangeSignalPlotDimension,'Value')
       trace1 = trace1 - mean(real(handles.Data.Background2(end,:)));
       trace1 = trace1/max(max(real(handles.Data.FirstBackgroundCorrected)));
       Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(trace1));      
-      plot(handles.signal_t1,Axis,trace1,'Color',[0.6 0.0 0.8])     
+      plot(handles.signal_t1,Axis,trace1,'Color',[0.6 0.0 0.8],'LineStyle','--')     
       hold(handles.signal_t1,'on')
       P1 = Axis(handles.Data.BackgroundStartIndex2)*[1 1];
       P2 = [1.1*ylimMin 1.1*ylimMax];
@@ -143,7 +143,7 @@ else
       trace1 = trace1 - mean(real(handles.Data.Background1(end,:)));
       trace1 = trace1/max(max(real(handles.Data.NonCorrectedIntegral)));
       Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(trace1));      
-      plot(handles.signal_t1,Axis,trace1,'Color',[0.2 0.2 0.9])     
+      plot(handles.signal_t1,Axis,trace1,'Color',[0.2 0.2 0.9],'LineStyle','--')     
       hold(handles.signal_t1,'on')
       P1 = Axis(handles.Data.BackgroundStartIndex1)*[1 1];
       P2 = [1.1*ylimMin 1.1*ylimMax];
@@ -191,7 +191,7 @@ else
       trace1 = trace1 - mean(real(handles.Data.Background2(end,:)));
       trace1 = trace1/max(max(real(handles.Data.FirstBackgroundCorrected)));
       Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(trace1));      
-      plot(handles.signal_t1,Axis,trace1,'Color',[0.6 0.0 0.8])     
+      plot(handles.signal_t1,Axis,trace1,'Color',[0.6 0.0 0.8],'LineStyle','--')     
       hold(handles.signal_t1,'on')
       P1 = Axis(handles.Data.BackgroundStartIndex2)*[1 1];
       P2 = [1.1*ylimMin 1.1*ylimMax];

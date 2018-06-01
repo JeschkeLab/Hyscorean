@@ -44,7 +44,7 @@ end
   end
   save(fullfile(FullPath,SaveName),'Settings');
 
-  set(handles.ProcessingInfo, 'String', 'Status: Saving session... 25%'); drawnow;
+  set(handles.ProcessingInfo, 'String', 'Status: Saving session 25%'); drawnow;
 
   
 % Save data
@@ -60,7 +60,7 @@ Axis2 = handles.Processed.axis2;
   end
   save(fullfile(FullPath,SaveName),'Spectrum','ProcessedSignal','Axis1','Axis2');
 
-  set(handles.ProcessingInfo, 'String', 'Status: Saving session... 50%'); drawnow;
+  set(handles.ProcessingInfo, 'String', 'Status: Saving session 50%'); drawnow;
 
 % Save main figure
 %----------------------------------------------------------------------  
@@ -82,7 +82,7 @@ print(GhostFigure,fullfile(FullPath,SaveName),'-dpdf')
 %Delete the ghost figure
 delete(GhostFigure);
 
-set(handles.ProcessingInfo, 'String', 'Status: Saving session... 75%'); drawnow;
+set(handles.ProcessingInfo, 'String', 'Status: Saving session 75%'); drawnow;
 
 
 % Create report
@@ -108,6 +108,7 @@ Offset = get(handles.FieldOffset,'string');
 reportdata.FieldOffset = str2double(Offset(1:end-2));
 reportdata.currentTaus = handles.currentTaus;
 reportdata.BrukerParameters = handles.Data.BrukerParameters;
+reportdata.L2GActive = get(handles.Lorentz2GaussCheck,'Value');
 reportdata.mainPlotHandle = handles.mainPlot;
 BackgroundAxis = linspace(min(reportdata.Data.CorrectedTimeAxis1),max(reportdata.Data.CorrectedTimeAxis1),length(reportdata.Data.Background1));      
 reportdata.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
