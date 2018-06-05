@@ -87,12 +87,15 @@ function LoadButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.LoadedData, 'String', 'Loading...');drawnow;
 
-try
 [handles.FileNames,handles.FilePaths] = multiload_mod;
-catch
+if handles.FilePaths.Files == 0
   set(handles.LoadedData,'String','Loading canceled');drawnow;
   return;
 end
+
+set(handles.DisplayLoadedFiles,'enable','on')
+
+
 handles.TauSelectionSwitch = true;
 handles.backgroundCorrectionSwitch = true;
 handles.ReconstructionSwitch  = true;
