@@ -107,9 +107,10 @@ switch GraphicalSettings.PlotType
 end
 
 hold(handles.mainPlot,'on')
-handles.Diagonals = plot(handles.mainPlot,axis1,abs(axis1),'k-.');
+lineAxis = linspace(-XupperLimit,XupperLimit,1000);
+handles.Diagonals = plot(handles.mainPlot,lineAxis,abs(lineAxis),'k-.');
 set(handles.mainPlot,'LineWidth',0.5)
-handles.VerticalLine = plot(handles.mainPlot,zeros(length(axis2)),axis2,'k-','LineWidth',0.5);
+handles.VerticalLine = plot(handles.mainPlot,zeros(length(lineAxis)),abs(lineAxis),'k-','LineWidth',0.5);
 set(handles.mainPlot,'LineWidth',1)
 
 hold(handles.mainPlot,'off')

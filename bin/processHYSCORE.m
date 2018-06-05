@@ -86,6 +86,9 @@ if handles.TauSelectionSwitch && strcmp(type,'experimental') %no need to repeate
         options.BackgroundFractalDimension2 = [];
     end
     %Set-up rest of options
+    options.AutomaticBackgroundStart = get(handles.AutomaticBackgroundStart,'Value');
+    options.BackgroundStart1 = str2double(get(handles.BackgroundStart1,'string'));
+    options.BackgroundStart2 = str2double(get(handles.BackgroundStart1,'string'));
     options.BackgroundCorrection2D = 0;
     options.ZeroTimeTruncation = get(handles.ZeroTimeTruncation,'Value');
     options.InvertCorrection = get(handles.InvertCorrection,'Value');

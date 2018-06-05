@@ -103,7 +103,9 @@ NonCorrectedIntegral = Integral();
 TimeIndex1 = 1;
 TimeIndex2 = 1;
 Data.CorrectedTimeAxis2 = ZeroTimeAxis2(TimeIndex2:end);
+Data.CorrectedTimeAxis2 = Data.CorrectedTimeAxis2  - min(Data.CorrectedTimeAxis2);
 Data.CorrectedTimeAxis1 = ZeroTimeAxis1(TimeIndex1:end);
+Data.CorrectedTimeAxis1 = Data.CorrectedTimeAxis1  - min(Data.CorrectedTimeAxis1);
 
 
 %Option to show output of fitting functions
@@ -129,9 +131,12 @@ else
     Parameters.BackgroundModel = options.BackgroundMethod1;
     Parameters.homdim = options.BackgroundFractalDimension1;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
-    [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis2,sum(Integral,1),Parameters);
+    if options.AutomaticBackgroundStart
+      [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis2,sum(Integral,1),Parameters);
+    else
+      StartIndex1 = options.BackgroundStart1;
+    end
     Parameters.start = StartIndex1;
-    
     Background1 = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background1;
   
@@ -143,8 +148,11 @@ else
     Parameters.BackgroundModel = options.BackgroundMethod2;
     Parameters.homdim = options.BackgroundFractalDimension2;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
-    [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
-    
+    if options.AutomaticBackgroundStart
+      [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
+    else
+      StartIndex2 = options.BackgroundStart2;
+    end
     Parameters.start = StartIndex2;
     Background2 = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background2;
@@ -155,10 +163,13 @@ else
     Parameters.Dimension = 1;
     Parameters.BackgroundModel = options.BackgroundMethod1;
     Parameters.homdim = options.BackgroundFractalDimension1;
-    Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;    
-    [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
+    Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+    if options.AutomaticBackgroundStart
+      [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
+    else
+      StartIndex1 = options.BackgroundStart1;
+    end
     Parameters.start = StartIndex1;
-      
     Background1 = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background1;
   
@@ -170,9 +181,12 @@ else
     Parameters.BackgroundModel = options.BackgroundMethod2;
     Parameters.homdim = options.BackgroundFractalDimension2;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
-    [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(Integral,1),Parameters);
+    if options.AutomaticBackgroundStart
+      [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(Integral,1),Parameters);
+    else
+      StartIndex2 = options.BackgroundStart2;
+    end
     Parameters.start = StartIndex2;
-    
     Background2 = fitBackground2D(real(Integral),Parameters);
     Integral = real(Integral)-Background2;
     
@@ -196,8 +210,6 @@ Data.Background2 = Background2;
 Data.BackgroundStartIndex1 = StartIndex1;
 Data.BackgroundStartIndex2 = StartIndex2;
 Data.BackgroundCorrected = real(Integral);
-Data.CorrectedTimeAxis2 = ZeroTimeAxis2(TimeIndex2:end);
-Data.CorrectedTimeAxis1 = ZeroTimeAxis1(TimeIndex1:end);
 
 % Savitzky-Golay filtering of background-corrected integral
 try
