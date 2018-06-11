@@ -674,6 +674,12 @@ function FilterOrder_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of FilterOrder as text
 %        str2double(get(hObject,'String')) returns contents of FilterOrder as a double
+if str2double(get(handles.FrameLength,'string'))< str2double(get(hObject,'string'))
+    set(handles.FrameLength,'string',str2double(get(hObject,'string'))+1)
+end
+if ~mod(str2double(get(handles.FrameLength,'string')),2)
+  set(handles.FrameLength,'string',str2double(get(handles.FrameLength,'string'))+1)
+end
 handles.backgroundCorrectionSwitch = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
@@ -700,6 +706,12 @@ function FrameLength_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of FrameLength as text
 %        str2double(get(hObject,'String')) returns contents of FrameLength as a double
+if str2double(get(hObject,'string'))< str2double(get(handles.FilterOrder,'string'))
+    set(hObject,'string',str2double(get(handles.FilterOrder,'string'))+1)
+end
+if ~mod(str2double(get(hObject,'string')),2)
+  set(hObject,'string',str2double(get(hObject,'string'))+1)
+end
 handles.backgroundCorrectionSwitch = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
