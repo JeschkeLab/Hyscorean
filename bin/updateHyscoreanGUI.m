@@ -136,12 +136,12 @@ if isfield(handles,'AddedLines')
 end
 if isfield(handles,'AddedTags')
   for i=1:length(handles.AddedTags)
-            text(handles.AddedTags{i}.x,handles.AddedTags{i}.y,handles.AddedTags{i}.Tag,'FontSize',14)
+            text(handles.mainPlot,XupperLimit/20 + handles.AddedTags{i}.x,handles.AddedTags{i}.y,handles.AddedTags{i}.Tag,'FontSize',14)
   end
 end
 
 %Reactivate all pushbuttons
 set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','on')
-set(handles.ProcessingInfo, 'String', 'Status: Finished');,drawnow
+set(handles.ProcessingInfo, 'String', 'Status: Finished');drawnow
 
 

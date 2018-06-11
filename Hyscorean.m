@@ -1253,7 +1253,11 @@ if abs(Larmorfrequency) < Limit
 Tags = handles.IsotopeTags;
 Tag = Tags(get(handles.AddTagList,'Value'));
 
-text(handles.mainPlot,1.1*X,Y,sprintf('^{%s}%s',Tag.isotope,Tag.name),'FontSize',14)
+
+  AestheticShift = Limit/20;
+
+
+text(handles.mainPlot,AestheticShift+X,Y,sprintf('^{%s}%s',Tag.isotope,Tag.name),'FontSize',14)
 
 if isfield(handles,'AddedTags')
 size = length(handles.AddedTags);
@@ -1263,7 +1267,6 @@ end
 handles.AddedTags{size +1}.x = X;
 handles.AddedTags{size +1}.y = Y;
 handles.AddedTags{size +1}.Tag = sprintf('^{%s}%s',Tag.isotope,Tag.name);
-
 end
 
 guidata(hObject, handles);
