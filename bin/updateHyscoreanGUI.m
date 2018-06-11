@@ -1,5 +1,7 @@
 function updateHyscoreanGUI(handles,Processed)
 
+%Deactivate all pushbuttons until the graphics are rendered
+set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','inactive')
     set(handles.ProcessingInfo, 'String', 'Status: Rendering...'); drawnow;
 
 
@@ -138,6 +140,8 @@ if isfield(handles,'AddedTags')
   end
 end
 
+%Reactivate all pushbuttons
+set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','on')
+set(handles.ProcessingInfo, 'String', 'Status: Finished');,drawnow
 
 
-set(handles.ProcessingInfo, 'String', 'Status: Finished');
