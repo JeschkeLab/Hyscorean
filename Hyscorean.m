@@ -1246,10 +1246,14 @@ Larmorfrequency = gyromagneticRatio*(CenterField + Offset);
 X = Larmorfrequency;
 Y = abs(Larmorfrequency);
 
+Limit = str2double(get(handles.XUpperLimit,'string'));
+
+if abs(Larmorfrequency) < Limit
+
 Tags = handles.IsotopeTags;
 Tag = Tags(get(handles.AddTagList,'Value'));
 
-text(handles.mainPlot,X,Y,sprintf('^{%s}%s',Tag.isotope,Tag.name),'FontSize',14)
+text(handles.mainPlot,1.1*X,Y,sprintf('^{%s}%s',Tag.isotope,Tag.name),'FontSize',14)
 
 if isfield(handles,'AddedTags')
 size = length(handles.AddedTags);
@@ -1259,6 +1263,8 @@ end
 handles.AddedTags{size +1}.x = X;
 handles.AddedTags{size +1}.y = Y;
 handles.AddedTags{size +1}.Tag = sprintf('^{%s}%s',Tag.isotope,Tag.name);
+
+end
 
 guidata(hObject, handles);
 
@@ -1286,14 +1292,13 @@ end
 Names = get(hObject,'string');
 Colors = white(length(Names))-1;
 for i=1:length(Names)
-  IsotopeTags(i).name = Names{i};
-  if i<=4 
-    IsotopeTags(i).isotope = IsotopeTags(i).name(1);
-    IsotopeTags(i).name = IsotopeTags(i).name(2:end);
-  else
-    IsotopeTags(i).isotope = IsotopeTags(i).name(1:2);
-    IsotopeTags(i).name = IsotopeTags(i).name(3:end); 
-  end
+  
+  Position1 = strfind(Names{i},'<SUP>');
+  Position2 = strfind(Names{i},'</SUP>');
+  Position3 = strfind(Names{i},'</FONT>');
+
+  IsotopeTags(i).isotope = Names{i}(Position1+length('<SUP>'):Position2-1);
+  IsotopeTags(i).name = Names{i}(Position2+length('</SUP>'):Position3-1);
   IsotopeTags(i).Color =  uint8(Colors(i,:) * 255 + 0.5);
 end
 
