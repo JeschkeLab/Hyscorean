@@ -1,4 +1,4 @@
-function correlation_plot(x1,x2,y,options)
+function Hyscore_correlation_plot(x1,x2,y,options)
 % this creates a two dimensional correlation plot, with the projections as
 % the integral along the corresponding axes.
 % Call should be 
@@ -67,6 +67,14 @@ end
 plotsize = [73.8000   47.2000  434.0000  342.3000];
 figsize = [680   678   560   420];
 
+
+if isfield(options,'figsize')
+  figsize = options.figsize;
+  plotsize([1,2]) = 0.15*figsize([1,2]);
+  plotsize(4) = 0.75*figsize(4);
+  plotsize(3) = 0.82*figsize(3);
+
+end
 % stretch the figure vertically by a factor
 horzstretch = 1.2;
 figsize(3) = figsize(3) * horzstretch;
@@ -92,7 +100,8 @@ inset2size(4) = (vertstretch-1) * figsize(4) - pixeloffset;
 
 w1_projection = sum(abs(y),2);
 w1_projection = w1_projection/max(w1_projection);
-w2_projection = sum(abs(y));
+
+w2_projection = sum(abs(y),1);
 w2_projection = w2_projection/max(w2_projection);
 
 %% first plot
@@ -101,7 +110,6 @@ w2_projection = w2_projection/max(w2_projection);
 set(gcf,'Position',figsize);
 ax1 = axes; %#ok<NASGU>
 set(gca,'Units','pixels','Position',plotsize)
-
 
 if isempty(options) || ~isfield(options,'type') || isempty(options.type)
     plotarea = abs(y');
@@ -113,8 +121,19 @@ elseif strcmp(options.type,'imag')
     plotarea = imag(y');
 end
 
+%Compute contour levels according to minimal contour level given by user
+Levels=levels;
+MinimalContourLevel = options.MinimalContourLevel;
+MaximalContourLevel = max(max(plotarea));
+MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
+ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
+ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
 
-contour(x1,x2,plotarea,levels,'LineWidth',options.Linewidth)
+contour(x1,x2,plotarea,ContourLevels,'LineWidth',options.Linewidth)
+hold on
+plot(x1,abs(x1),'k-.');
+plot(zeros(length(x1)),abs(x1),'k-');
+grid on
 ax(1)=gca;
 
 if isfield(options,'xlabel') && ~isempty(options.xlabel)
@@ -148,7 +167,7 @@ set(gca,'Units','pixels','Position',insetsize)
 hold on
 box on
 
-plot(gca,abs(w2_projection),x2,'k','LineWidth',options.Linewidth)
+% plot(gca,abs(w2_projection),x2,'k')
 
 ax(2)=gca;
 
@@ -164,7 +183,7 @@ set(gca,'Units','pixels','Position',inset2size)
 hold on
 box on
 
-plot(x1,abs(w1_projection),'k','LineWidth',options.Linewidth);
+% plot(x1,abs(w1_projection),'k');
 ax(3) = gca;
 axis tight
 xlim(xaxs)
@@ -192,6 +211,7 @@ setappdata(ax(i),'YLim',get(ax(i),'YLim'));
 setappdata(ax(i),'XLim',get(ax(i),'XLim'));
 end
 
+ zoom(1)
 end
 
 function zoomcallback(obj,evd)
@@ -230,14 +250,14 @@ axesHandlesToChildObjects = findobj(ax(3), 'Type', 'line');
 delete(axesHandlesToChildObjects);
 
 
-plot(ax(3),x1(x1_range),abs(w1_projection),'color',line_color,'LineWidth',options.Linewidth)
+plot(ax(3),x1(x1_range),abs(w1_projection),'color','k')
 % set(ax(3),'YLim',getappdata(ax(3),'YLim'));
 
 
 axesHandlesToChildObjects = findobj(ax(2), 'Type', 'line');
 delete(axesHandlesToChildObjects);
 
-plot(ax(2),abs(w2_projection),x2(x2_range),'color',line_color,'LineWidth',options.Linewidth)
+plot(ax(2),abs(w2_projection),x2(x2_range),'color','k')
 % set(ax(2),'XLim',getappdata(ax(2),'XLim'));
 
 

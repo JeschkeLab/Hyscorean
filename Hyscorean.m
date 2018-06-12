@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 05-Jun-2018 11:19:29
+% Last Modified by GUIDE v2.5 12-Jun-2018 10:41:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,6 +70,12 @@ function varargout = Hyscorean_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
+plot(handles.mainPlot,-50:1:50,abs(-50:1:50),'k-.'),grid(handles.mainPlot,'on')
+hold(handles.mainPlot,'on')
+plot(handles.mainPlot,zeros(length(0:50),1),abs(0:50),'k-')
+hold(handles.mainPlot,'off')
+set(handles.mainPlot,'xticklabel',[],'yticklabel',[])
+
 varargout{1} = handles.output;
 
 
@@ -1579,3 +1585,51 @@ function BackgroundStart2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in DetachProjectionPlot.
+function DetachProjectionPlot_Callback(hObject, eventdata, handles)
+% hObject    handle to DetachProjectionPlot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+figure(51002)
+options.figsize = [500 500 790 450];
+
+set(gcf,'NumberTitle','off','Name','Hyscorean: Projection Contour','Units','pixels','Position',options.figsize);
+  XUpperLimit=str2double(get(handles.XUpperLimit,'string'));
+  options.xaxs = [-XUpperLimit XUpperLimit]; options.yaxs = [0 XUpperLimit];
+  options.xlabel = '\nu_1 [MHz]'; options.ylabel = '\nu_2 [MHz]';
+options.levels=handles.GraphicalSettings.Levels;
+options.Linewidth=handles.GraphicalSettings.Linewidth;
+options.nonewfig = true;
+options.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
+switch handles.GraphicalSettings.Colormap
+  case 1
+    colormap('parula')
+  case 2
+    colormap('jet')
+  case 3
+    colormap('hsv')
+  case 4
+    colormap('hot')
+  case 5
+    colormap('cool')
+  case 6
+    colormap('spring')
+  case 7
+    colormap('summer')
+  case 8
+    colormap('autumn')
+  case 9
+    colormap('winter')
+  case 10
+    colormap('gray')
+end
+if handles.GraphicalSettings.Absolute
+  spectrum2 = abs(handles.Processed.spectrum);
+elseif handles.GraphicalSettings.Real
+  spectrum2 = real(handles.Processed.spectrum);
+elseif handles.GraphicalSettings.Imaginary
+  spectrum2 = imag(handles.Processed.spectrum);
+end
+Hyscore_correlation_plot(handles.Processed.axis2,handles.Processed.axis1,spectrum2,options)
