@@ -22,7 +22,7 @@ function varargout = Hyscorean_detachedSignalPlot(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_detachedSignalPlot
 
-% Last Modified by GUIDE v2.5 31-May-2018 15:18:58
+% Last Modified by GUIDE v2.5 12-Jun-2018 09:12:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,8 @@ handles.output = hObject;
 Processed = getappdata(0,'Processed');
 handles.Processed = Processed;
 handles.Data = getappdata(0,'Data');
+InvertCorrection = getappdata(0,'InvertCorrection');
+set(handles.InvertCorrection,'value',InvertCorrection)
 Hammingedit = getappdata(0,'Hammingedit');
 HammingWindow = getappdata(0,'HammingWindow');
 set(handles.HammingWindow,'Value',HammingWindow)
@@ -298,3 +300,12 @@ function PlotBackground_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of PlotBackground
 HyscoreanSignalPlot(handles,handles.Processed)
 guidata(hObject, handles);
+
+
+% --- Executes on button press in InvertCorrection.
+function InvertCorrection_Callback(hObject, eventdata, handles)
+% hObject    handle to InvertCorrection (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of InvertCorrection

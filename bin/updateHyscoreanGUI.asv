@@ -1,21 +1,11 @@
 function updateHyscoreanGUI(handles,Processed)
-%------------------------------------------------------------------------
-% Updater of the HYSCOREAN GUI
-%------------------------------------------------------------------------
-% Automatically update all graphical elements present on the GUI according
-% to the most recent data.
-% This function is responsible for the plotting the main spectrum as well
-% as for calling the function responsible for the plots containing the time
-% domain signals
-%
-% Luis Fabregas, Hyscorean 2018
 
 % Preparations
 %------------------------------------------------------------------------
 
 %Deactivate all pushbuttons until the graphics are rendered  & update info display
 set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','inactive')
-set(handles.ProcessingInfo, 'String', 'Status: Rendering...'); drawnow;
+    set(handles.ProcessingInfo, 'String', 'Status: Rendering...'); drawnow;
 
 %Enable all graphics-related GUI components
 set(handles.PreProcessedTrace,'visible','on')
@@ -39,7 +29,7 @@ Npoints = length(Processed.TimeAxis2) - str2double(get(handles.ZeroFilling2,'str
 set(handles.t1_Slider,'Min', 1, 'Max',Npoints , 'SliderStep', [1/(Npoints - 1) 5/(Npoints - 1)], 'Value', 1)
 handles.PlotProcessedSignal = true;
 try
-  HyscoreanSignalPlot(handles,Processed);
+HyscoreanSignalPlot(handles,Processed);
 catch
 end
 
@@ -68,8 +58,7 @@ elseif GraphicalSettings.Real
   Spectrum = abs(Spectrum);
 elseif GraphicalSettings.Imaginary
   Spectrum = imag(Spectrum);
-end
-
+end  
 %Select current colormap
 switch GraphicalSettings.Colormap
   case 1
@@ -93,7 +82,6 @@ switch GraphicalSettings.Colormap
   case 10
     colormap('gray')
 end
-
 %Compute contour levels according to minimal contour level given by user
 Levels=GraphicalSettings.Levels;
 MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
@@ -104,18 +92,18 @@ ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
 
 %If blindspots are to be plotted, superimpose them to the spectrum
 if get(handles.ImposeBlindSpots,'Value')
-  [BlindSpotsMap,BlindSpotsAxis1,BlindSpotsAxis2] = imposeBlindSpots(handles);
-  BlindSpotsMap = BlindSpotsMap/max(max(BlindSpotsMap))*max(max(Spectrum)); colormap('hot')
-  BlindSpots = pcolor(handles.mainPlot,BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap);shading(handles.mainPlot,'flat'),
-  alpha(BlindSpots,0.7);
-  hold(handles.mainPlot,'on')
+[BlindSpotsMap,BlindSpotsAxis1,BlindSpotsAxis2] = imposeBlindSpots(handles);  
+BlindSpotsMap = BlindSpotsMap/max(max(BlindSpotsMap))*max(max(Spectrum)); colormap('hot')
+BlindSpots = pcolor(handles.mainPlot,BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap);shading(handles.mainPlot,'flat'),
+alpha(BlindSpots,0.7);
+hold(handles.mainPlot,'on')
 end
 
 %Construct main plot
 switch GraphicalSettings.PlotType
   case 1 %Contour plot
-    if get(handles.ImposeBlindSpots,'Value')
-      %If blindspots are superimposed, make contour only black to adapt to hot-colormap
+    if get(handles.ImposeBlindSpots,'Value') 
+      %If blindspots are superimposed, make contour only black to adapt to hot-colormap 
       contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.Linewidth,'Color','k');
     else
       contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.Linewidth);
@@ -126,7 +114,7 @@ switch GraphicalSettings.PlotType
     pcolor(handles.mainPlot,axis1,axis2,Spectrum),shading(handles.mainPlot,'interp')
 end
 
-%Add diagonal/antidiagonal and zero-vertical auxiliary lines
+%Add diagonal/antidiagonal and zero-vertical auxiliary lines 
 hold(handles.mainPlot,'on')
 LineAxis = linspace(-XupperLimit,XupperLimit,1000);
 handles.Diagonals = plot(handles.mainPlot,LineAxis,abs(LineAxis),'k-.');
@@ -142,7 +130,7 @@ xlabel(handles.mainPlot,'\nu_1 [MHz]');
 ylabel(handles.mainPlot,'\nu_2 [MHz]');
 curerntXTicks = xticks(handles.mainPlot);
 yticks(handles.mainPlot,curerntXTicks(curerntXTicks>=0))
-
+  
 %If auxiliare lines have been added (and not cleared) add them again
 if isfield(handles,'AddedLines')
   for i=1:length(handles.AddedLines)
@@ -155,13 +143,9 @@ end
 %If isotope tags have been added (and not cleared) add them again
 if isfield(handles,'AddedTags')
   for i=1:length(handles.AddedTags)
-    text(handles.mainPlot,XupperLimit/20 + handles.AddedTags{i}.x,handles.AddedTags{i}.y,handles.AddedTags{i}.Tag,'FontSize',14)
+            text(handles.mainPlot,XupperLimit/20 + handles.AddedTags{i}.x,handles.AddedTags{i}.y,handles.AddedTags{i}.Tag,'FontSize',14)
   end
 end
-
-
-% Finish & Exit
-%------------------------------------------------------------------------
 
 %Reactivate all pushbuttons & update info display
 set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','on')

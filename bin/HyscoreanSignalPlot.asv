@@ -2,13 +2,10 @@ function HyscoreanSignalPlot(handles,Processed)
 %------------------------------------------------------------------------
 % Time-domain signal traces updater 
 %------------------------------------------------------------------------
-% Interactively display the traces of the different time-domain traces
-% processed throughout Hyscorean via GUI slider.  
-% This function is responsible for the update and functionality of the
-% signal plot in the Hyscorean main-GUI, as well as for the detached signal
-% plot sub-GUI.
+% Construct 
 %
-% Luis Fabregas, Hyscorean 2018
+%
+
 
 % Preparations
 %------------------------------------------------------------------------
