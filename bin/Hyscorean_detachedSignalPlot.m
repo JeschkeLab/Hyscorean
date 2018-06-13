@@ -22,7 +22,7 @@ function varargout = Hyscorean_detachedSignalPlot(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_detachedSignalPlot
 
-% Last Modified by GUIDE v2.5 12-Jun-2018 09:12:03
+% Last Modified by GUIDE v2.5 13-Jun-2018 08:34:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,7 +73,7 @@ set(handles.t1_Slider,'Min', 1, 'Max',Npoints , 'SliderStep', [1/(Npoints - 1) 5
 guidata(hObject, handles);
 
 % UIWAIT makes Hyscorean_detachedSignalPlot wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.HyscoreanDetachedSignalPlot);
 
 
 % --- Outputs from this function are returned to the command line.

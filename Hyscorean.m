@@ -1093,12 +1093,12 @@ function GraphicalSettingsButton_Callback(hObject, eventdata, handles)
 setappdata(0,'GraphicalSettings',handles.GraphicalSettings)
 %Set relative positioning of the new window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+40;
-Position(2) = Position(2)+25;
-Position(3) = 87.80000000000001;
-Position(4) = 12.615384615384613;
+% Position(1) = Position(1)-40;
+% Position(2) = Position(2)+25;
+% Position(3) = 87.80000000000001;
+% Position(4) = 12.615384615384613;
 %Call graphical settings GUI
-Hyscorean_GraphicalSettings('Position',Position)
+Hyscorean_GraphicalSettings
 uiwait(Hyscorean_GraphicalSettings)
 
 handles.GraphicalSettings = getappdata(0,'GraphicalSettings');
@@ -1426,7 +1426,13 @@ setappdata(0,'Hammingedit',get(handles.Hammingedit,'String'))
 setappdata(0,'HammingWindow',get(handles.HammingWindow,'Value'))
 
 %Call graphical settings GUI
-Hyscorean_detachedSignalPlot
+handles.SignalPlotIsDetached = true;
+guidata(hObject, handles);
+
+uiwait(Hyscorean_detachedSignalPlot)
+
+handles.SignalPlotIsDetached = false;
+guidata(hObject, handles);
 
 
 

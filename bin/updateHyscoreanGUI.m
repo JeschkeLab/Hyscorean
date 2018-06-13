@@ -43,6 +43,23 @@ try
 catch
 end
 
+% Update external signal plot GUI
+%------------------------------------------------------------------------
+if ~isfield(handles,'SignalPlotIsDetached')
+    handles.SignalPlotIsDetached = false;
+end
+if handles.SignalPlotIsDetached
+  setappdata(0,'Processed',handles.Processed)
+  setappdata(0,'Data',handles.Data)
+  setappdata(0,'InvertCorrection',get(handles.InvertCorrection,'value'))
+  setappdata(0,'ZeroFilling1',str2double(get(handles.ZeroFilling1,'String')))
+  setappdata(0,'ZeroFilling2',str2double(get(handles.ZeroFilling2,'String')))
+  setappdata(0,'Hammingedit',get(handles.Hammingedit,'String'))
+  setappdata(0,'HammingWindow',get(handles.HammingWindow,'Value'))
+  
+  %Call graphical settings GUI
+  Hyscorean_detachedSignalPlot
+end
 
 % Update Main plot
 %------------------------------------------------------------------------

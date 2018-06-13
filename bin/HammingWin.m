@@ -13,7 +13,7 @@ if HammingDecay>=size1
 end
 
 if HammingDecay<size1
-  HammingWindow=[HammingWindow zeros(1,size1-HammingDecay)];
+  HammingWindow=[HammingWindow HammingWindow(end)+zeros(1,size1-HammingDecay)];
 end
 
 for k=1:size2
@@ -27,7 +27,7 @@ if HammingDecay>=size2
 end
 
 if HammingDecay<size2
-  HammingWindow=[HammingWindow zeros(1,size2-HammingDecay)];
+  HammingWindow=[HammingWindow HammingWindow(end)+zeros(1,size2-HammingDecay)];
 end
 
 for k=1:size1

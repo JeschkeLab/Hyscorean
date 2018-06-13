@@ -192,7 +192,7 @@ if get(handles.PlotApodizationWindow,'value')
     Window=Window(1:length(TimeAxis1));
   end
   if WindowDecay<length(TimeAxis1)
-    Window=[Window zeros(1,length(TimeAxis1)-WindowDecay)];
+    Window=[Window Window(end)+zeros(1,length(TimeAxis1)-WindowDecay)];
   end
   %Plot and hold
   plot(handles.signal_t1,TimeAxis1,Window,'Color',[0.1 0.7 0.1])
