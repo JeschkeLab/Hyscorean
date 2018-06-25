@@ -1172,7 +1172,10 @@ function GraphicalSettingsButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to GraphicalSettingsButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-data = load('GraphicalSettings_default.mat');
+Root = which('Hyscorean');
+Root = Root(1:end-12);
+Path = fullfile(Root,'\bin');
+data = load(fullfile(Path,'GraphicalSettings_default.mat'));
 handles.GraphicalSettings = data.GraphicalSettings;
 guidata(hObject, handles);
 

@@ -140,9 +140,8 @@ function SaveDefault_Callback(hObject, eventdata, handles)
 GraphicalSettings = handles.GraphicalSettings;
 if dialog_default_graphics
 Root = which('Hyscorean');
-Pos = strfind(Root,'\Hyscorean 1.0');
-Root = Root(1:Pos);
-Path = fullfile(Root,'Hyscorean 1.0\bin');
+Root = Root(1:end-12);
+Path = fullfile(Root,'\bin');
 save(fullfile(Path,'GraphicalSettings_default.mat'),'GraphicalSettings')
 end
 
@@ -151,7 +150,10 @@ function LoadDefault_Callback(hObject, eventdata, handles)
 % hObject    handle to LoadDefault (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-data = load('GraphicalSettings_default.mat');
+Root = which('Hyscorean');
+Root = Root(1:end-12);
+Path = fullfile(Root,'\bin');
+data = load(fullfile(Path,'GraphicalSettings_default.mat'));
 handles.GraphicalSettings = data.GraphicalSettings;
 set(handles.Absolute,'value',handles.GraphicalSettings.Absolute);
 set(handles.Imaginary,'value',handles.GraphicalSettings.Imaginary);

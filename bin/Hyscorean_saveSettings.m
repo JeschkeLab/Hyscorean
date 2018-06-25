@@ -103,9 +103,8 @@ if ~strcmp(Default.SavePath,SavePath)
   end
 if dialog_default_saver
 Root = which('Hyscorean');
-Pos = strfind(Root,'\Hyscorean 1.0');
-Root = Root(1:Pos);
-Path = fullfile(Root,'Hyscorean 1.0\bin');
+Root = Root(1:end-12);
+Path = fullfile(Root,'\bin');
 save(fullfile(Path,'Hyscorean_default_savepath.mat'),'SavePath')
 end
 end
@@ -127,9 +126,6 @@ function initialize_gui(fig_handle, handles, isreset)
 if isfield(handles, 'metricdata') && ~isreset
     return;
 end
-
-
-
 
 function SavePath_Callback(hObject, eventdata, handles)
 % hObject    handle to SavePath (see GCBO)
