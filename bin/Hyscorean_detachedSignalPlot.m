@@ -22,7 +22,7 @@ function varargout = Hyscorean_detachedSignalPlot(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_detachedSignalPlot
 
-% Last Modified by GUIDE v2.5 13-Jun-2018 08:34:15
+% Last Modified by GUIDE v2.5 26-Jun-2018 12:27:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -309,3 +309,14 @@ function InvertCorrection_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of InvertCorrection
+
+
+% --- Executes on button press in PlotWithZeroFilling.
+function PlotWithZeroFilling_Callback(hObject, eventdata, handles)
+% hObject    handle to PlotWithZeroFilling (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PlotWithZeroFilling
+HyscoreanSignalPlot(handles,handles.Processed)
+guidata(hObject, handles);

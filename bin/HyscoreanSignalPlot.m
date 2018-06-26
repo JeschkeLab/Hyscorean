@@ -26,7 +26,11 @@ if ~isfield(handles,'PlotBackground')
 else
   PlotSecondCorrection = get(handles.PlotBackground,'Value');
 end
-
+if ~isfield(handles,'PlotWithZeroFilling')
+   PlotWithZeroFilling = false;
+else
+   PlotWithZeroFilling = get(handles.PlotWithZeroFilling,'Value');
+end
 %Find which of the signals to be plotted has the largest maximum
 ylimMax = max(max(real(Processed.Signal)));
 ylimMin = min(min(real(Processed.Signal)));
@@ -44,9 +48,13 @@ if ylimMin > min(min(real(handles.Data.PreProcessedSignal)))
 end
 
 %Construct time axes for the signals
-TimeAxis1 = Processed.TimeAxis1(1:length(Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
-TimeAxis2 = Processed.TimeAxis1(1:length(Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
-
+if  PlotWithZeroFilling
+  TimeAxis1 = Processed.TimeAxis1(1:length(Processed.TimeAxis1));
+  TimeAxis2 = Processed.TimeAxis2(1:length(Processed.TimeAxis2));
+else
+  TimeAxis1 = Processed.TimeAxis1(1:length(Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
+  TimeAxis2 = Processed.TimeAxis2(1:length(Processed.TimeAxis2)-str2double(get(handles.ZeroFilling2,'String')));
+end
 %Get current position of the slider
 SliderPosition = round(get(handles.t1_Slider,'Value'));
 
@@ -60,7 +68,11 @@ if handles.PlotProcessedSignal
   else
     ProcessedSignalTrace = Processed.Signal(:,SliderPosition);
   end
-  ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling1,'String')));
+  if  PlotWithZeroFilling
+    ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace));
+  else
+    ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling1,'String')));
+  end
   plot(handles.signal_t1,TimeAxis1',ProcessedSignalTrace,'k','Linewidth',1)
 end
 
