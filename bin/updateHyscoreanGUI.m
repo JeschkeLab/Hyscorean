@@ -15,6 +15,11 @@ function updateHyscoreanGUI(handles,Processed)
 
 %Deactivate all pushbuttons until the graphics are rendered  & update info display
 set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','inactive')
+set(findall(handles.HyscoreanFigure, 'Style', 'radiobutton'),'enable','inactive')
+set(findall(handles.HyscoreanFigure, 'Style', 'checkbox'),'enable','inactive')
+set(findall(handles.HyscoreanFigure, 'Style', 'edit'),'enable','inactive')
+set(findall(handles.HyscoreanFigure, 'Style', 'slider'),'enable','inactive')
+set(findall(handles.HyscoreanFigure, 'Style', 'popupmenu'),'enable','inactive')
 set(handles.ProcessingInfo, 'String', 'Status: Rendering...'); drawnow;
 
 %Enable all graphics-related GUI components
@@ -181,7 +186,10 @@ end
 %------------------------------------------------------------------------
 
 %Reactivate all pushbuttons & update info display
-set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','on')
 set(handles.ProcessingInfo, 'String', 'Status: Finished');drawnow
-
-
+set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','on')
+set(findall(handles.HyscoreanFigure, 'Style', 'radiobutton'),'enable','on')
+set(findall(handles.HyscoreanFigure, 'Style', 'checkbox'),'enable','on')
+set(findall(handles.HyscoreanFigure, 'Style', 'edit'),'enable','on')
+set(findall(handles.HyscoreanFigure, 'Style', 'slider'),'enable','on')
+set(findall(handles.HyscoreanFigure, 'Style', 'popupmenu'),'enable','on')
