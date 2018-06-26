@@ -102,7 +102,28 @@ if handles.FilePaths.Files == 0
   return;
 end
 
-set(handles.DisplayLoadedFiles,'enable','on')
+%If data has been reloaded and there exists and old processed spectrum,
+%remove all the associated data
+if isfield(handles,'Processed')
+  handles = rmfield(handles,'Processed');
+end
+%Reset/Disable graphical handles so that no errors appear if called
+set(handles.PreProcessedTrace,'visible','off')
+set(handles.NonCorrectedTrace,'visible','off')
+set(handles.PlotApodizationWindow,'visible','off')
+set(handles.DetachSignalPlot,'visible','off')
+set(handles.ChangeSignalPlotDimension,'visible','off')
+set(handles.t1_Slider,'enable','off')
+set(handles.ImposeBlindSpots,'enable','off')
+set(handles.AddHelpLine,'enable','off')
+set(handles.AddTag,'enable','off')
+set(handles.AddTagList,'enable','off')
+set(handles.ClearTags,'enable','off')
+set(handles.FieldOffsetTag,'enable','off')
+set(handles.FieldOffset,'enable','off')
+set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'off')
+set(handles.DisplayLoadedFiles,'enable','off')
+set(handles.trace2Info,'string','')
 
 
 handles.TauSelectionSwitch = true;
@@ -141,7 +162,8 @@ TauValues = handles.Data.TauValues;
   if handles.Data.NUSflag
     enableDisableGUI(handles,'NUSReconstruction','on')
   end
- 
+ set(handles.ProcessingInfo, 'String', 'Status: Data Loaded');drawnow
+
 % Save the handles structure.
 guidata(hObject,handles)
 
@@ -230,8 +252,11 @@ function SaveReportButton_Callback(hObject, eventdata, handles)
 % hObject    handle to SaveReportButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'Processed')
+  Window = warndlg('There is no processed data to be saved','Warning');
+  return
+end
 saveHyscorean(handles);
-
 
 % --- Executes on button press in DisplayLoadedFiles.
 function DisplayLoadedFiles_Callback(hObject, eventdata, handles)
