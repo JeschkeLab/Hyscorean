@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 12-Jun-2018 10:41:07
+% Last Modified by GUIDE v2.5 01-Oct-2018 08:54:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1452,6 +1452,7 @@ setappdata(0,'ZeroFilling1',str2double(get(handles.ZeroFilling1,'String')))
 setappdata(0,'ZeroFilling2',str2double(get(handles.ZeroFilling2,'String')))
 setappdata(0,'Hammingedit',get(handles.Hammingedit,'String'))
 setappdata(0,'HammingWindow',get(handles.HammingWindow,'Value'))
+setappdata(0,'WindowType',get(handles.WindowType,'Value'))
 
 %Call graphical settings GUI
 handles.SignalPlotIsDetached = true;
@@ -1667,3 +1668,26 @@ elseif handles.GraphicalSettings.Imaginary
   spectrum2 = imag(handles.Processed.spectrum);
 end
 Hyscore_correlation_plot(handles.Processed.axis2,handles.Processed.axis1,spectrum2,options)
+
+
+% --- Executes on selection change in WindowType.
+function WindowType_Callback(hObject, eventdata, handles)
+% hObject    handle to WindowType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns WindowType contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from WindowType
+
+
+% --- Executes during object creation, after setting all properties.
+function WindowType_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to WindowType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

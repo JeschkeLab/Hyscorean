@@ -20,7 +20,7 @@ SaveDirectory = sprintf('%s_%s',Date,Identifier);
 FullPath = fullfile(SavePath,SaveDirectory);
 
 % If directory does not exist create it
-if ~exist(FullPath,'dir')
+if ~exist(FullPath,'dir') 
     mkdir(FullPath)
 end
 
@@ -132,21 +132,34 @@ reportdata.Pulse90Length  = str2double(Pulse90String);
 reportdata.Pulse180Length  = str2double(Pulse180String);
 %Store apodization window 
 WindowDecay = str2double(get(handles.Hammingedit,'string'));
-arg=linspace(0,pi,WindowDecay);
-if get(handles.HammingWindow,'Value')
-  Window=0.54*ones(1,WindowDecay)+0.46*cos(arg);
-else
-  ChebishevWindow = ifftshift(chebwin(WindowDecay*2));
-  Window = ChebishevWindow(1:WindowDecay)';
-end
+    WindowMenuState = get(handles.WindowType,'value');
+  switch WindowMenuState
+    case 1
+     WindowType =  'hamming';
+    case 2
+     WindowType =  'chebyshev';  
+    case 3
+     WindowType =  'welch';
+    case 4
+      WindowType = 'blackman'; 
+    case 5
+      WindowType = 'bartlett';
+    case 6
+      WindowType = 'connes';
+    case 7
+      WindowType = 'cosine';      
+  end
+  [~,Window] = apodizationWin(handles.Processed.Signal,WindowType,WindowDecay);
 TimeAxis1 = handles.Processed.TimeAxis1(1:length(handles.Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
 Window = Window/max(Window);
+Window = Window';
 if WindowDecay>=length(TimeAxis1)
   Window=Window(1:length(TimeAxis1));
 end
 if WindowDecay<length(TimeAxis1)
   Window=[Window zeros(1,length(TimeAxis1)-WindowDecay)];
 end
+reportdata.WindowType = WindowType;
 reportdata.ApodizationWindow = Window;
 %Cosntruct report
 %Format savename so until it is different from the rest in the folder

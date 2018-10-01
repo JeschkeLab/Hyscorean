@@ -22,7 +22,7 @@ function varargout = Hyscorean_detachedSignalPlot(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_detachedSignalPlot
 
-% Last Modified by GUIDE v2.5 26-Jun-2018 12:27:38
+% Last Modified by GUIDE v2.5 01-Oct-2018 09:06:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,6 +65,8 @@ set(handles.HammingWindow,'Value',HammingWindow)
 set(handles.Hammingedit,'string',Hammingedit)
 ZeroFilling1 = getappdata(0,'ZeroFilling1');
 ZeroFilling2 = getappdata(0,'ZeroFilling2');
+WindowTypeState =  getappdata(0,'WindowType');
+set(handles.WindowType,'string',WindowTypeState)
 set(handles.ZeroFilling2,'string',ZeroFilling2)
 set(handles.ZeroFilling1,'string',ZeroFilling1)
 Npoints = length(Processed.TimeAxis2) - str2double(get(handles.ZeroFilling2,'string'));
@@ -320,3 +322,26 @@ function PlotWithZeroFilling_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of PlotWithZeroFilling
 HyscoreanSignalPlot(handles,handles.Processed)
 guidata(hObject, handles);
+
+
+% --- Executes on selection change in WindowType.
+function WindowType_Callback(hObject, eventdata, handles)
+% hObject    handle to WindowType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns WindowType contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from WindowType
+
+
+% --- Executes during object creation, after setting all properties.
+function WindowType_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to WindowType (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

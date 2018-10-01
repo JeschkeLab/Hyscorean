@@ -187,19 +187,29 @@ end
 
 if get(handles.PlotApodizationWindow,'value')
   
-  %Get window decay
+%   %Get window decay
   WindowDecay = str2double(get(handles.Hammingedit,'string'));
-  if get(handles.HammingWindow,'Value')
-    %Hamming Window
-    arg=linspace(0,pi,WindowDecay);
-    Window=0.54*ones(1,WindowDecay)+0.46*cos(arg);
-  else
-    %Chebishev Window
-    ChebishevWindow = ifftshift(chebwin(WindowDecay*2));
-    Window = ChebishevWindow(1:WindowDecay)';
+    WindowMenuState = get(handles.WindowType,'value');
+  switch WindowMenuState
+    case 1
+     WindowType =  'hamming';
+    case 2
+     WindowType =  'chebyshev';  
+    case 3
+     WindowType =  'welch';
+    case 4
+      WindowType = 'blackman'; 
+    case 5
+      WindowType = 'bartlett';
+    case 6
+      WindowType = 'connes';
+    case 7
+      WindowType = 'cosine';      
   end
+  [~,Window] = apodizationWin(Processed.Signal,WindowType,WindowDecay);
   %Adjust window to current axis
   Window = Window/max(Window);
+  Window = Window';
   if WindowDecay>=length(TimeAxis1)
     Window=Window(1:length(TimeAxis1));
   end
