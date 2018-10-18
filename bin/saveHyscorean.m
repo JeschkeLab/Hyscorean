@@ -51,14 +51,17 @@ end
 %----------------------------------------------------------------------  
 Spectrum = handles.Processed.spectrum;
 ProcessedSignal = handles.Processed.Signal;
-Axis1 = handles.Processed.axis1;
-Axis2 = handles.Processed.axis2;
+RawSignal = handles.Data.Integral;
+TimeAxis1 = handles.Processed.TimeAxis1;
+TimeAxis2 = handles.Processed.TimeAxis2;
+FrequencyAxis1 = handles.Processed.axis1;
+FrequencyAxis2 = handles.Processed.axis2;
 %Format savename so until it is different from the rest in the folder
   SaveName = sprintf('%s_%s_OutputData.mat',Date,Identifier);
   if CrushFlag
       SaveName = sprintf('%s_%s_OutputData_%i.mat',Date,Identifier,CopyIndex);
   end
-  save(fullfile(FullPath,SaveName),'Spectrum','ProcessedSignal','Axis1','Axis2');
+  save(fullfile(FullPath,SaveName),'Spectrum','ProcessedSignal','RawSignal','TimeAxis1','TimeAxis1','FrequencyAxis1','FrequencyAxis2');
 
   set(handles.ProcessingInfo, 'String', 'Status: Saving session 50%'); drawnow;
 

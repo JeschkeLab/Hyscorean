@@ -1,7 +1,7 @@
 function saveSettings(handles)
 
 try
-  [File,Path] = uiputfile('TrierAnalysis_settings.mat','Save settings as...');
+  [File,Path] = uiputfile('Hyscorean_settings.mat','Save settings as...');
   
   Settings = getSettings(handles);
 

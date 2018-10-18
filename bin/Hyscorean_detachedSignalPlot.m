@@ -66,7 +66,7 @@ set(handles.Hammingedit,'string',Hammingedit)
 ZeroFilling1 = getappdata(0,'ZeroFilling1');
 ZeroFilling2 = getappdata(0,'ZeroFilling2');
 WindowTypeState =  getappdata(0,'WindowType');
-set(handles.WindowType,'string',WindowTypeState)
+set(handles.WindowType,'value',WindowTypeState)
 set(handles.ZeroFilling2,'string',ZeroFilling2)
 set(handles.ZeroFilling1,'string',ZeroFilling1)
 Npoints = length(Processed.TimeAxis2) - str2double(get(handles.ZeroFilling2,'string'));
