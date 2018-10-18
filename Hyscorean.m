@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 01-Oct-2018 08:54:32
+% Last Modified by GUIDE v2.5 18-Oct-2018 15:29:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,6 +54,33 @@ function Hyscorean_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for Hyscorean
 handles.output = hObject;
+% Find all static text UICONTROLS whose 'Tag' starts with latex_
+handles.laxis = axes('parent',hObject,'units','normalized','position',[0 0 1 1],'visible','off');
+lbls = findobj(hObject,'-regexp','tag','latex_*');
+
+for i=1:length(lbls)
+
+      l = lbls(i);
+
+      % Get current text, position and tag
+
+      set(l,'units','normalized');
+
+      s = get(l,'string');
+
+      p = get(l,'position');
+
+      t = get(l,'tag');
+
+      % Remove the UICONTROL
+
+      delete(l);
+
+      % Replace it with a TEXT object 
+
+      handles.(t) = text(p(1),p(2),s,'interpreter','latex');
+
+end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -75,7 +102,10 @@ hold(handles.mainPlot,'on')
 plot(handles.mainPlot,zeros(length(0:50),1),abs(0:50),'k-')
 hold(handles.mainPlot,'off')
 set(handles.mainPlot,'xticklabel',[],'yticklabel',[])
-
+plot(handles.signal_t1,-50:1:50,abs(-50:0.5:0),'k-',-50:1:50,abs(0:0.5:50),'k-')
+set(handles.signal_t1,'xticklabel',[],'yticklabel',[])
+% set(handles.latex_CopyrightHyscorean,'string','<HTML><p>&copy; 2015 RapidTables.com<p></HTML>')
+% uicontrol('Style', 'push', 'enable', 'off', 'units', 'norm', 'position', [0 0 1 .1], 'String','<HTML><FONT COLOR="red">hello &omega;</HTML>')
 varargout{1} = handles.output;
 
 
@@ -87,7 +117,9 @@ hold(handles.mainPlot,'off')
 set(handles.mainPlot,'xticklabel',[],'yticklabel',[])
 cla(handles.signal_t1,'reset')
 set(handles.signal_t1,'xtick',[],'ytick',[])
-
+hold(handles.mainPlot,'on')
+plot(handles.signal_t1,-50:1:50,abs(-50:0.5:0),'k-',-50:1:50,abs(0:0.5:50),'k-')
+set(handles.signal_t1,'xticklabel',[],'yticklabel',[])
 
 % --- Executes on button press in LoadButton.
 function LoadButton_Callback(hObject, eventdata, handles)
@@ -96,8 +128,8 @@ function LoadButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.LoadedData, 'String', 'Loading...');drawnow;
 
-[handles.FileNames,handles.FilePaths] = multiload_mod;
-if handles.FilePaths.Files == 0
+[handles.FileNames,handles.FilePaths,CancelFlag] = multiload_mod;
+if CancelFlag
   set(handles.LoadedData,'String','Loading canceled');drawnow;
   return;
 end
@@ -272,12 +304,12 @@ catch
   return
 end
 
-% --- Executes on button press in pushbutton22.
-function pushbutton22_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton22 (see GCBO)
+% --- Executes on button press in SaveSettingsButton.
+function SaveSettingsButton_Callback(hObject, eventdata, handles)
+% hObject    handle to SaveSettingsButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+saveSettings(handles)
 
 % --- Executes on button press in LoadSettings.
 function LoadSettings_Callback(hObject, eventdata, handles)
@@ -1451,7 +1483,7 @@ setappdata(0,'InvertCorrection',get(handles.InvertCorrection,'value'))
 setappdata(0,'ZeroFilling1',str2double(get(handles.ZeroFilling1,'String')))
 setappdata(0,'ZeroFilling2',str2double(get(handles.ZeroFilling2,'String')))
 setappdata(0,'Hammingedit',get(handles.Hammingedit,'String'))
-setappdata(0,'HammingWindow',get(handles.HammingWindow,'Value'))
+% setappdata(0,'HammingWindow',get(handles.HammingWindow,'Value'))
 setappdata(0,'WindowType',get(handles.WindowType,'Value'))
 
 %Call graphical settings GUI
@@ -1691,3 +1723,11 @@ function WindowType_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in BlindSpotsSimulator.
+function BlindSpotsSimulator_Callback(hObject, eventdata, handles)
+% hObject    handle to BlindSpotsSimulator (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Blindspot_simulator(str2double(get(handles.XUpperLimit,'string')))
