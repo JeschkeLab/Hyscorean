@@ -20,8 +20,21 @@ set(findall(handles.HyscoreanFigure, 'Style', 'checkbox'),'enable','inactive')
 set(findall(handles.HyscoreanFigure, 'Style', 'edit'),'enable','inactive')
 set(findall(handles.HyscoreanFigure, 'Style', 'slider'),'enable','inactive')
 set(findall(handles.HyscoreanFigure, 'Style', 'popupmenu'),'enable','inactive')
-set(handles.ProcessingInfo, 'String', 'Status: Rendering...'); drawnow;
-
+set(handles.ProcessingInfo, 'String', 'Status: Rendering...')
+%Re-deactivate all which were deactivated (just aesthetic)
+if ~get(handles.Lorentz2GaussCheck,'Value')
+      enableDisableGUI(handles,'Lorent2Gauss','off')
+end
+if ~handles.Data.NUSflag
+      enableDisableGUI(handles,'NUSReconstruction','off')
+end
+if get(handles.AutomaticBackgroundStart,'Value')
+      enableDisableGUI(handles,'AutomaticBackground','off')
+end
+if ~get(handles.SavitzkyFilter,'Value')
+      enableDisableGUI(handles,'SG-Filtering','off')
+end
+drawnow;
 %Enable all graphics-related GUI components
 set(handles.PreProcessedTrace,'visible','on')
 set(handles.NonCorrectedTrace,'visible','on')
@@ -193,3 +206,19 @@ set(findall(handles.HyscoreanFigure, 'Style', 'checkbox'),'enable','on')
 set(findall(handles.HyscoreanFigure, 'Style', 'edit'),'enable','on')
 set(findall(handles.HyscoreanFigure, 'Style', 'slider'),'enable','on')
 set(findall(handles.HyscoreanFigure, 'Style', 'popupmenu'),'enable','on')
+set(findall(handles.HyscoreanFigure, 'Style', 'text'),'enable','on')
+
+%Re-deactivate all which were deactivated
+if ~get(handles.Lorentz2GaussCheck,'Value')
+      enableDisableGUI(handles,'Lorent2Gauss','off')
+end
+if ~handles.Data.NUSflag
+      enableDisableGUI(handles,'NUSReconstruction','off')
+end
+if get(handles.AutomaticBackgroundStart,'Value')
+      enableDisableGUI(handles,'AutomaticBackground','off')
+end
+if ~get(handles.SavitzkyFilter,'Value')
+      enableDisableGUI(handles,'SG-Filtering','off')
+end
+drawnow

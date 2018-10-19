@@ -18,22 +18,14 @@ if ~exist('y3d','var')
     x3 = 1:size(y3d,3);
 end
 
-if exist('fignum','var')
-    if isstruct(fignum)
-        options = fignum;
+
         if isfield(options,'fignum') && ~isempty(options.fignum)
             figure(options.fignum)
         else
             figure
         end
-    else
-        figure(fignum)
-        options = [];
-    end
-else
-    figure
-    options = [];
-end
+
+
 
 clf
 

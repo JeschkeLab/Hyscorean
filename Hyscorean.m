@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 18-Oct-2018 15:29:30
+% Last Modified by GUIDE v2.5 19-Oct-2018 09:36:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -132,6 +132,8 @@ set(handles.LoadedData, 'String', 'Loading...');drawnow;
 if CancelFlag
   set(handles.LoadedData,'String','Loading canceled');drawnow;
   return;
+else
+  set(handles.DisplayLoadedFiles,'enable','on')
 end
 
 %If data has been reloaded and there exists and old processed spectrum,
@@ -154,7 +156,6 @@ set(handles.ClearTags,'enable','off')
 set(handles.FieldOffsetTag,'enable','off')
 set(handles.FieldOffset,'enable','off')
 set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'off')
-set(handles.DisplayLoadedFiles,'enable','off')
 set(handles.trace2Info,'string','')
 
 

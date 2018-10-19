@@ -8,7 +8,8 @@ if nargout>3
   error('Too many output arguments');
 end
 CancelFlag = false;
-
+FileNames = [];
+FilePaths = [];
 [Files, Path]=uigetfile({'*.*'},'MultiSelect','on');
 try
   if Files==0

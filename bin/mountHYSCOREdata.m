@@ -76,14 +76,13 @@ switch FileExtension
     % Preprocess measurement data of first file with uwb_eval and set up data container
     Measurement = load(FileNames{1});
     %Check if data is NUS and proceed
-    if isfield(Measurement.trier,'NUS')
+    if isfield(Measurement.hyscore,'NUS')
       %If NUS data, then launch appropiate mounter and return to main function
       [MountedData]=mountNUSdata(FileNames,options);
       return
     else
       MountedData.NUSflag = false;
     end
-    PulseSequenceInfo = Measurement.hyscore.events;
     % Evaluate data from the AWG spectrometer
     options.plot = 0;
     OutputUWB = uwb_eval(FileNames{1},options);
@@ -115,10 +114,11 @@ switch FileExtension
     EchoAxis = EchoAxis(1:Dimension1);
     
     %Get timings and set up t_2 axis and zero time
-    Tau =  PulseSequenceInfo{2}.t;   % absolute time of first echo    
-    StartTimeAxis2 = Tau + Measurement.hyscore.events{3}.t; % absolute time of second echo
-    TimeAxis2 = -(Measurement.hyscore.parvars{2}.axis - StartTimeAxis2); % adjust t_2 axis to zero time
-    TimeAxis1(1) = PulseSequenceInfo{3}.t - tauAbsolute1;  % first element of t1 vector from file name
+    Tau =  Measurement.hyscore.tau;   % absolute time of first echo    
+    StartTimeAxis2 = Measurement.hyscore.parvars{2}.strt(1) - Measurement.hyscore.events{3}.t; % absolute time of second echo
+    TimeAxis2 = (Measurement.hyscore.parvars{2}.axis - Measurement.hyscore.deadtime); % adjust t_2 axis to zero time
+    TimeAxis1(1) = Measurement.hyscore.events{3}.t - Measurement.hyscore.hyscore_t1.strt(1);  % first element of t1 vector from file name
+    TauValues(1) = Tau;
     
     %Set up filtering
     SamplingRateMHZ = 1/(EchoAxis(2) - EchoAxis(1))*1e3; % sampling rate from time axis
@@ -142,7 +142,7 @@ switch FileExtension
 
     % Repeat for remaining files
     for iFile = 2:NFiles
-      OutputUWB = uwb_eval(RawData{iFile},options);
+      OutputUWB = uwb_eval(FileNames{iFile},options);
       OutputUWB.dta_avg = OutputUWB.dta_avg(1:Dimension1,1:Dimension2);
       % Write traces
       if Filtering
@@ -152,21 +152,45 @@ switch FileExtension
       end
       
       % Update t1 Time axis
-      Measurement = load(RawData{iFile});
-      TimeAxis1(iFile) = Measurement.hyscore.events{3}.t - tauAbsolute1;
+      AWG_Parameters = OutputUWB.exp;
+      TimeAxis1(iFile) = AWG_Parameters.events{3}.t - AWG_Parameters.hyscore_t1.strt(1);
+      TauValues(iFile) =  AWG_Parameters.tau;   % absolute time of first echo
+
     end   
     
     % In case something goes wrong and NaNs are formed set them to void
     TimeAxis1(~any(~isnan(TimeAxis1), 1)) = [];
     
-    %Mount Data structure
-    MountedData.AverageEcho = AverageEcho;
-    MountedData.TimeAxis1 = TimeAxis1;
-    MountedData.TimeAxis2 = TimeAxis2;
-    MountedData.EchoAxis = EchoAxis;
-    MountedData.TimeStep1 = (MountedData.TimeAxis1(2) - MountedData.TimeAxis1(1))/1000;
-    MountedData.TimeStep2 = (MountedData.TimeAxis2(2) - MountedData.TimeAxis2(1))/1000;
-    MountedData.isNotIntegrated  = true;
+    
+    %Mount Data structure for integration
+    DataForInegration.AverageEcho = AverageEcho;
+    DataForInegration.TimeAxis1 = TimeAxis1;
+    DataForInegration.TimeAxis2 = TimeAxis2;
+    DataForInegration.EchoAxis = EchoAxis;
+    DataForInegration.TimeStep1 = (DataForInegration.TimeAxis1(2) - DataForInegration.TimeAxis1(1))/1000;
+    DataForInegration.TimeStep2 = (DataForInegration.TimeAxis2(2) - DataForInegration.TimeAxis2(1))/1000;
+    DataForInegration.isNotIntegrated  = true;
+        options.fignum = 123213123;surfslices(EchoAxis,TimeAxis2,TimeAxis1,AverageEcho,options)
+
+    %Integrate the echos
+    [IntegratedData] = integrateEcho(DataForInegration,'gaussian');
+    %Restructure the integrated data by sorting to corresponding taus
+    [Dimension1,Dimension2] = size(IntegratedData.Integral);
+    FoldingFactor = numel(unique(TauValues));
+    TauSignals = zeros(FoldingFactor,Dimension1,Dimension2);
+    StartPosition = 1;
+    for FoldingIndex = 1:FoldingFactor
+      TauSignals(FoldingIndex,:,:) = IntegratedData.Integral(:,StartPosition:Dimension2/FoldingFactor*FoldingIndex);
+        StartPosition = Dimension2/FoldingFactor*FoldingIndex + 1;
+    end
+      
+    %Mount data structure with integrated signals
+    MountedData.TauSignals = IntegratedData.Integral;
+    MountedData.TauValues = unique(TauValues);
+    MountedData.AWG_Parameters = AWG_Parameters;
+    MountedData.TimeStep1 = DataForInegration.TimeStep1;
+    MountedData.TimeStep2 = DataForInegration.TimeStep2;
+    
 end
 
 

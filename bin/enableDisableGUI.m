@@ -1,6 +1,7 @@
 function enableDisableGUI(handles,Panel,Action)
 
 switch Panel
+  
   case 'NUSReconstruction'
     set(handles.MaxEntBackgroundParameter,'enable',Action)
     set(handles.BackgroundParameterText,'enable',Action)
@@ -18,6 +19,7 @@ switch Panel
     set(handles.plotNUSgrid,'enable',Action)
     set(handles.plotNUSsignal,'enable',Action)
     set(handles.plotNUSsignalText,'enable',Action)
+    
   case 'Lorent2Gauss'
     set(handles.L2G_sigma,'enable',Action)
     set(handles.L2G_sigma2,'enable',Action)
@@ -28,6 +30,13 @@ switch Panel
     set(handles.L2G_tau,'enable',Action)
     set(handles.L2G_tau2,'enable',Action)
     
+  case 'AutomaticBackground'
+    set(handles.BackgroundStart1,'enable',Action)
+    set(handles.BackgroundStart2,'enable',Action)
     
-    
+  case 'SG-Filtering'
+    set(handles.FilterOrder,'enable',Action)
+    set(handles.FilterOrderText,'enable',Action)
+    set(handles.FrameLength,'enable',Action)
+    set(handles.FrameLengthText,'enable',Action)
 end

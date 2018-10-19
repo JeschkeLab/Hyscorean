@@ -1,5 +1,5 @@
 function [Data] = correctBackground(Data,options)
-% Background correction of 2D-time datasets from TRIER experiments
+% Background correction of 2D-time datasets from TRIER/HYSCORE experiments
 % -----------INPUT------------------------------------------------
 %       Data              Structure containing all relevant variables 
 %           .TimeAxis1    
@@ -226,18 +226,18 @@ Integral = Integral/max(max(Integral));
 
 Data.PreProcessedSignal = Integral';
 
-% If requested, display background corrected 2D-trace
-if options.DisplayCorrected
-  figure(3000)
-  set(gcf,'NumberTitle','off','Name','TrierAnalysis: Background corrected','Units','pixels');   
-  
-  surf(Data.CorrectedTimeAxis2,Data.CorrectedTimeAxis1,Integral)
-  colormap default
-  shading flat
-  xlabel('t_1'),ylabel('t_2')
-  az = 135; el = 40.4000; 
-  view(az,el),drawnow;
-end
+% % If requested, display background corrected 2D-trace
+% if options.DisplayCorrected
+%   figure(3000)
+%   set(gcf,'NumberTitle','off','Name','TrierAnalysis: Background corrected','Units','pixels');   
+%   
+%   surf(Data.CorrectedTimeAxis2,Data.CorrectedTimeAxis1,Integral)
+%   colormap default
+%   shading flat
+%   xlabel('t_1'),ylabel('t_2')
+%   az = 135; el = 40.4000; 
+%   view(az,el),drawnow;
+% end
 
 
 

@@ -15,15 +15,15 @@ figure(12312),clf
 set(gcf,'NumberTitle','off','Name','HYSCORE Blind spot simulator','Position',[Position(1) Position(2) 985 445])
 %Contruct slider
 SliderHandle = uicontrol('units','normalized','position',[0.04 0.08 0.025 0.90],'Style','slider','value',100,...
-                    'min',100,'max',350,'sliderstep',[1/250 1/100],'callback',{@BlindspotsSpoter,TauValues});
+                    'min',100,'max',350,'sliderstep',[1/250 1/250],'callback',{@BlindspotsSpoter,TauValues});
 %Construct pushbutton
 uicontrol('units','normalized','string','Add Tau','position',[0.015 0.01 0.08 0.06],...
           'Style','pushbutton','callback',{@addTau,SliderHandle,TauValues});
 
 %Plot with lowest tau value to construct and initialize the plot
 DummyTauValue = 100/1000;
-BlindSpotsAxis1  = linspace(-SpecLlim,SpecLlim,500);
-BlindSpotsAxis2  = linspace(0,SpecLlim,500);
+BlindSpotsAxis1  = linspace(-SpecLlim,SpecLlim,1000);
+BlindSpotsAxis2  = linspace(0,SpecLlim,1000);
 Dimension1 = length(BlindSpotsAxis1); 
 Dimension2 = length(BlindSpotsAxis2); 
 BlinSpotsMap = zeros(Dimension1,Dimension2);

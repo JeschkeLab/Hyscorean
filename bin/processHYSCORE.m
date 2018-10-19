@@ -36,18 +36,12 @@ if handles.TauSelectionSwitch && strcmp(type,'experimental') %no need to repeate
   %--------------------------------------------------------------------------
   % Integration
   %--------------------------------------------------------------------------
-  
-  if Data.isNotIntegrated
-    options.status = handles.ProcessingInfo;
-    [Data] = integrateEcho(Data,options);
-  else
     Data.Integral = zeros(size(Data.TauSignals,2));
     for TauIndex = 1:length(handles.currentTaus)
       Data.Integral  = Data.Integral  + squeeze(Data.TauSignals(handles.currentIndexes(TauIndex),:,:));
     end
     Data.TimeAxis1 = linspace(0,Data.TimeStep1*size(Data.Integral,1),size(Data.Integral,1));
     Data.TimeAxis2 = linspace(0,Data.TimeStep2*size(Data.Integral,2),size(Data.Integral,2));
-  end
   %Set tau selection icon to check
   set(handles.TauSelectionWaiting,'visible','off')
   set(handles.TauSelectionCheck,'visible','on')
@@ -104,7 +98,6 @@ if handles.backgroundCorrectionSwitch
   options.BackgroundCorrection2D = 0;
   options.ZeroTimeTruncation = get(handles.ZeroTimeTruncation,'Value');
   options.InvertCorrection = get(handles.InvertCorrection,'Value');
-  options.DisplayCorrected = get(handles.DisplayCorrected,'Value');
   options.SavitzkyGolayFiltering = get(handles.SavitzkyFilter,'Value');
   options.SavitzkyOrder = str2double(get(handles.FilterOrder,'string'));
   options.SavitzkyFrameLength = str2double(get(handles.FrameLength,'string'));
@@ -130,8 +123,7 @@ handles.MountDataSwitch = false;
 if Data.NUSflag && handles.ReconstructionSwitch
   
   %Set reconstruction icon to waiting
-  set(handles.ReconstructionWaiting,'visible','on')
-  drawnow;
+  set(handles.ReconstructionWaiting,'visible','on'); drawnow;
   %Update status display
   set(handles.ProcessingInfo, 'String', 'Status: Reconstructing signal'); drawnow;
   %If yes, then reconstruct the signal
