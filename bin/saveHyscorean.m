@@ -94,15 +94,6 @@ reportdata = Settings;
 %Load data into report structure
 reportdata.Processed = handles.Processed;
 reportdata.GraphicalSettings = handles.GraphicalSettings;
-%Add experimental parameters if they have been processed
-if isfield(handles,'ExperimentParameters')
-  reportdata.ExperimentParameters = handles.ExperimentParameters;
-  reportdata.PlotPulses= handles.PlotPulses;
-end
-%Add regularization parameters if they have been employed
-if isfield(handles,'RegularizationParameters')
-  reportdata.RegularizationParameters = handles.RegularizationParameters;
-end
 reportdata.Data = handles.Data;
 reportdata.TauValues = handles.Data.TauValues;
 reportdata.TimeStep1 = handles.Data.TimeStep1;
@@ -110,15 +101,18 @@ reportdata.TimeStep2 = handles.Data.TimeStep2;
 Offset = get(handles.FieldOffset,'string');
 reportdata.FieldOffset = str2double(Offset(1:end-2));
 reportdata.currentTaus = handles.currentTaus;
-reportdata.BrukerParameters = handles.Data.BrukerParameters;
 reportdata.L2GActive = get(handles.Lorentz2GaussCheck,'Value');
 reportdata.mainPlotHandle = handles.mainPlot;
 BackgroundAxis = linspace(min(reportdata.Data.CorrectedTimeAxis1),max(reportdata.Data.CorrectedTimeAxis1),length(reportdata.Data.Background1));      
 reportdata.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
 reportdata.BackgroundStart2 =round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex2),0);
 reportdata.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
+
+%Bruker-spectrometer specific parameters
+if isfield(handles.Data,'BrukerParameters')
+BrukerParameters = handles.Data.BrukerParameters;
 %Extract pulse lengths
-PulseSpelText = reportdata.BrukerParameters.PlsSPELGlbTxt;
+PulseSpelText = BrukerParameters.PlsSPELGlbTxt;
 Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
 Pulse180DefinitionIndex = strfind(PulseSpelText,'p1   = ');
 Shift = 7;
@@ -133,6 +127,33 @@ while ~isspace(PulseSpelText(Pulse180DefinitionIndex + Shift))
 end
 reportdata.Pulse90Length  = str2double(Pulse90String);
 reportdata.Pulse180Length  = str2double(Pulse180String);
+reportdata.MW_Frequency = BrukerParameters.MWFQ/1e9;
+reportdata.ShotRepTime = str2double(BrukerParameters.ShotRepTime(1:strfind(BrukerParameters.ShotRepTime,' ')));
+reportdata.ShotsPerLoop = BrukerParameters.ShotsPLoop;
+reportdata.NbScansDone = BrukerParameters.NbScansDone;
+reportdata.CenterField = str2double(BrukerParameters.CenterField(1:strfind(BrukerParameters.CenterField,' ')));
+reportdata.XDimension = BrukerParameters.XPTS;
+reportdata.YDimension = BrukerParameters.YPTS;
+reportdata.VideoGain = str2double(BrukerParameters.VideoGain(1:strfind(BrukerParameters.VideoGain,' ')));
+reportdata.VideoBandwidth = str2double(BrukerParameters.VideoBW(1:strfind(BrukerParameters.VideoBW,' ')));
+end
+
+%AWG-spectrometer specific parameters
+if isfield(handles.Data,'AWG_Parameters')
+AWG_Parameters = handles.Data.AWG_Parameters;
+reportdata.Pulse90Length  = AWG_Parameters.events{1}.pulsedef.tp;
+reportdata.Pulse180Length  = AWG_Parameters.events{3}.pulsedef.tp;
+reportdata.MW_Frequency = AWG_Parameters.LO + AWG_Parameters.nu_obs;
+reportdata.ShotRepTime = AWG_Parameters.reptime/1e6;
+reportdata.ShotsPerLoop = AWG_Parameters.shots;
+reportdata.NbScansDone = AWG_Parameters.store_avgs;
+reportdata.CenterField = round(AWG_Parameters.B,0);
+reportdata.XDimension = AWG_Parameters.hyscore_t1.dim;
+reportdata.YDimension = AWG_Parameters.hyscore_t2.dim;
+reportdata.VideoGain = NaN;
+reportdata.VideoBandwidth = NaN;
+end
+
 %Store apodization window 
 WindowDecay = str2double(get(handles.Hammingedit,'string'));
     WindowMenuState = get(handles.WindowType,'value');
