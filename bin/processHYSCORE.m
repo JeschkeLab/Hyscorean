@@ -36,7 +36,7 @@ if handles.TauSelectionSwitch && strcmp(type,'experimental') %no need to repeate
   %--------------------------------------------------------------------------
   % Integration
   %--------------------------------------------------------------------------
-    Data.Integral = zeros(size(Data.TauSignals,2));
+    Data.Integral = zeros(size(Data.TauSignals,2),size(Data.TauSignals,3));
     for TauIndex = 1:length(handles.currentTaus)
       Data.Integral  = Data.Integral  + squeeze(Data.TauSignals(handles.currentIndexes(TauIndex),:,:));
     end
