@@ -4,7 +4,6 @@ function MountedData = mountHYSCOREdata(FileNames,handles)
 [~,~,FileExtension] = fileparts(FileNames{1});
 
 set(handles.ProcessingInfo, 'String', 'Status: Preparing data...'); drawnow;
-warning('off','all')
 
 switch FileExtension
   
@@ -121,6 +120,15 @@ switch FileExtension
     %Get unique tau values and folding factor
     UniqueTaus = unique(TauValues);
     FoldingFactor = numel(UniqueTaus);
+    
+%     % Check consistency of Dimension2
+%     for iFile = 2:NFiles
+%       OutputUWB = uwb_eval(FileNames{iFile},options);
+%       if Dimension2 > size(OutputUWB.dta_avg,2) 
+%         %If a file should contain fewer points, reduce dimension 
+%         Dimension2 = size(OutputUWB.dta_avg,2);
+%       end
+%     end
 
     OutputUWB = uwb_eval(FileNames{1},options);
     %Adjust to consistent dimensions
@@ -223,7 +231,8 @@ switch FileExtension
       for FoldingIndex=1:FoldingFactor
         TauSignals(FoldingIndex,:,:)=IntegratedData.Integral(1:end,StartPosition:Dimension2/FoldingFactor*FoldingIndex);
         StartPosition = Dimension2/FoldingFactor*FoldingIndex + 1;
-      end    
+      end
+      
     else
       for Index = 1:FoldingFactor
         %Get all integrals corresponding to current tau-value
@@ -239,15 +248,13 @@ switch FileExtension
         TauSignals(Index,:,:) = CurrentTauIntegral;
       end
     end
-    
     %Mount data structure with integrated signals
     MountedData.TauSignals = TauSignals;
     MountedData.TauValues = unique(TauValues);
     MountedData.AWG_Parameters = AWG_Parameters;
     MountedData.TimeStep1 = DataForInegration.TimeStep1;
     MountedData.TimeStep2 = DataForInegration.TimeStep2;
-    MountedData.NUSflag = isNUS;
-
+    
 end
 
 

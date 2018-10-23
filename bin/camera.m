@@ -1,100 +1,224 @@
-function ReconstructedSignal = camera(Signal,SamplingMatrix,BackgroundParameter)
+function [Reconstruction, FunctionalValues, NumberOfOperations] = camera (Signal,Schedule,NoiseLevel,SingleLagrangeMultiplier,BackgroundParameterVector,MultiplierBackgroundParameter,MaxOutIter,MaxInIter,NZeroFillings,Weights)
+%--------------------------------------------------------------------------  
+% Convex Accelerated Maximum Entropy Reconstruction (CAMERA)
 %--------------------------------------------------------------------------
-%Convex Accelerated Maximum Entropy Reconstruction Algorithm (CAMERA)
-%--------------------------------------------------------------------------
-%Algorithm for the regularization/reconstruction of time-domain signals
-%obtained by non-uniform sampling (NUS). This method requires on-grid NUS. 
-%Adapted from:
-% [1] B. Worley, JMR 265, (2016), 90-98
-%Luis Fabregas, TrierAnalysis 2018
-%--------------------------------------------------------------------------
+% Algorithm for the reconstruction of one- or two-dimensional non-uniformly
+% sampled (NUS) signals basde on maximization of the Hoch-Hore entropy [1].
+% The signal is zero-filled during the procedure to double (or more) its 
+% dimension size and after reconstruction it is truncated to its original 
+% size.
+%
+% Literature:
+%   [1] B. Worley, Journal of Magnetic Resonance 265, (2016), 90-98
+%
+% Adapted from Bradley Worley under the GNU GPL 3.0. license.
+% by
+% Luis Fabregas Ibanez, 2018  
 
-if size(Signal) > size(SamplingMatrix)
-  error('Dimensionality of sampling matrix cannot exceed that of the measured signal.')
+if (nargin < 2)
+  error('At least two arguments are required');
 end
 
-if nargin<3
-  warning('No input background parameter given. Assuming a default value of 1.')
-  BackgroundParameter = 1;
+% Check whether one or two dimensional reconstruction
+if ~isvector(Signal) || ~isvector(Schedule)
+  isTwoDimensional = true;
+else
+  isTwoDimensional = false;
 end
 
+%Store the input vector lengths.
+ScheduleLength = length(Schedule);
+SignalDimension = length(Signal);
+
+% check for an estimated noise argument.
+if (nargin < 3 || isempty(NoiseLevel))
+  % none supplied, use a default value.
+  NoiseLevel = 1e-6 * norm(Signal);
+end
+
+% check for a lagrange multiplier argument.
+if (nargin < 4)
+  % none supplied, use a default value.
+  SingleLagrangeMultiplier = [];
+end
+
+% check for a default background argument.
+if (nargin < 5 || isempty(BackgroundParameterVector))
+  % none supplied, use a default value.
+  BackgroundParameterVector = 0.1 * NoiseLevel;
+end
+
+% check for a default line search argument.
+if (nargin < 6 || isempty(MultiplierBackgroundParameter))
+  % none supplied, use a default value.
+  MultiplierBackgroundParameter = 1;
+end
+
+% check for an outer loop count argument.
+if (nargin < 7 || isempty(MaxOutIter))
+  % none supplied, use a default value.
+  MaxOutIter = 1;
+end
+
+% check for an inner loop count argument.
+if (nargin < 8 || isempty(MaxInIter))
+  % none supplied, use a default value.
+  MaxInIter = 5000;
+end
+
+% check for a zero-fill count argument.
+if (nargin < 9 || isempty(NZeroFillings))
+  % none supplied, use a default value.
+  NZeroFillings = 1;
+end
+
+% check for a weight argument.
+if (nargin < 10 || isempty(Weights))
+  % none supplied, use a default value.
+  Weights = @(idx) 1;
+end
+
+%--------------------------------------------------------------------------
 % Preparations
-%----------------------------------------------------------------------
-%Check if signal is zero-agumented
-if size(Signal) ~= size(SamplingMatrix)
-  %If not perform zero-augmentation according to sampling matrix
-  Signal = zeroAugmentation(Signal,SamplingMatrix);
+%--------------------------------------------------------------------------
+
+% Set the output size.
+OutputDimension = (2 ^ NZeroFillings) * SignalDimension;
+
+%Increase dimensions of all variables
+if isTwoDimensional
+  SubSamplingGrid = zeros(OutputDimension);
+  ZeroFiller = zeros(OutputDimension);
+  ZeroFiller(1:size(Signal,1),1:size(Signal,2)) = Signal;
+  Signal  = ZeroFiller;
+  for i=1:size(Schedule,1)
+    SubSamplingGrid(Schedule(i,1),Schedule(i,2)) = 1;
+  end
+else
+  SubSamplingGrid = zeros(OutputDimension,1);
+  Signal = [Signal; zeros(OutputDimension - SignalDimension, 1)];
+  SubSamplingGrid(Schedule) = ones(size(Schedule));
 end
 
-%Get constants
-Dimension1 = size(Signal,1);
-Dimension2 = size(Signal,2);
-%Noise deviation requires large numbers (1e6 - 1e9) in order to obtain good results
-NoiseDeviation = 7e9;
-EstimatedUncertainty = NoiseDeviation*sqrt(length(find(SamplingMatrix>0)));
 
-%Initialize reconstruction models to zero-augmented signal
-ReconstructedSignal = Signal;
-ProjectedProximalStep = ReconstructedSignal;
+% build a weighting vector.
+W = Weights([0 : OutputDimension - 1]');
 
-%Construct upper Lipschitz constant boundary
-LipschitzBound = 1/(2*BackgroundParameter);
-%Automatically initiallize Lipschitz constant (reduce the initial constant to accelerate line search)
-LipschitzConstant = LipschitzBound*1e-4;
+% build easy-to-understand transformation variables.
+A = SubSamplingGrid .* W;
+At = W .* SubSamplingGrid;
+AtA = (W .^ 2) .* SubSamplingGrid;
 
-% CAMERA Iterations
-%----------------------------------------------------------------------
-for Iteration = 1:1000
+% build an epsilon value.
+vareps = sqrt(2 * ScheduleLength) * NoiseLevel;
+
+% initialize the objective value vector.
+FunctionalValues = [];
+
+% initialize the operation count vector.
+NumberOfOperations = 0;
+
+%Initialize the reconstruction vectors.
+Reconstruction = Signal;
+y = Signal;
+
+%Check that the defs vector is the correct size.
+if (length(BackgroundParameterVector) ~= MaxOutIter)
+  BackgroundParameterVector = repmat(BackgroundParameterVector(1), MaxOutIter, 1);
+end
+
+%--------------------------------------------------------------------------
+% Algorithm
+%--------------------------------------------------------------------------
+
+% Loop over the outer indices.
+for OuterIteration = 1 : MaxOutIter
+  % Get the background paremeter value and compute the Lipschitz constant.
+  CurrentBackgroundParameter = BackgroundParameterVector(OuterIteration);
+  TresholdBackgroundparameter = 0.5 / CurrentBackgroundParameter;
+  LipschitzConstant = 0.5 / (CurrentBackgroundParameter * MultiplierBackgroundParameter);
   
-  %Allocate hypercomplex modulus of the reconstructed spectrum
-  HyperComplexModulus = abs(fft2(ReconstructedSignal));
+  % Compute the initial spectral estimate.
+  ReconstructedSpectrum = fft2(Reconstruction);
+  NumberOfOperations(end) = NumberOfOperations +1;
   
-  %Compute Hoch-Hore entropy and entropy gradient
-  Entropy = HyperComplexModulus.*log(HyperComplexModulus/(2*BackgroundParameter) + ...
-    sqrt(1 + (HyperComplexModulus/(2*BackgroundParameter)).^2)) + sqrt(HyperComplexModulus.^2 + 4*BackgroundParameter^2);
-  
-  EntropyGradient = fft2(ReconstructedSignal)./HyperComplexModulus.*log(HyperComplexModulus/(2*BackgroundParameter) + ...
-    sqrt(1 + (HyperComplexModulus/(2*BackgroundParameter)).^2));
-  
-  %Transform entropy gradient into time-domain
-  TimeDomainGradient = -ifft2(EntropyGradient);
-  
-  %Store current proximal step before updating
-  PreviousProjectedProximalStep = ProjectedProximalStep;
-  
-  while true
+  % Loop over the inner indices.
+  for InnerIteration = 1 : MaxInIter
+    % Get functional state and gradient
+    [CurrentFunctionalValue, SpectralGradient] = camera_functional(ReconstructedSpectrum, CurrentBackgroundParameter);
+    FunctionalValues = [FunctionalValues; CurrentFunctionalValue];
     
-    %Compute Lagrange multiplier
-    LagrangeMultiplier = LipschitzConstant/EstimatedUncertainty*norm(Signal - SamplingMatrix*ReconstructedSignal + ...
-      1/LipschitzConstant*SamplingMatrix*TimeDomainGradient) - LipschitzConstant;
-    %Project the Lagrange multipliers into positive orthant
-    if LagrangeMultiplier < 0
-      LagrangeMultiplier = 0;
+    % Compute and store the time-domain gradient.
+    Gradient = OutputDimension .* ifft2(SpectralGradient);
+    NumberOfOperations(end) =  NumberOfOperations +1;
+    
+    % Compute the velocity factor.
+    VelocityFactor = (InnerIteration - 1) / (InnerIteration + 2);
+    
+    ok =1;
+    % Line-search loop
+    while ok
+      % compute a projected gradient update.
+      if (isempty(SingleLagrangeMultiplier))
+        LagrangeMultiplier = max(0, (LipschitzConstant/vareps) .* norm(Signal - A .* (Reconstruction - Gradient ./ LipschitzConstant)) - LipschitzConstant);
+      else
+        LagrangeMultiplier = SingleLagrangeMultiplier;
+      end
+      ReconstructionUpdate = (1 ./ (1 + (LagrangeMultiplier / LipschitzConstant) .* AtA)) .* ...
+        (Reconstruction + (LagrangeMultiplier / LipschitzConstant) .* At .* Signal - Gradient ./ LipschitzConstant);
+      
+      % compute a potential x-update.
+      ReconstructionUpdate = (1 + VelocityFactor) .* ReconstructionUpdate - VelocityFactor .* y;
+      ReconstructedSpectrum = fft2(ReconstructionUpdate);
+      NumberOfOperations(end) =  NumberOfOperations +1;
+      
+      %Check for a primary termination criterion.
+      ok = 1;
+      if (LipschitzConstant >= TresholdBackgroundparameter)
+        break; % Breaks while loop
+      end
+      
+      %Check for a secondary termination criterion.
+      [NewFunctionalValue, ~] = camera_functional(ReconstructedSpectrum, CurrentBackgroundParameter);
+      if (NewFunctionalValue > CurrentFunctionalValue)
+        % backtrack by a fixed factor of two.
+        LipschitzConstant = min(TresholdBackgroundparameter, 2 * LipschitzConstant);
+        ok = 0;
+      end
     end
-    %Update the projected proximal step
-    ProjectedProximalStep = (eye(Dimension1,Dimension2) +  LagrangeMultiplier/LipschitzConstant*(SamplingMatrix')*SamplingMatrix)...
-      \(ReconstructedSignal + LagrangeMultiplier/LipschitzConstant*Signal -  1/LipschitzConstant*TimeDomainGradient);
+    % store the accepted new values.
+    y = (ReconstructionUpdate + VelocityFactor .* y) ./ (1 + VelocityFactor);
+    Reconstruction = ReconstructionUpdate;
     
-    %Update the reconstructed time-domain signal
-    ReconstructedSignal = ProjectedProximalStep + (Iteration - 1)/(Iteration + 2)*(ProjectedProximalStep - PreviousProjectedProximalStep);
-    
-    %Compute the corresponding entropy
-    HyperComplexModulus = abs(fft2(ReconstructedSignal));
-    NewEntropy = HyperComplexModulus.*log(HyperComplexModulus/(2*BackgroundParameter) + ...
-      sqrt(1 + (HyperComplexModulus/(2*BackgroundParameter)).^2)) + sqrt(HyperComplexModulus.^2 + 4*BackgroundParameter^2);
-    
-    %If the new iterate has produced a decrease in Hoch-Hore entropy
-    %or
-    %Lipschitz constant has reached its boundary go to next iterate
-    if -sum(sum(NewEntropy)) > -sum(sum(Entropy)) || LipschitzConstant==LipschitzBound
-      break;
+    %Check for a final termination criterion
+    if InnerIteration>500
+      FunctionalDecrease = FunctionalValues(end)-FunctionalValues(end-1);
+      if abs(FunctionalDecrease) < FunctionalValues(1)/1e6
+        break; % Finishes algorithm
+      end
     end
     
-    %Otherwise update the local Lipschitz constant and restart the iteration
-    LipschitzConstant = 2*LipschitzConstant;
-    if LipschitzConstant > LipschitzBound
-      LipschitzConstant = LipschitzBound;
-    end
   end
   
+  % update the operation count vector.
+  NumberOfOperations = NumberOfOperations +1;
+end
+
+%--------------------------------------------------------------------------  
+% Truncate & Return
+%--------------------------------------------------------------------------
+
+if isTwoDimensional
+  for i=(SignalDimension + 1):size(Reconstruction,2)
+    Reconstruction(:, SignalDimension + 1) = [];
+  end
+  for i=(SignalDimension + 1):size(Reconstruction,1)
+    Reconstruction(SignalDimension + 1, :) = [];
+  end
+else
+  Reconstruction(SignalDimension + 1 : end) = [];
+end
+
+% Truncate the operation count vector.
+NumberOfOperations(end) = [];
 end

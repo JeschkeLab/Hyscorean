@@ -1259,6 +1259,8 @@ function MultiTauDimensions_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns MultiTauDimensions contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from MultiTauDimensions
 handles.TauSelectionSwitch = true;
+handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch = true;
   set(handles.TauSelectionCheck,'visible','off')
   set(handles.BackgroundCorrectionCheck,'visible','off')
   set(handles.ReconstructionCheck,'visible','off')

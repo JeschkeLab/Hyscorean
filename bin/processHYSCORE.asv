@@ -103,29 +103,7 @@ if handles.backgroundCorrectionSwitch
   options.SavitzkyFrameLength = str2double(get(handles.FrameLength,'string'));
   
   set(handles.ProcessingInfo, 'String', 'Status: Correct background'); drawnow;
-  
-  if Data.NUSflag
-  [Dimension1,Dimension2] = size(Data.Integral);
-  for i=1:Dimension1
-    for j=1:Dimension2
-      if Data.AWG_Parameters.NUS.SamplingGrid(i,j) ==0
-        Data.Integral(i,j) = NaN;
-      end
-    end
-  end
-  end
-  
   [Data] = correctBackground(Data,options);
-  
-  if Data.NUSflag
-    for i=1:Dimension1
-    for j=1:Dimension2
-      if isnan(Data.PreProcessedSignal(i,j))
-        Data.PreProcessedSignal(i,j) = 0;
-      end
-    end
-    end
-  end
   %Set background correction icon to check
   set(handles.BackgroundCorrectionWaiting,'visible','off')
   set(handles.BackgroundCorrectionCheck,'visible','on')
@@ -151,11 +129,11 @@ if Data.NUSflag && handles.ReconstructionSwitch
   %If yes, then reconstruct the signal
   switch get(handles.ReconstructionAlgorithm,'Value')
     case 1 %CAMERA Reconstruction
-      [Rows,Columns] = find(Data.AWG_Parameters.NUS.SamplingGrid==1);
+      [Rows,Columns] = find(NUSgrid==1);
       Schedule = [Rows,Columns];
-      Data.ReconstructedSignal = camera(Data.PreProcessedSignal,Schedule);
-    case 5 %IST-D Reconstruction
-      Data.ReconstructedSignal = istd(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.99,5000);
+      Data.ReconstructedSignal = camera(Data.PreProcessedSignal,Schedule,BackgroundParameter);
+    case 2 %Simple MaxEnt Reconstruction
+      Data.ReconstructedSignal =  maxEntReconstruction(Data.PreProcessedSignal,BackgroundParameter,LagrangeMultiplier);
   end
   %Once processed turn the switch to the reconstruction off (will be turned on if parameters in pre-processing changed)
   handles.ReconstructionSwitch = false;

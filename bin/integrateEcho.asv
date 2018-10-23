@@ -25,26 +25,16 @@ switch Integration
 % Gaussian-Fit Integration
 %--------------------------------------------------------------------------
   case 'gaussian'
-    Pos = 1;
-    Pos2 = 1;
-    while sum(AverageEcho(:,Pos,Pos2)) == 0
-      Pos = Pos+1;
-      if Pos > size(AverageEcho,2)
-        Pos = 1;
-        Pos2 = Pos2+1;
-      end
-    end
-    
     %Gaussian fit of the first echo (for better SNR)
     AverageEchoFitted = zeros(size(AverageEcho));
     FitTimeAxis = EchoAxis(TimeIndex:end - TimeIndex);
-    FitData = abs(squeeze(AverageEcho(TimeIndex:end - TimeIndex,Pos,Pos2)));
+    FitData = abs(squeeze(AverageEcho(TimeIndex:end - TimeIndex,1,1)));
     GaussianWindow = fit(FitTimeAxis,FitData,'gauss1');
     %Normalize window
     GaussianWindow = GaussianWindow(EchoAxis)/max(GaussianWindow(EchoAxis));
     %Apply to first echo
-
-    AverageEchoFitted(:,Pos,1) = GaussianWindow.*AverageEcho(:,1,1);
+    while sum( AverageEchoFitted(:,1,1)) ==0
+    AverageEchoFitted(:,1,1) = GaussianWindow.*AverageEcho(:,1,1);
     
     for iDimension2 = 1 : size(AverageEcho,2)
       for iDimension3 = 1: size(AverageEcho,3)
@@ -53,7 +43,7 @@ switch Integration
       end
       %Update on the status of integration
       if isfield(options,'status')
-      set(options.status, 'String', sprintf('Status: Integr. Echoes %2.1f%%',iDimension2/size(AverageEcho,2)*100)); drawnow;
+      set(options.status, 'String', sprintf('Status: Integrating Echo %2.1f%%',iDimension2/size(AverageEcho,2)*100)); drawnow;
       end
     end
     %Integration of the gaussian fits of the echos
@@ -71,7 +61,7 @@ end
 plot([-options.FittingTime, -options.FittingTime],[0, 1],'b--','LineWidth',1.5)
 hold on
 plot([options.FittingTime, options.FittingTime],[0, 1],'b--','LineWidth',1.5)
-plot(EchoAxis,abs(AverageEcho(:,Pos,Pos2))/max(abs(AverageEcho(:,1,1))),'k','LineWidth',1)
+plot(EchoAxis,abs(AverageEcho(:,end,end))/max(abs(AverageEcho(:,1,1))),'k','LineWidth',1)
 plot(EchoAxis,GaussianWindow,'r','LineWidth',1)
 xlabel('Echo Time Axis [ns]'),ylabel('Intensity')
 set(gca,'fontsize',9)
@@ -87,18 +77,18 @@ drawnow;
 Data.Integral = real(Integral/max(max(Integral)));
 
 % Time axis, no zero time adaption
-% Data.TimeAxis1 = Data.TimeAxis1 - min(Data.TimeAxis1);
-% Data.TimeAxis2 = Data.TimeAxis2 - min(Data.TimeAxis2);
+Data.TimeAxis1 = Data.TimeAxis1 - min(Data.TimeAxis1);
+Data.TimeAxis2 = Data.TimeAxis2 - min(Data.TimeAxis2);
 
 % If requested, display integral
-%   figure(2000)
-%   set(gcf,'NumberTitle','off','Name','TrierAnalysis: Echo integrals','Units','pixels');
-%   surf(Data.TimeAxis1,Data.TimeAxis2,Data.Integral)
-%   shading flat
-%   xlabel('t_1 [ns]')
-%   ylabel('t_2 [ns]')
-%   az = 135; el = 40.4000; 
-%   view(az,el)
+  figure(2000)
+  set(gcf,'NumberTitle','off','Name','TrierAnalysis: Echo integrals','Units','pixels');
+  surf(Data.TimeAxis1,Data.TimeAxis2,Data.Integral)
+  shading flat
+  xlabel('t_1 [ns]')
+  ylabel('t_2 [ns]')
+  az = 135; el = 40.4000; 
+  view(az,el)
 
 
 end
