@@ -65,15 +65,21 @@ if handles.PlotProcessedSignal
   %Switch to change between t1 and t2 traces
   if get(handles.ChangeSignalPlotDimension,'Value')
     ProcessedSignalTrace = Processed.Signal(SliderPosition,:);
+    TimeAxis = TimeAxis2';
   else
     ProcessedSignalTrace = Processed.Signal(:,SliderPosition);
+    TimeAxis = TimeAxis1';
   end
   if  PlotWithZeroFilling
     ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace));
   else
-    ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling1,'String')));
+      if get(handles.ChangeSignalPlotDimension,'Value')
+    ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling2,'String')));
+      else
+        ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling1,'String')));
+      end
   end
-  plot(handles.signal_t1,TimeAxis1',ProcessedSignalTrace,'k','Linewidth',1)
+  plot(handles.signal_t1,TimeAxis,ProcessedSignalTrace,'k','Linewidth',1)
 end
 
 % First background correction 
@@ -112,7 +118,7 @@ if get(handles.NonCorrectedTrace,'value')
   XCoordinate = Axis(handles.Data.BackgroundStartIndex1)*[1 1];
   YCoordinate = [1.1*ylimMin 1.1*ylimMax];
   line(handles.signal_t1,XCoordinate,YCoordinate,'Color',[0.2 0.2 0.9],'LineStyle','--')
-  text(1.1*Axis(handles.Data.BackgroundStartIndex1),ylimMin,sprintf('%i ns',round(1000*Axis(handles.Data.BackgroundStartIndex1),0)),'Color',[0.2 0.2 0.9])
+  text(handles.signal_t1,1.1*Axis(handles.Data.BackgroundStartIndex1),ylimMin,sprintf('%i ns',round(1000*Axis(handles.Data.BackgroundStartIndex1),0)),'Color',[0.2 0.2 0.9])
   hold(handles.signal_t1,'on')
 end
 
@@ -152,7 +158,7 @@ if PlotSecondCorrection
   XCoordinate = Axis(handles.Data.BackgroundStartIndex2)*[1 1];
   YCoordinate = [1.1*ylimMin 1.1*ylimMax];
   line(handles.signal_t1,XCoordinate,YCoordinate,'Color',[0.6 0.0 0.8],'LineStyle','--')
-  text(1.1*Axis(handles.Data.BackgroundStartIndex2),ylimMax,sprintf('%i ns',round(1000*Axis(handles.Data.BackgroundStartIndex2),0)),'Color',[0.6 0.0 0.8])
+  text(handles.signal_t1,1.1*Axis(handles.Data.BackgroundStartIndex2),ylimMax,sprintf('%i ns',round(1000*Axis(handles.Data.BackgroundStartIndex2),0)),'Color',[0.6 0.0 0.8])
   hold(handles.signal_t1,'on')
   
 end
@@ -231,12 +237,24 @@ set(handles.signal_t1,'ytick',[],'ylim',[1.1*ylimMin 1.1*ylimMax],'xlim',[min(Ti
 %Format axis labels and trace information according to current dimension
 if get(handles.ChangeSignalPlotDimension,'Value')
   set(handles.signal_t1,'xlim',[min(TimeAxis2) max(TimeAxis2)])
-  set(handles.signal_t1,'xtick',round(linspace(TimeAxis2(1),TimeAxis2(end),10),1))
+  try
+    %Try to use 1 digit after comma
+    set(handles.signal_t1,'xtick',round(linspace(TimeAxis2(1),TimeAxis2(end),10),1))
+  catch
+    %If not possible use 2 digits
+    set(handles.signal_t1,'xtick',round(linspace(TimeAxis2(1),TimeAxis2(end),10),2))
+  end
   xlabel(handles.signal_t1,'t_2 [\mus]','FontSize',8);
   set(handles.trace2Info,'string',sprintf('Trace along t2 at t1 = %g ns',round(1000*Processed.TimeAxis1(SliderPosition),1)))
 else
   set(handles.signal_t1,'xlim',[min(TimeAxis1) max(TimeAxis1)])
-  set(handles.signal_t1,'xtick',round(linspace(TimeAxis1(1),TimeAxis1(end),10),1))
+  try
+    %Try to use 1 digit after comma
+    set(handles.signal_t1,'xtick',round(linspace(TimeAxis1(1),TimeAxis1(end),10),1))
+  catch
+    %If not possible use 2 digits
+    set(handles.signal_t1,'xtick',round(linspace(TimeAxis1(1),TimeAxis1(end),10),2))
+  end
   xlabel(handles.signal_t1,'t_1 [\mus]','FontSize',8);
   set(handles.trace2Info,'string',sprintf('Trace along t1 at t2 = %g ns',round(1000*Processed.TimeAxis2(SliderPosition),1)))
 end
