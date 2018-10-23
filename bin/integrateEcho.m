@@ -56,17 +56,17 @@ switch Integration
     Integral = squeeze(sum(AverageEcho(TimeIndex:end-TimeIndex,:,:),1));
 end
 
-try  figure(125124),clf
+  figure(125124),set(gcf,'Color','w'),clf
 plot([-options.FittingTime, -options.FittingTime],[0, 1],'b--','LineWidth',1.5)
 hold on
 plot([options.FittingTime, options.FittingTime],[0, 1],'b--','LineWidth',1.5)
-plot(EchoAxis,abs(AverageEcho(:,1,1))/max(abs(AverageEcho(:,1,1))),'k','LineWidth',1)
+plot(EchoAxis,abs(AverageEcho(:,end,end))/max(abs(AverageEcho(:,1,1))),'k','LineWidth',1)
 plot(EchoAxis,GaussianWindow,'r','LineWidth',1)
-set(gca,'fontsize',9,'YTickLabel',[],'XTickLabel',[])
+xlabel('Echo Time Axis [ns]'),ylabel('Intensity')
+set(gca,'fontsize',9)
 hold off
 drawnow;
-catch 
-end
+
 
 %--------------------------------------------------------------------------
 % Return

@@ -1,7 +1,9 @@
-function MountedData = mountHYSCOREdata(FileNames)
+function MountedData = mountHYSCOREdata(FileNames,handles)
 
 %Check extension of file to know how to mount data
 [~,~,FileExtension] = fileparts(FileNames{1});
+
+set(handles.ProcessingInfo, 'String', 'Status: Preparing data...'); drawnow;
 
 switch FileExtension
   
@@ -69,7 +71,6 @@ switch FileExtension
   % AWG Spectrometer Files
   %------------------------------------------------------------------------
   case '.mat'
-    
     NFiles = length(str2double(FileNames));
     %Preallocate first time axis vector
     TimeAxis1 = zeros(NFiles,1);
@@ -78,7 +79,7 @@ switch FileExtension
     %Check if data is NUS and proceed
     if isfield(Measurement.hyscore,'NUS')
       %If NUS data, then launch appropiate mounter and return to main function
-      [MountedData]=mountNUSdata(FileNames,options);
+      [MountedData]=mountNUSdata(FileNames);
       return
     else
       MountedData.NUSflag = false;
@@ -90,7 +91,6 @@ switch FileExtension
     [Dimension1, Dimension2] = size(OutputUWB.dta_avg);
     % Get time axis of echo
     EchoAxis = OutputUWB.t_ax;
-    
     % Check consistency of Dimension1  
     for iFile = 2:NFiles
       OutputUWB = uwb_eval(FileNames{iFile},options);
@@ -142,6 +142,7 @@ switch FileExtension
 
     % Repeat for remaining files
     for iFile = 2:NFiles
+      set(handles.ProcessingInfo, 'String', sprintf('Status: Mounting file %i/%i',iFile,NFiles)); drawnow;
       OutputUWB = uwb_eval(FileNames{iFile},options);
       OutputUWB.dta_avg = OutputUWB.dta_avg(1:Dimension1,1:Dimension2);
       % Write traces
@@ -173,7 +174,8 @@ switch FileExtension
         options.fignum = 123213123;surfslices(EchoAxis,TimeAxis2,TimeAxis1,AverageEcho,options)
 
     %Integrate the echos
-    [IntegratedData] = integrateEcho(DataForInegration,'gaussian');
+    options.status = handles.ProcessingInfo;
+    [IntegratedData] = integrateEcho(DataForInegration,'gaussian',options);
     %Restructure the integrated data by sorting to corresponding taus
     [Dimension1,Dimension2] = size(IntegratedData.Integral);
     FoldingFactor = numel(unique(TauValues));
@@ -185,7 +187,7 @@ switch FileExtension
     end
       
     %Mount data structure with integrated signals
-    MountedData.TauSignals = IntegratedData.Integral;
+    MountedData.TauSignals = TauSignals;
     MountedData.TauValues = unique(TauValues);
     MountedData.AWG_Parameters = AWG_Parameters;
     MountedData.TimeStep1 = DataForInegration.TimeStep1;

@@ -100,7 +100,9 @@ function varargout = Hyscorean_OutputFcn(hObject, eventdata, handles)
 plot(handles.mainPlot,-50:1:50,abs(-50:1:50),'k-.'),grid(handles.mainPlot,'on')
 hold(handles.mainPlot,'on')
 axes(handles.Icon)
-[matlabImage,~,Alpha] = imread('D:\lufa\projects\Hyscorean\Hyscorean 1.0\bin\trial2.png');
+Path =  which('Hyscorean');
+Path = [Path(1:end-11) 'bin\'];
+[matlabImage,~,Alpha] = imread(fullfile(Path,'logo.png'));
 image(matlabImage,'AlphaData',Alpha)
 axis off
 axis image

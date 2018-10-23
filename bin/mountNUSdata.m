@@ -20,15 +20,14 @@ function [Data]=mountNUSdata(RawData,options)
 
 % Experimental NUS data
 %----------------------------------------------------------------------
-switch options.type
-  case 'experimental'
-    
+
+    warning('off','all')
     NFiles = length(str2double(RawData));
     %Preallocate time axis1 vector
     TimeAxis1 = zeros(NFiles,1);
     % Preprocess measurement data of first file with uwb_eval and set up data container
     Measurement = load(RawData{1});
-    PulseSequence = Measurement.trier.events;
+    PulseSequence = Measurement.hyscore.events;
     % Evaluate data from the AWG spectrometer
     options.plot = 0;
     OutputUWB = uwb_eval(RawData{1},options);
@@ -122,16 +121,3 @@ switch options.type
       assignin('base', 'EchoAxis2', EchoAxis);
 
     end
-
-% Simulated NUS data
-%----------------------------------------------------------------------    
-  case 'simulation'
-    %Directly mount Data structure
-    Data.NUSflag = true;
-    Data.PreProcessedSignal = RawData.Signal;
-    Data.SamplingGrid = RawData.SamplingMatrix;
-    Data.TimeAxis1 = RawData.t1;
-    Data.TimeAxis2 = RawData.t2;
-    Data.TimeStep1 = Data.TimeAxis1(2) - Data.TimeAxis1(1);
-    Data.TimeStep2 = Data.TimeAxis2(2) - Data.TimeAxis2(1);
-end
