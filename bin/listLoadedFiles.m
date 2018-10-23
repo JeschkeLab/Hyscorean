@@ -1,4 +1,4 @@
-function  [RawData,FilePaths] = listLoadedFiles(RawData,FilePaths)
+function  [RawData,FilePaths,SelectionMade] = listLoadedFiles(RawData,FilePaths)
 
 
 str = FilePaths.Files;

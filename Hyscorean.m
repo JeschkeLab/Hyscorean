@@ -99,6 +99,11 @@ function varargout = Hyscorean_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 plot(handles.mainPlot,-50:1:50,abs(-50:1:50),'k-.'),grid(handles.mainPlot,'on')
 hold(handles.mainPlot,'on')
+axes(handles.Icon)
+[matlabImage,~,Alpha] = imread('D:\lufa\projects\Hyscorean\Hyscorean 1.0\bin\trial2.png');
+image(matlabImage,'AlphaData',Alpha)
+axis off
+axis image
 plot(handles.mainPlot,zeros(length(0:50),1),abs(0:50),'k-')
 hold(handles.mainPlot,'off')
 set(handles.mainPlot,'xticklabel',[],'yticklabel',[])
@@ -157,13 +162,10 @@ set(handles.FieldOffsetTag,'enable','off')
 set(handles.FieldOffset,'enable','off')
 set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'off')
 set(handles.trace2Info,'string','')
-
-
 handles.TauSelectionSwitch = true;
 handles.backgroundCorrectionSwitch = true;
 handles.ReconstructionSwitch  = true;
 handles.MountDataSwitch  = true;
-
    set(handles.TauSelectionCheck,'visible','off')
    set(handles.BackgroundCorrectionCheck,'visible','off')
    set(handles.ReconstructionCheck,'visible','off')
@@ -178,8 +180,9 @@ else
   resetPlots(handles);
   enableDisableGUI(handles,'NUSReconstruction','off')
 end
+ set(handles.ProcessingInfo, 'String', 'Status: Loading...');drawnow
 
-handles.Data = mountHYSCOREdata(handles.FileNames);
+handles.Data = mountHYSCOREdata(handles.FileNames,handles);
 TauValues = handles.Data.TauValues;
 
 [handles.Selections,handles.Data.Combinations] = getTauCombinations(TauValues);
@@ -188,14 +191,14 @@ TauValues = handles.Data.TauValues;
 
  set(handles.MultiTauDimensions,'String',handles.Selections);
  set(handles.ZeroFilling1,'String',2*size(handles.Data.TauSignals,2));
- set(handles.ZeroFilling2,'String',2*size(handles.Data.TauSignals,2));
+ set(handles.ZeroFilling2,'String',2*size(handles.Data.TauSignals,3));
  set(handles.Hammingedit,'String',size(handles.Data.TauSignals,2));
 
   %Check if data is NUS and activate the panels in the GUI
   if handles.Data.NUSflag
     enableDisableGUI(handles,'NUSReconstruction','on')
   end
- set(handles.ProcessingInfo, 'String', 'Status: Data Loaded');drawnow
+ set(handles.ProcessingInfo, 'String', 'Status: Ready');drawnow
 
 % Save the handles structure.
 guidata(hObject,handles)
@@ -297,10 +300,57 @@ function DisplayLoadedFiles_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 try
-  [handles.FileNames,handles.FilePaths] = listLoadedFiles(handles.FileNames,handles.FilePaths);
+  [handles.FileNames,handles.FilePaths,CancelFlag] = listLoadedFiles(handles.FileNames,handles.FilePaths);
+  if CancelFlag
+    %If data has been reloaded and there exists and old processed spectrum,
+%remove all the associated data
+if isfield(handles,'Processed')
+  handles = rmfield(handles,'Processed');
+end
+%Reset/Disable graphical handles so that no errors appear if called
+set(handles.PreProcessedTrace,'visible','off')
+set(handles.NonCorrectedTrace,'visible','off')
+set(handles.PlotApodizationWindow,'visible','off')
+set(handles.DetachSignalPlot,'visible','off')
+set(handles.ChangeSignalPlotDimension,'visible','off')
+set(handles.t1_Slider,'enable','off')
+set(handles.ImposeBlindSpots,'enable','off')
+set(handles.AddHelpLine,'enable','off')
+set(handles.AddTag,'enable','off')
+set(handles.AddTagList,'enable','off')
+set(handles.ClearTags,'enable','off')
+set(handles.FieldOffsetTag,'enable','off')
+set(handles.FieldOffset,'enable','off')
+set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'off')
+set(handles.trace2Info,'string','')
+handles.TauSelectionSwitch = true;
+handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
+handles.MountDataSwitch  = true;
+   set(handles.TauSelectionCheck,'visible','off')
+   set(handles.BackgroundCorrectionCheck,'visible','off')
+   set(handles.ReconstructionCheck,'visible','off')
+   set(handles.TauSelectionWaiting,'visible','off')
+   set(handles.BackgroundCorrectionWaiting,'visible','off')
+      drawnow
+      resetPlots(handles);
+  enableDisableGUI(handles,'NUSReconstruction','off')
   set(handles.LoadedData, 'String', sprintf('%d File(s) Loaded',length(handles.FileNames)));drawnow;
-  handles.EchoIntegrationSwitch = true;
   guidata(hObject, handles);
+  handles.Data = mountHYSCOREdata(handles.FileNames,handles);
+TauValues = handles.Data.TauValues;
+
+[handles.Selections,handles.Data.Combinations] = getTauCombinations(TauValues);
+
+ set(handles.MultiTauDimensions,'enable','on');
+
+ set(handles.MultiTauDimensions,'String',handles.Selections);
+ set(handles.ZeroFilling1,'String',2*size(handles.Data.TauSignals,2));
+ set(handles.ZeroFilling2,'String',2*size(handles.Data.TauSignals,3));
+ set(handles.Hammingedit,'String',size(handles.Data.TauSignals,2));
+set(handles.ProcessingInfo, 'String', 'Status: Ready'); drawnow;
+
+ end
 catch
   return
 end
@@ -1257,9 +1307,13 @@ function AddHelpLine_Callback(hObject, eventdata, handles)
 %Get gyromagnetic ratio from selected nuclei
 gyromagneticRatio = getgyro(get(handles.AddTagList,'Value'));
 %Get center field in gauss
-CenterField = handles.Data.BrukerParameters.CenterField; 
-%Remove units character and convert to double
-CenterField = str2double(CenterField(1:end-2));
+if isfield(handles.Data,'BrukerParameters')
+  CenterField = handles.Data.AWG_Parameters.CenterField;
+  %Remove units character and convert to double
+  CenterField = str2double(CenterField(1:end-2));
+elseif isfield(handles.Data,'AWG_Parameters')
+  CenterField = handles.Data.AWG_Parameters.B;
+end
 %convert to tesla
 CenterField = CenterField*1e-4;
 %Get field offset
@@ -1302,9 +1356,13 @@ function AddTag_Callback(hObject, eventdata, handles)
 %Get gyromagnetic ratio from selected nuclei
 gyromagneticRatio = getgyro(get(handles.AddTagList,'Value'));
 %Get center field in gauss
-CenterField = handles.Data.BrukerParameters.CenterField; 
-%Remove units character and convert to double
-CenterField = str2double(CenterField(1:end-2));
+if isfield(handles.Data,'BrukerParameters')
+  CenterField = handles.Data.AWG_Parameters.CenterField;
+  %Remove units character and convert to double
+  CenterField = str2double(CenterField(1:end-2));
+elseif isfield(handles.Data,'AWG_Parameters')
+  CenterField = handles.Data.AWG_Parameters.B;
+end
 %convert to tesla
 CenterField = CenterField*1e-4;
 %Get field offset
