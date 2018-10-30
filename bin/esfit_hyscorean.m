@@ -88,7 +88,7 @@ if isstruct(ExpSpec) || ~isnumeric(ExpSpec)
 end
 FitData.nSpectra = 1;
 FitData.ExpSpec = ExpSpec;
-FitData.ExpSpecScaled = rescale(ExpSpec,'maxabs');
+FitData.ExpSpecScaled = rescale_mod(ExpSpec,'maxabs');
 if length(FitData.ExpSpec)~=length(FitData.ExpSpecScaled)
   FitData.ExpSpecScaled = reshape(FitData.ExpSpecScaled,length(FitData.ExpSpec),length(FitData.ExpSpec));
 end
@@ -814,11 +814,11 @@ Out = out{1:FitData.nOutArguments};
 BestSpec = Out.fd;
 % (SimSystems{s}.weight is taken into account in the simulation function)
 % BestSpec = out{FitData.OutArgument}; % pick last output argument
-BestSpecScaled = rescale(BestSpec,FitData.ExpSpecScaled,FitOpts.Scaling);
+BestSpecScaled = rescale_mod(BestSpec,FitData.ExpSpecScaled,FitOpts.Scaling);
 if length(FitData.ExpSpec)~=BestSpecScaled
   BestSpecScaled = reshape(BestSpecScaled,length(FitData.ExpSpec),length(FitData.ExpSpec));
 end
-BestSpec = rescale(BestSpec,FitData.ExpSpec,FitOpts.Scaling);
+BestSpec = rescale_mod(BestSpec,FitData.ExpSpec,FitOpts.Scaling);
 if length(FitData.ExpSpec)~=BestSpec
   BestSpec = reshape(BestSpec,length(FitData.ExpSpec),length(FitData.ExpSpec));
 end
@@ -923,7 +923,7 @@ simspec = fftshift(fft2(tdx,SimOpt.ZeroFillFactor*Exp.nPoints,SimOpt.ZeroFillFac
 % simspec = out{FitData.OutArgument}; % pick last output argument
 
 % Scale simulated spectrum to experimental spectrum ----------
-simspec = rescale(simspec,ExpSpec,FitOpt.Scaling);
+simspec = rescale_mod(simspec,ExpSpec,FitOpt.Scaling);
 simspec  = reshape(simspec,length(ExpSpec),length(ExpSpec));
 % Compute residuals ------------------------------
 residuals = getResiduals(simspec(:),ExpSpec(:),FitOpt.TargetID);
