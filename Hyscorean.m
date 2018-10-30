@@ -156,6 +156,7 @@ set(handles.DetachSignalPlot,'visible','off')
 set(handles.ChangeSignalPlotDimension,'visible','off')
 set(handles.t1_Slider,'enable','off')
 set(handles.ImposeBlindSpots,'enable','off')
+set(handles.EasyspinFitButton,'enable','off')
 set(handles.AddHelpLine,'enable','off')
 set(handles.AddTag,'enable','off')
 set(handles.AddTagList,'enable','off')
@@ -226,7 +227,10 @@ set(handles.AddTagList,'enable','on')
 set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
+set(handles.EasyspinFitButton,'enable','on')
 set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'on')
+
+
 % set(hObject,'enable','on')
 
 guidata(hObject, handles)
@@ -1800,7 +1804,8 @@ function WindowType_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to WindowType (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-
+handles.WindowTypeString = 'chebyshev';
+guidata(hObject,handles)
 % Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))

@@ -32,8 +32,8 @@ else
    PlotWithZeroFilling = get(handles.PlotWithZeroFilling,'Value');
 end
 %Find which of the signals to be plotted has the largest maximum
-ylimMax = max(max(real(Processed.Signal)));
-ylimMin = min(min(real(Processed.Signal)));
+ylimMax = max(max(real(Processed.Signal)/max(max(real(Processed.Signal)))));
+ylimMin = min(min(real(Processed.Signal)/max(max(real(Processed.Signal)))));
 if ylimMax < max(max(real(handles.Data.NonCorrectedIntegral)))
   ylimMax = max(max(real(handles.Data.NonCorrectedIntegral)));
 end
@@ -46,7 +46,6 @@ end
 if ylimMin > min(min(real(handles.Data.PreProcessedSignal)))
   ylimMin =  min(min(real(handles.Data.PreProcessedSignal)));
 end
-
 %Construct time axes for the signals
 if  PlotWithZeroFilling
   TimeAxis1 = Processed.TimeAxis1(1:length(Processed.TimeAxis1));
@@ -79,6 +78,7 @@ if handles.PlotProcessedSignal
         ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling1,'String')));
       end
   end
+  ProcessedSignalTrace = ProcessedSignalTrace/max(max(Processed.Signal));
   plot(handles.signal_t1,TimeAxis,ProcessedSignalTrace,'k','Linewidth',1)
 end
 
