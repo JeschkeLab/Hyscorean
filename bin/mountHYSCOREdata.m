@@ -57,13 +57,17 @@ switch FileExtension
       end
       TauValues(i)  = str2double(TauString);
     end
-    
+    TimeAxis1 = linspace(0,TimeStep1*size(TauSignals,2),size(TauSignals,2));
+    TimeAxis2 = linspace(0,TimeStep2*size(TauSignals,2),size(TauSignals,2));
+
     %Construct output structure
     MountedData.TauSignals = TauSignals;
     MountedData.TauValues = TauValues;
     MountedData.BrukerParameters = BrukerParameters;
     MountedData.TimeStep1 = TimeStep1;
     MountedData.TimeStep2 = TimeStep2;
+    MountedData.TimeAxis1 = TimeAxis1;
+    MountedData.TimeAxis2 = TimeAxis2;
     MountedData.NUSflag = false;
     MountedData.isNotIntegrated  = false;
 
@@ -247,6 +251,7 @@ switch FileExtension
     MountedData.TimeStep1 = DataForInegration.TimeStep1;
     MountedData.TimeStep2 = DataForInegration.TimeStep2;
     MountedData.NUSflag = isNUS;
+    MountedData.NUS = AWG_Parameters.NUS;
 
 end
 

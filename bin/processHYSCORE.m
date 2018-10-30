@@ -26,7 +26,7 @@ TauIndexes  = handles.Data.Combinations(CombinationsSelection,:);
 handles.currentTaus = handles.Data.TauValues(TauIndexes(TauIndexes~=0));
 handles.currentIndexes = TauIndexes(TauIndexes~=0);
 
-if handles.TauSelectionSwitch && strcmp(type,'experimental') %no need to repeate pre-processing if data not changed
+if handles.TauSelectionSwitch %no need to repeate pre-processing if data not changed
   %Set selection icon to waiting
   set(handles.TauSelectionWaiting,'visible','on'),drawnow
   handles.backgroundCorrectionSwitch = true;
@@ -153,10 +153,11 @@ if Data.NUSflag && handles.ReconstructionSwitch
     case 1 %CAMERA Reconstruction
       [Rows,Columns] = find(Data.AWG_Parameters.NUS.SamplingGrid==1);
       Schedule = [Rows,Columns];
-      Data.ReconstructedSignal = camera(Data.PreProcessedSignal,Schedule);
+      [Data.ReconstructedSignal,FunctionEvaluations] = camera(Data.PreProcessedSignal,Schedule);
     case 5 %IST-D Reconstruction
-      Data.ReconstructedSignal = istd(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.99,5000);
+      [Data.ReconstructedSignal,FunctionEvaluations] = istd(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.99,5000);
   end
+  Data.ReconstructionConvergence = FunctionEvaluations;
   %Once processed turn the switch to the reconstruction off (will be turned on if parameters in pre-processing changed)
   handles.ReconstructionSwitch = false;
   %Set reconstruction icon to check

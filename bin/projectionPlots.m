@@ -15,12 +15,14 @@ elseif GraphicalSettings.Real
   spectrum2 = abs(spectrum);
   inset1 = sum(real(spectrum));
   inset2 = sum(real(spectrum'));
-
+%   inset1 = max(abs(spectrum));
+%   inset2 = max(abs(spectrum'));
 elseif GraphicalSettings.Imaginary
   spectrum2 = imag(spectrum);
   inset1 = sum(imag(spectrum));
   inset2 = sum(imag(spectrum'));
-
+  inset1 = max(abs(spectrum));
+  inset2 = max(abs(spectrum'));
 end
 
 % Get data for inset
