@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 19-Oct-2018 09:36:27
+% Last Modified by GUIDE v2.5 30-Oct-2018 08:58:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -192,8 +192,8 @@ TauValues = handles.Data.TauValues;
  set(handles.MultiTauDimensions,'enable','on');
 
  set(handles.MultiTauDimensions,'String',handles.Selections);
- set(handles.ZeroFilling1,'String',2*size(handles.Data.TauSignals,2));
- set(handles.ZeroFilling2,'String',2*size(handles.Data.TauSignals,3));
+ set(handles.ZeroFilling1,'String',size(handles.Data.TauSignals,2));
+ set(handles.ZeroFilling2,'String',size(handles.Data.TauSignals,3));
  set(handles.Hammingedit,'String',size(handles.Data.TauSignals,2));
 
   %Check if data is NUS and activate the panels in the GUI
@@ -1069,6 +1069,7 @@ function plotNUSgrid_Callback(hObject, eventdata, handles)
 % hObject    handle to plotNUSgrid (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+displayNUSreconstructionResults(handles)
 
 
 % --- Executes on button press in plotNUSsignal.
@@ -1312,7 +1313,7 @@ function AddHelpLine_Callback(hObject, eventdata, handles)
 gyromagneticRatio = getgyro(get(handles.AddTagList,'Value'));
 %Get center field in gauss
 if isfield(handles.Data,'BrukerParameters')
-  CenterField = handles.Data.AWG_Parameters.CenterField;
+  CenterField = handles.Data.BrukerParameters.CenterField;
   %Remove units character and convert to double
   CenterField = str2double(CenterField(1:end-2));
 elseif isfield(handles.Data,'AWG_Parameters')
@@ -1361,7 +1362,7 @@ function AddTag_Callback(hObject, eventdata, handles)
 gyromagneticRatio = getgyro(get(handles.AddTagList,'Value'));
 %Get center field in gauss
 if isfield(handles.Data,'BrukerParameters')
-  CenterField = handles.Data.AWG_Parameters.CenterField;
+  CenterField = handles.Data.BrukerParameters.CenterField;
   %Remove units character and convert to double
   CenterField = str2double(CenterField(1:end-2));
 elseif isfield(handles.Data,'AWG_Parameters')
@@ -1773,6 +1774,25 @@ function WindowType_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns WindowType contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from WindowType
+    WindowMenuState = get(handles.WindowType,'value');
+  switch WindowMenuState
+    case 1
+     WindowType =  'hamming';
+    case 2
+     WindowType =  'chebyshev';  
+    case 3
+     WindowType =  'welch';
+    case 4
+      WindowType = 'blackman'; 
+    case 5
+      WindowType = 'bartlett';
+    case 6
+      WindowType = 'connes';
+    case 7
+      WindowType = 'cosine';      
+  end
+handles.WindowTypeString = WindowType;
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1794,3 +1814,34 @@ function BlindSpotsSimulator_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Blindspot_simulator(str2double(get(handles.XUpperLimit,'string')))
+
+
+% --- Executes on button press in EasyspinFitButton.
+function EasyspinFitButton_Callback(hObject, eventdata, handles)
+% hObject    handle to EasyspinFitButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%Fill known experimental parameters
+Exp.Sequence = 'HYSCORE';
+if isfield(handles.Data,'BrukerParameters')
+  Exp.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6)); %mT
+elseif isfield(handles.Data,'AWG_Parameters')
+  Exp.Field =  0.1*AWG_Parameters.B;
+end
+Exp.tau = handles.Data.TauValues/1000;
+Exp.dt = handles.Data.TimeStep1;
+Exp.nPoints = length(handles.Data.PreProcessedSignal);
+
+%Fill known optional parameters
+Opt.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
+Opt.FreqLim = str2double(get(handles.XUpperLimit,'string'));
+Opt.WindowType = handles.WindowTypeString;
+Opt.WindowDecay = str2double(get(handles.Hammingedit,'string'));
+Opt.L2GParameters.tauFactor2 = str2double(get(handles.L2G_tau2,'string'));
+Opt.L2GParameters.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
+Opt.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
+Opt.L2GParameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
+Opt.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'value');
+
+esfit_hyscorean('saffron',abs(handles.Processed.spectrum),[],[],Exp,Opt)
