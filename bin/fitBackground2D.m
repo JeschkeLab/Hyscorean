@@ -1,4 +1,4 @@
-function Background = fitBackground2D(Data,options)
+function Background = fitBackground2D(Data,options,StartIndex)
 %
 % Fits background decay according to the model selected by
 % options.model along dimension options.dim starting at data point
@@ -29,6 +29,10 @@ if isfield(options,'Dimension') && options.Dimension == 1
     Data = Data.';
     Background = Background.'; 
 end;
+%Add this additional input form to allow it to be used inside parfor loops
+if nargin>2
+  options.start = StartIndex;
+end
 [Dimension1,Dimension2] = size(Data);
 SolverOptions = optimset('Display','off');
 

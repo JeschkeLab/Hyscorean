@@ -97,7 +97,7 @@ if get(handles.NonCorrectedTrace,'value')
   end
   
   %Rescale and zero-adjust the signal trace
-  SignalTrace = SignalTrace - mean(real(handles.Data.NonCorrectedIntegral(end,:)));
+  SignalTrace = SignalTrace - mean(real(handles.Data.NonCorrectedIntegral(end,:)),'omitnan');
   SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
   
   %Construct axis and plot
@@ -106,7 +106,7 @@ if get(handles.NonCorrectedTrace,'value')
   hold(handles.signal_t1,'on')
   
   %Rescale and zero-adjust the background trace
-  Background1Trace = Background1Trace - mean(real(handles.Data.Background1(end,:)));
+  Background1Trace = Background1Trace - mean(real(handles.Data.Background1(end,:)),'omitnan');
   Background1Trace = Background1Trace/max(max(real(handles.Data.NonCorrectedIntegral)));
   
   %Construct axis and plot
@@ -137,7 +137,7 @@ if PlotSecondCorrection
   end
   
   %Rescale and zero-adjust the signal trace
-  SignalTrace = SignalTrace - mean(real(handles.Data.FirstBackgroundCorrected(end,:)));
+  SignalTrace = SignalTrace - mean(real(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
   SignalTrace = SignalTrace/max(max(real(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
@@ -146,7 +146,7 @@ if PlotSecondCorrection
   hold(handles.signal_t1,'on')
   
   %Rescale and zero-adjust the background trace
-  Background2Trace = Background2Trace - mean(real(handles.Data.Background2(end,:)));
+  Background2Trace = Background2Trace - mean(real(handles.Data.Background2(end,:)),'omitnan');
   Background2Trace = Background2Trace/max(max(real(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
@@ -176,7 +176,7 @@ if get(handles.PreProcessedTrace,'value')
   end
   
   %Rescale and zero-adjust the trace
-  PreProcessedSignalTrace = PreProcessedSignalTrace - mean(real(handles.Data.PreProcessedSignal(end,:)));
+  PreProcessedSignalTrace = PreProcessedSignalTrace - mean(real(handles.Data.PreProcessedSignal(end,:)),'omitnan');
   PreProcessedSignalTrace = PreProcessedSignalTrace/max(max(real(handles.Data.PreProcessedSignal)));
   
   %Get axis for plot

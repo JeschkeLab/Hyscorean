@@ -17,8 +17,6 @@ switch Panel
     set(handles.NUSReconstructionText,'enable',Action)
     set(handles.plotNUSgridText,'enable',Action)
     set(handles.plotNUSgrid,'enable',Action)
-    set(handles.plotNUSsignal,'enable',Action)
-    set(handles.plotNUSsignalText,'enable',Action)
     
   case 'Lorent2Gauss'
     set(handles.L2G_sigma,'enable',Action)
