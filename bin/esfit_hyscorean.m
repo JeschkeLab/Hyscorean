@@ -72,6 +72,21 @@ switch class(SimFunctionName)
 end
 FitData.lastSetID = 0;
 
+%Load system
+%--------------------------------------------------------------------
+load('DefaultSystemEasySpin')
+SpinSystemInput = {DefaultInput};
+%Remove comments on the input
+Size = size(SpinSystemInput{1},1);
+for i=1:Size
+  if SpinSystemInput{1}(i,1) == '%'
+    SpinSystemInput{1}(i,:) = ' ';
+  end
+end
+StringForEval = char(strjoin(string(SpinSystemInput{1})));
+eval(StringForEval)
+Sys0 = Sys;
+
 % System structure
 %--------------------------------------------------------------------
 if ~iscell(Sys0), Sys0 = {Sys0}; end
@@ -201,14 +216,8 @@ for k = 1:numel(keywords)
     case 'montecarlo', FitOpt.MethodID = 3;
     case 'genetic',    FitOpt.MethodID = 4;
     case 'grid',       FitOpt.MethodID = 5;
-    case 'swarm',      FitOpt.MethodID = 6;
-      
+    case 'swarm',      FitOpt.MethodID = 6;      
     case 'fcn',        FitOpt.TargetID = 1;
-    case 'int',        FitOpt.TargetID = 2;
-    case 'iint',       FitOpt.TargetID = 3;
-    case 'dint',       FitOpt.TargetID = 3;
-    case 'diff',       FitOpt.TargetID = 4;
-    case 'fft',        FitOpt.TargetID = 5;
     otherwise
       error('Unknown ''%s'' in FitOpt.Method.',keywords{k});
   end
@@ -221,13 +230,6 @@ MethodNames{4} = 'genetic algorithm';
 MethodNames{5} = 'grid search';
 MethodNames{6} = 'particle swarm';
 FitData.MethodNames = MethodNames;
-
-TargetNames{1} = 'data as is';
-TargetNames{2} = 'integral';
-TargetNames{3} = 'double integral';
-TargetNames{4} = 'derivative';
-TargetNames{5} = 'Fourier transform';
-FitData.TargetNames = TargetNames;
 
 ScalingNames{1} = 'scale & shift (min/max)';
 ScalingNames{2} = 'scale only (max abs)';
@@ -269,7 +271,6 @@ if ~isfield(FitOpt,'TolFun'), FitOpt.TolFun = 1e-4; end
 if ~isfield(FitOpt,'TolStep'), FitOpt.TolStep = 1e-6; end
 if ~isfield(FitOpt,'maxTime'), FitOpt.maxTime = inf; end
 if ~isfield(FitOpt,'RandomStart'), FitOpt.Startpoint = 1; else, FitOpt.Startpoint = 0; end
-
 if ~isfield(FitOpt,'GridSize'), FitOpt.GridSize = 7; end
 
 % Internal parameters
@@ -339,10 +340,10 @@ if FitData.GUI
   hold(hAx,'on')
   plot(hAx,ones(length(FrequencyAxis),1)*0,linspace(0,max(FrequencyAxis),length(FrequencyAxis)),'k-')
   plot(hAx,FrequencyAxis,abs(FrequencyAxis),'k-.')  
-  colormap(hAx,'bone')
-  [~,h] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,50));
-  [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,50));
-  [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,50));
+%   colormap(hAx,'bone')
+  [~,h] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'Color','k','LevelList',linspace(0,1,30));
+  [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,30));
+  [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,30));
   NaNdata = ones(1,length(dispData))*NaN;
   hold(hsubAx1,'on')
   hsub1 = plot(hsubAx1,FrequencyAxis,NaNdata,'Color','k');
@@ -384,18 +385,18 @@ if FitData.GUI
   camroll(hsubAx2,-90)
   % iteration and rms error displays
   %-----------------------------------------------------------------
-  x0 = 1070; y0 = 150;
-  hAx = axes('Parent',hFig,'Units','pixels','Position',[x0 y0 130 110],'Layer','top');
+  x0 = 1070; y0 = 175;
+  hAx = axes('Parent',hFig,'Units','pixels','Position',[x0 y0-25 270 110],'Layer','top');
   h = plot(hAx,1,NaN,'.');
-  set(h,'Tag','errorline','MarkerSize',5,'Color',[0.2 0.2 0.8]);
+  set(h,'Tag','errorline','MarkerSize',6,'Color',[0.2 0.2 0.8]);
   set(gca,'FontSize',7,'YScale','lin','XTick',[],'YAxisLoc','right','Layer','top');
   title('log10(rmsd)','Color','k','FontSize',7,'FontWeight','normal');
     
-  h = uicontrol('Style','text','Position',[x0+150 y0+84 205 16]);
+  h = uicontrol('Style','text','Position',[x0 y0+119 270 16]);
   set(h,'FontSize',8,'String',' RMSD: -','ForegroundColor',[0 0 1],'Tooltip','Current best RMSD');
   set(h,'Tag','RmsText','HorizontalAl','left');
 
-  h = uicontrol('Style','text','Position',[x0+150 y0+20 205 62]);
+  h = uicontrol('Style','text','Position',[x0 y0+100 270 16]);
   set(h,'FontSize',7,'Tag','logLine','Tooltip','Information from fitting algorithm');
   set(h,'Horizontal','left');
   
@@ -438,14 +439,25 @@ if FitData.GUI
     'ColumnWidth',{20,62,62,62,62,60},...
     'RowName',[],...
     'Data',data);
+    uicontrol('Style','text',...
+    'Position',[x0 y0+170 230 20],...
+    'BackgroundColor',get(gcf,'Color'),...
+    'FontWeight','bold','String','System',...
+    'HorizontalAl','left');
+  uicontrol('Style','text',...
+    'Position',[x0+115 y0+169 230 20],...
+    'BackgroundColor',get(gcf,'Color'),'ForegroundColor',[0 0 1],...
+    'FontWeight','normal','String',FitData.Sys0{1}.Nucs,...
+    'Tag','SystemName',...
+    'HorizontalAl','left');
   uicontrol('Style','text',...
     'Position',[x0 y0+150 230 20],...
     'BackgroundColor',get(gcf,'Color'),...
     'FontWeight','bold','String','Parameters',...
     'HorizontalAl','left');
   uicontrol('Style','pushbutton','Tag','selectInvButton',...
-    'Position',[x0+160 y0+150 50 20],...
-    'String','system','Enable','on','Callback',@systemButtonCallback,...
+    'Position',[x0+70 y0+172 40 20],...
+    'String','...','Enable','on','Callback',@systemButtonCallback,...
     'HorizontalAl','left',...
     'Tooltip','Invert selection of parameters');
   uicontrol('Style','pushbutton','Tag','selectInvButton',...
@@ -463,26 +475,9 @@ if FitData.GUI
     'String','none','Enable','on','Callback',@selectNoneButtonCallback,...
     'HorizontalAl','left',...
     'Tooltip','Unselect all parameters');
-  uicontrol(hFig,'Style','text',...
-    'String','Function',...
-    'Tooltip','Name of simulation function',...
-    'FontWeight','bold',...
-    'HorizontalAlign','left',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0 y0+170 dx 20]);
-  h = uicontrol(hFig,'Style','text',...
-    'String','tbd',...
-    'ForeGroundColor','b',...
-    'Tooltip','Simulation function name',...
-    'HorizontalAlign','left',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0+dx y0+170 dx 20]);
-  set(h,'Tooltip',sprintf('using output no. %d of %d',FitData.nOutArguments,FitData.OutArgument));
-  set(h,'String',FitData.SimFcnName);
-
   % popup menus
   %-----------------------------------------------------------------
-  x0 = 1070; dx = 60; y0 = 290; dy = 24;
+  x0 = 1070; dx = 60; y0 = 299; dy = 24;
   uicontrol(hFig,'Style','text',...
     'String','Method',...
     'FontWeight','bold',...
@@ -497,50 +492,37 @@ if FitData.GUI
     'Tooltip','Fitting algorithm',...
     'Position',[x0+dx y0+3*dy 150 20]);
   uicontrol(hFig,'Style','text',...
-    'String','Target',...
-    'FontWeight','bold',...
-    'HorizontalAlign','left',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0 y0+2*dy-4 dx 20]);
-  uicontrol(hFig,'Style','popupmenu',...
-    'Tag','TargetMenu',...
-    'String',TargetNames,...
-    'Value',FitOpt.TargetID,...
-    'BackgroundColor','w',...
-    'Tooltip','Target function',...
-    'Position',[x0+dx y0+2*dy 150 20]);
-  uicontrol(hFig,'Style','text',...
     'String','Scaling',...
     'FontWeight','bold',...
     'HorizontalAlign','left',...
     'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0 y0+dy-4 dx 20]);
+    'Position',[x0 y0+2*dy-4 dx 20]);
   uicontrol(hFig,'Style','popupmenu',...
     'Tag','ScalingMenu',...
     'String',ScalingNames,...
     'Value',FitOpt.ScalingID,...
     'BackgroundColor','w',...
     'Tooltip','Scaling mode',...
-    'Position',[x0+dx y0+dy 150 20]);
+    'Position',[x0+dx y0+2*dy 150 20]);
   uicontrol(hFig,'Style','text',...
     'String','Startpoint',...
     'FontWeight','bold',...
     'HorizontalAlign','left',...
     'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0 y0-4 dx 20]);
+    'Position',[x0 y0+dy-4 dx 20]);
   h = uicontrol(hFig,'Style','popupmenu',...
     'Tag','StartpointMenu',...
     'String',StartpointNames,...
     'Value',1,...
     'BackgroundColor','w',...
     'Tooltip','Starting point for fit',...
-    'Position',[x0+dx y0 150 20]);
+    'Position',[x0+dx y0+dy 150 20]);
   if (FitOpts.Startpoint==2), set(h,'Value',2); end
   
   % Start/Stop buttons
   %-----------------------------------------------------------------
-  pos =  [x0+220 y0-3+30 110 67];
-  pos1 = [x0+220 y0-3    110 30];
+  pos =  [x0+220 y0-3+50 110 45];
+  pos1 = [x0+220 y0-3+25 110 25];
   uicontrol(hFig,'Style','pushbutton',...
     'Tag','StartButton',...
     'String','Start',...
@@ -633,6 +615,7 @@ clear global UserCommand
 
 function [FinalSys,BestSpec,Residuals] = runFitting(object,src,event)
 
+% try
 global FitOpts FitData UserCommand
 
 UserCommand = 0;
@@ -667,7 +650,7 @@ if FitData.GUI
   
   % Determine selected method, target, and scaling
   FitOpts.MethodID = get(findobj('Tag','MethodMenu'),'Value');
-  FitOpts.TargetID = get(findobj('Tag','TargetMenu'),'Value');
+  FitOpts.TargetID = 1;
   FitOpts.Scaling = FitData.ScalingString{get(findobj('Tag','ScalingMenu'),'Value')};
   FitOpts.Startpoint = get(findobj('Tag','StartpointMenu'),'Value');
   
@@ -809,9 +792,25 @@ if numel(FinalSys)==1
 else
   fs = FinalSys;
 end
-[~,~,~,out{1:FitData.nOutArguments}] = FitData.SimFcn(fs,FitData.Exp,FitData.SimOpt);
+[t1,t2,~,out{1:FitData.nOutArguments}] = FitData.SimFcn(fs,FitData.Exp,FitData.SimOpt);
+%Get time-domain signal
 Out = out{1:FitData.nOutArguments};
-BestSpec = Out.fd;
+td = Out.td;
+%Do base-correction as would be done in saffron
+tdx = basecorr(td,[1 2],[0 0]);
+%If done for experimental data, then do Lorentz-Gauss transformation
+if FitData.SimOpt.Lorentz2GaussCheck
+  Processed.TimeAxis1 = t1;
+  Processed.TimeAxis2 = t2;
+  Processed.Signal = tdx;
+  [Processed]=Lorentz2Gauss2D(Processed,FitData.SimOpt.L2GParameters);
+  tdx = Processed.Signal;
+end
+%Use same apodization window as experimental data
+tdx = apodizationWin(tdx,FitData.SimOpt.WindowType,FitData.SimOpt.WindowDecay);
+%Fourier transform with same zerofilling as experimental data
+BestSpec = fftshift(fft2(tdx,FitData.SimOpt.ZeroFillFactor*FitData.Exp.nPoints,FitData.SimOpt.ZeroFillFactor*FitData.Exp.nPoints));
+
 % (SimSystems{s}.weight is taken into account in the simulation function)
 % BestSpec = out{FitData.OutArgument}; % pick last output argument
 BestSpecScaled = rescale_mod(BestSpec,FitData.ExpSpecScaled,FitOpts.Scaling);
@@ -863,6 +862,14 @@ else
   FitData.currFitSet = newFitSet;
   
 end
+
+% catch
+%  fprintf('Something went wrong and fitting failed. Check your system definition.')
+%   % If fails hide Stop button, show Start button
+%   set(findobj('Tag','StopButton'),'Visible','off');
+%   set(findobj('Tag','StartButton'),'Visible','on');
+%   set(findobj('Tag','SaveButton'),'Enable','off');
+% end
 
 return
 %===============================================================================
@@ -926,7 +933,7 @@ simspec = fftshift(fft2(tdx,SimOpt.ZeroFillFactor*Exp.nPoints,SimOpt.ZeroFillFac
 simspec = rescale_mod(simspec,ExpSpec,FitOpt.Scaling);
 simspec  = reshape(simspec,length(ExpSpec),length(ExpSpec));
 % Compute residuals ------------------------------
-residuals = getResiduals(simspec(:),ExpSpec(:),FitOpt.TargetID);
+residuals = getResiduals(simspec(:),ExpSpec(:),1);
 rmsd = real(sqrt(mean(residuals.^2)));
 
 FitData.errorlist = [FitData.errorlist rmsd];
@@ -1359,9 +1366,18 @@ if ~isempty(str)
       data{p,3} = sprintf('%0.6g',values(p));
     end
     set(h,'Data',data);
-    
+    fitset.fitSpec = abs(fitset.fitSpec - fitset.fitSpec(end));
     h = findobj('Tag','bestsimdata');
     set(h,'ZData',abs(fitset.fitSpec)/max(max(abs(fitset.fitSpec))));
+    h = findobj('Tag','bestsimdata_projection1');
+    Inset = sum(fitset.fitSpec(round(length(fitset.fitSpec)/2,0):end,:),1);
+    Inset = abs(Inset - Inset(end));
+    set(h,'YData',Inset/max(Inset));
+    h = findobj('Tag','bestsimdata_projection2');
+    Inset = sum(fitset.fitSpec,2);
+    Inset = abs(Inset - Inset(end));
+    set(h,'YData',Inset/max(Inset));
+
     drawnow
   end
 else
@@ -1399,14 +1415,13 @@ return
 %==========================================================================
 function systemButtonCallback(object,src,event)
 global FitData
-if ~isfield(FitData,'DefaultInput')
-  SystemDefaultInput = ['%EasySpin Input' newline '%---------------------------------------------' newline  newline ...
-    '%Spin System definition' newline 'Sys.Nucs = ''14N'';' newline 'Sys.A_ = [0.8 0.5];' newline 'Sys.Q = [-1 -1 2]*0.1;'];
-  VaryDefaultInput = [newline '%Fit variables definition'   newline        'Vary.A_ = [0.2 0.1];' newline 'Vary.Q = [0 0.1 0.1];'];
-  FitData.DefaultInput = {(sprintf('%s\n%s',SystemDefaultInput,VaryDefaultInput))};
+load('DefaultSystemEasySpin')
+SpinSystemInput = inputdlg('Input','Spin System & Variables', [20 80],{DefaultInput});
+if isempty(SpinSystemInput) %if canceled
+  return
 end
-SpinSystemInput = inputdlg('Input','Spin System & Variables', [20 80],FitData.DefaultInput);
-FitData.DefaultInput = SpinSystemInput;
+DefaultInput = SpinSystemInput{1};
+save('DefaultSystemEasySpin','DefaultInput')
 %Remove comments on the input
 Size = size(SpinSystemInput{1},1);
 for i=1:Size
@@ -1416,6 +1431,9 @@ for i=1:Size
 end
 StringForEval = char(strjoin(string(SpinSystemInput{1})'));
 eval(StringForEval)
+
+set(findobj('Tag','SystemName'),'string',Sys.Nucs)
+
 if ~iscell(Sys)
 Sys = {Sys};
 end
