@@ -162,6 +162,8 @@ set(handles.AddTag,'enable','off')
 set(handles.AddTagList,'enable','off')
 set(handles.ClearTags,'enable','off')
 set(handles.FieldOffsetTag,'enable','off')
+set(handles.ProcessButton,'enable','off')
+set(handles.SaveReportButton,'enable','off')
 set(handles.FieldOffset,'enable','off')
 set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'off')
 set(handles.trace2Info,'string','')
@@ -196,6 +198,7 @@ TauValues = handles.Data.TauValues;
  set(handles.ZeroFilling1,'String',size(handles.Data.TauSignals,2));
  set(handles.ZeroFilling2,'String',size(handles.Data.TauSignals,3));
  set(handles.Hammingedit,'String',size(handles.Data.TauSignals,2));
+set(handles.ProcessButton,'enable','on')
 
   %Check if data is NUS and activate the panels in the GUI
   if handles.Data.NUSflag
@@ -229,6 +232,7 @@ set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
 set(handles.EasyspinFitButton,'enable','on')
 set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'on')
+set(handles.SaveReportButton,'enable','on')
 
 
 % set(hObject,'enable','on')
@@ -1832,7 +1836,7 @@ Exp.Sequence = 'HYSCORE';
 if isfield(handles.Data,'BrukerParameters')
   Exp.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6)); %mT
 elseif isfield(handles.Data,'AWG_Parameters')
-  Exp.Field =  0.1*AWG_Parameters.B;
+  Exp.Field =  0.1*handles.Data.AWG_Parameters.B;
 end
 Exp.tau = handles.Data.TauValues/1000;
 Exp.dt = handles.Data.TimeStep1;
