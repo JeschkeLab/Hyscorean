@@ -74,7 +74,9 @@ FitData.lastSetID = 0;
 
 %Load system
 %--------------------------------------------------------------------
-load('DefaultSystemEasySpin')
+Path2Hyscorean = which('Hyscorean');
+Path2Hyscorean = Path2Hyscorean(1:end-11);
+load([Path2Hyscorean 'bin\DefaultSystemEasySpin'])
 SpinSystemInput = {DefaultInput};
 %Remove comments on the input
 Size = size(SpinSystemInput{1},1);
@@ -341,9 +343,9 @@ if FitData.GUI
   plot(hAx,ones(length(FrequencyAxis),1)*0,linspace(0,max(FrequencyAxis),length(FrequencyAxis)),'k-')
   plot(hAx,FrequencyAxis,abs(FrequencyAxis),'k-.')  
 %   colormap(hAx,'bone')
-  [~,h] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'Color','k','LevelList',linspace(0,1,30));
-  [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,30));
-  [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,30));
+  [~,h] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'Color','k','LevelList',linspace(0,1,40));
+  [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
+  [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,40));
   NaNdata = ones(1,length(dispData))*NaN;
   hold(hsubAx1,'on')
   hsub1 = plot(hsubAx1,FrequencyAxis,NaNdata,'Color','k');
@@ -1415,13 +1417,15 @@ return
 %==========================================================================
 function systemButtonCallback(object,src,event)
 global FitData
-load('DefaultSystemEasySpin')
+Path2Hyscorean = which('Hyscorean');
+Path2Hyscorean = Path2Hyscorean(1:end-11);
+load([Path2Hyscorean 'bin\DefaultSystemEasySpin']);
 SpinSystemInput = inputdlg('Input','Spin System & Variables', [20 80],{DefaultInput});
 if isempty(SpinSystemInput) %if canceled
   return
 end
 DefaultInput = SpinSystemInput{1};
-save('DefaultSystemEasySpin','DefaultInput')
+save([Path2Hyscorean 'bin\DefaultSystemEasySpin'],'DefaultInput')
 %Remove comments on the input
 Size = size(SpinSystemInput{1},1);
 for i=1:Size
