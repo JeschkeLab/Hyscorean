@@ -48,7 +48,7 @@ FitOpts = [];
 FitData.currFitSet = [];
 
 FitData.CurrentSpectrumDisplay = 1;
-FitData.CurrentCoreUsage = 1;
+
 % Simulation function
 %--------------------------------------------------------------------
 switch class(SimFunctionName)
@@ -261,14 +261,6 @@ AvailableFields = cell(1,length(Exp));
 for i = 1:length(AvailableFields)
   AvailableFields{i} = strcat(string(Exp{i}.Field), ' mT');
 end
-
-AvailableCores = cell(1,length(Exp));
-AvailableCores{1} = 'off';
-numcores = feature('numcores');
-for i = 1:numcores
-  AvailableCores{i+1} =sprintf('%i cores',i);
-end
-
 MethodNames{1} = 'Nelder/Mead simplex';
 MethodNames{2} = 'Levenberg/Marquardt';
 MethodNames{3} = 'Monte Carlo';
@@ -631,20 +623,7 @@ if FitData.GUI
     'Enable','off',...
     'Tooltip','Save latest fitting result',...
     'Position',pos1);
-  uicontrol(hFig,'Style','popupmenu',...
-    'Tag','SpeedUp',...
-    'String',AvailableCores,...
-    'Value',FitData.CurrentCoreUsage,...
-    'Callback',@speedUpCallback,...
-    'Enable','on',...
-    'Tooltip','Parallel computing options',...
-    'Position',[x0+269 y0-5 60 25]);
-    uicontrol('Style','text',...
-      'String','Speed-up',...
-    'Position',[x0+218 y0-8 50 25],...
-    'HorizontalAlignment','right',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'HorizontalAl','left');
+
   %-----------------------------------------------------------------
   % Fitset list
   %-----------------------------------------------------------------
@@ -903,15 +882,16 @@ BestSpec = cell(numSpec,1);
 BestSpecScaled = cell(numSpec,1);
 Residuals = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
-FitData.Cores = 1;
+
 %Loop over all field positions (i.e. different files/spectra)
-parfor (Index = 1:numSpec,FitData.Cores)
+nOutArguments = FitData.nOutArguments;
+parfor Index = 1:numSpec
 
   %Run saffron for a given field position
-  [t1,t2,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
+  [t1,t2,~,out] = FitData.SimFcn(fs,FitData.Exp{Index},FitData.SimOpt{Index});
   %Get time-domain signal
   if iscell(out)
-  Out = out{1:FitData.nOutArguments};
+  Out = out{1:nOutArguments};
   else
     Out = out;
   end
@@ -1031,12 +1011,13 @@ numSpec = length(Exp);
 rmsd = 0;
 simspec = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
+
+%Loop over all field positions (i.e. different files/spectra)
 nOutArguments = FitData.nOutArguments;
 SImFcnHandel = FitData.SimFcn;
+tic
+parfor Index = 1:numSpec
 
-FitData.Cores = 0;
-%Loop over all field positions (i.e. different files/spectra)
-parfor (Index = 1:numSpec,FitData.Cores)
 if numel(SimSystems)==1
   [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
 else
@@ -1077,7 +1058,7 @@ rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpe
 rmsd = rmsd + rmsd_individual{Index};
 
 end
-
+toc
 FitData.errorlist = [FitData.errorlist rmsd];
 isNewBest = rmsd<FitData.smallestError;
 
@@ -1873,20 +1854,6 @@ end
 return
 %==========================================================================
 
-
-%==========================================================================
-function speedUpCallback(object,src,event)
-  global FitData
-  FitData.CurrentCoreUsage = get(object,'value') - 1;
-  
-  delete(gcp('nocreate'))
-
-  if FitData.CurrentCoreUsage>0
-   FitData.PoolData =  parpool(FitData.CurrentCoreUsage);
-  end
-
-return
-%==========================================================================
 
 %==========================================================================
 function tableEditCallback(hTable,callbackData)
