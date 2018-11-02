@@ -39,12 +39,11 @@ end
     end
     CopyIndex = CopyIndex + 1;
     CrushFlag = true;
-    SaveName = sprintf('%s_%s_settings_%i.mat',Date,Identifier,CopyIndex);
-    
+    SaveName = sprintf('%s_%s_settings_%i.mat',Date,Identifier,CopyIndex);   
   end
   save(fullfile(FullPath,SaveName),'Settings');
 
-  set(handles.ProcessingInfo, 'String', 'Status: Saving session 25%'); drawnow;
+  set(handles.ProcessingInfo, 'String', 'Status: Saving session 20%'); drawnow;
 
   
 % Save data
@@ -63,7 +62,7 @@ FrequencyAxis2 = handles.Processed.axis2;
   end
   save(fullfile(FullPath,SaveName),'Spectrum','ProcessedSignal','RawSignal','TimeAxis1','TimeAxis1','FrequencyAxis1','FrequencyAxis2');
 
-  set(handles.ProcessingInfo, 'String', 'Status: Saving session 50%'); drawnow;
+  set(handles.ProcessingInfo, 'String', 'Status: Saving session 40%'); drawnow;
 
 % Save main figure
 %----------------------------------------------------------------------  
@@ -85,7 +84,7 @@ print(GhostFigure,fullfile(FullPath,SaveName),'-dpdf')
 %Delete the ghost figure
 delete(GhostFigure);
 
-set(handles.ProcessingInfo, 'String', 'Status: Saving session 75%'); drawnow;
+set(handles.ProcessingInfo, 'String', 'Status: Saving session 60%'); drawnow;
 
 
 % Create report
@@ -204,4 +203,54 @@ assignin('base', 'reportdata', reportdata);
 %Generate report
  report Hyscorean_report -fpdf ;
  
+ set(handles.ProcessingInfo, 'String', 'Status: Saving session 80%'); drawnow;
+
+ 
+% Save data for Easyspin fitting
+%----------------------------------------------------------------------  
+DataForFitting.Spectrum = handles.Processed.spectrum;
+reportdata.Data = handles.Data;
+DataForFitting.TauValues = handles.Data.TauValues/1000;
+DataForFitting.TimeStep1 = handles.Data.TimeStep1;
+DataForFitting.TimeStep2 = handles.Data.TimeStep2;
+Offset = get(handles.FieldOffset,'string');
+DataForFitting.FieldOffset = str2double(Offset(1:end-2));
+DataForFitting.currentTaus = handles.currentTaus;
+DataForFitting.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'Value');
+DataForFitting.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
+DataForFitting.BackgroundStart2 =round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex2),0);
+if isfield(handles.Data,'BrukerParameters')
+  DataForFitting.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6)); %mT
+elseif isfield(handles.Data,'AWG_Parameters')
+  DataForFitting.Field =  0.1*handles.Data.AWG_Parameters.B;
+end
+DataForFitting.nPoints = length(handles.Data.PreProcessedSignal);
+DataForFitting.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
+DataForFitting.FreqLim = str2double(get(handles.XUpperLimit,'string'));
+DataForFitting.WindowType = handles.WindowTypeString;
+DataForFitting.WindowDecay = str2double(get(handles.Hammingedit,'string'));
+DataForFitting.L2GParameters.tauFactor2 = str2double(get(handles.L2G_tau2,'string'));
+DataForFitting.L2GParameters.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
+DataForFitting.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
+DataForFitting.L2GParameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
+
+
+%Send settings structure to base workspace
+assignin('base', 'DataForFitting', DataForFitting);
+%Format savename so until it is different from the rest in the folder
+SaveName = sprintf('%s_%s_DataForFitting.mat',Date,Identifier);
+CopyIndex = 1;
+while true
+  if ~exist(fullfile(FullPath,SaveName),'file')
+    break
+  end
+  CopyIndex = CopyIndex + 1;
+  CrushFlag = true;
+  SaveName = sprintf('%s_%s_DataForFitting_%i.mat',Date,Identifier,CopyIndex);
+end
+save(fullfile(FullPath,SaveName),'DataForFitting');
+
  set(handles.ProcessingInfo, 'String', 'Status: Session saved'); drawnow;
+
+ 
+ 

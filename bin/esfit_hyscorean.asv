@@ -239,10 +239,6 @@ for k = 1:numel(keywords)
   end
 end
 
-AvailableFields = cell(1,length(Exp));
-for i = 1:length(AvailableFields)
-  AvailableFields{i} = strcat(string(Exp{i}.Field), ' mT');
-end
 MethodNames{1} = 'Nelder/Mead simplex';
 MethodNames{2} = 'Levenberg/Marquardt';
 MethodNames{3} = 'Monte Carlo';
@@ -408,18 +404,18 @@ if FitData.GUI
   %-----------------------------------------------------------------
     x0 = 960; y0 = 380; dx = 80;
     uicontrol('Style','text',...
-    'Position',[x0 y0+145 230 20],...
+    'Position',[x0 y0+170 230 20],...
     'BackgroundColor',get(gcf,'Color'),...
     'FontWeight','bold','String','Display @ field',...
     'HorizontalAl','left');
    uicontrol(hFig,'Style','popupmenu',...
      'Position',[x0 y0+120 100 25],...
     'Tag','ChangeDisplay',...
-    'String',AvailableFields,...
-    'Value',FitData.CurrentSpectrumDisplay,...
+    'String',ScalingNames,...
+    'Value',FitOpt.ScalingID,...
     'BackgroundColor','w',...
     'Tooltip','Scaling mode',...
-    'Callback',@ChangeCurrentDisplay);  
+    'Callback',@changeCurrentDisplay);  
   
   % iteration and rms error displays
   %-----------------------------------------------------------------
@@ -1597,55 +1593,6 @@ set(h,'Data',d);
 return
 %==========================================================================
 
-%==========================================================================
-function ChangeCurrentDisplay(hObject,event)
-
-global FitData
-FitData.CurrentSpectrumDisplay = get(hObject,'value');
-
-FrequencyAxis = linspace(-1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
-CurrentExpSpec = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
-% update contour graph
-set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
-% update upper projection graph
-Inset = sum(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),2);
-set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-% update lower projection graph
-Inset = sum(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
-set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-drawnow;
-
-
-if isfield(FitData,'FitSets')
-  h = findobj('Tag','SetListBox');
-  idx = get(h,'Value');
-  fitset = FitData.FitSets(idx);
-  
-  h = getParameterTableHandle;
-  data = get(h,'data');
-  values = fitset.bestvalues;
-  for p = 1:numel(values)
-    data{p,3} = sprintf('%0.6g',values(p));
-  end
-  set(h,'Data',data);
-  
-  CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
-  CurrentFitSpec = abs(CurrentFitSpec - CurrentFitSpec(end,end));
-  h = findobj('Tag','bestsimdata');
-  set(h,'ZData',abs(CurrentFitSpec)/max(max(abs(CurrentFitSpec))));
-  h = findobj('Tag','bestsimdata_projection1');
-  Inset = sum(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),1);
-  Inset = abs(Inset - Inset(end));
-  set(h,'YData',Inset/max(Inset));
-  h = findobj('Tag','bestsimdata_projection2');
-  Inset = sum(CurrentFitSpec,2);
-  Inset = abs(Inset - Inset(end));
-  set(h,'YData',Inset/max(Inset));
-  drawnow
-end
-
-return
-%==========================================================================
 
 %==========================================================================
 function selectInvButtonCallback(object,src,event)

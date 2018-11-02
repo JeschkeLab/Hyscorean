@@ -251,7 +251,9 @@ switch FileExtension
     MountedData.TimeStep1 = DataForInegration.TimeStep1;
     MountedData.TimeStep2 = DataForInegration.TimeStep2;
     MountedData.NUSflag = isNUS;
+    if MountedData.NUSflag
     MountedData.NUS = AWG_Parameters.NUS;
+    end
 
 end
 
