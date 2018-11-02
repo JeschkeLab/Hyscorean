@@ -28,6 +28,10 @@ function varargout = esfit_hyscorean(SimFunctionName,ExpSpec,Sys0,Vary,Exp,SimOp
 
 if (nargin==0), help(mfilename); return; end
 
+%Close all parpools
+delete(gcp('nocreate'))
+
+
 % --------License ------------------------------------------------
 LicErr = 'Could not determine license.';
 Link = 'epr@eth'; eschecker; error(LicErr); clear Link LicErr
@@ -903,9 +907,9 @@ BestSpec = cell(numSpec,1);
 BestSpecScaled = cell(numSpec,1);
 Residuals = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
-FitData.Cores = 1;
+
 %Loop over all field positions (i.e. different files/spectra)
-parfor (Index = 1:numSpec,FitData.Cores)
+parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
 
   %Run saffron for a given field position
   [t1,t2,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
@@ -1034,48 +1038,47 @@ rmsd_individual = cell(numSpec,1);
 nOutArguments = FitData.nOutArguments;
 SImFcnHandel = FitData.SimFcn;
 
-FitData.Cores = 0;
 %Loop over all field positions (i.e. different files/spectra)
-parfor (Index = 1:numSpec,FitData.Cores)
-if numel(SimSystems)==1
-  [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
-else
-  [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
-end
-
-%Get time-domain signal
-if iscell(out)
-  Out = out{1:nOutArguments};
-else
-  Out = out;
-end
-td = Out.td;
-%Do base-correction as would be done in saffron
-tdx = basecorr(td,[1 2],[0 0]);
-%If done for experimental data, then do Lorentz-Gauss transformation
-if SimOpt{Index}.Lorentz2GaussCheck
-  Processed.TimeAxis1 = t1;
-  Processed.TimeAxis2 = t2;
-  Processed.Signal = tdx;
-  [Processed]=Lorentz2Gauss2D(Processed,SimOpt{Index}.L2GParameters);
-  tdx = Processed.Signal;
-end
-%Use same apodization window as experimental data
-tdx = apodizationWin(tdx,SimOpt{Index}.WindowType,SimOpt{Index}.WindowDecay);
-%Fourier transform with same zerofilling as experimental data
-simspec{Index} = fftshift(fft2(tdx,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints));
-
-
-% (SimSystems{s}.weight is taken into account in the simulation function)
-% simspec = out{FitData.OutArgument}; % pick last output argument
-
-% Scale simulated spectrum to experimental spectrum ----------
-simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},FitOpt.Scaling);
-simspec{Index}  = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
-
-rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
-rmsd = rmsd + rmsd_individual{Index};
-
+parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
+  if numel(SimSystems)==1
+    [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
+  else
+    [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
+  end
+  
+  %Get time-domain signal
+  if iscell(out)
+    Out = out{1:nOutArguments};
+  else
+    Out = out;
+  end
+  td = Out.td;
+  %Do base-correction as would be done in saffron
+  tdx = basecorr(td,[1 2],[0 0]);
+  %If done for experimental data, then do Lorentz-Gauss transformation
+  if SimOpt{Index}.Lorentz2GaussCheck
+    Processed.TimeAxis1 = t1;
+    Processed.TimeAxis2 = t2;
+    Processed.Signal = tdx;
+    [Processed]=Lorentz2Gauss2D(Processed,SimOpt{Index}.L2GParameters);
+    tdx = Processed.Signal;
+  end
+  %Use same apodization window as experimental data
+  tdx = apodizationWin(tdx,SimOpt{Index}.WindowType,SimOpt{Index}.WindowDecay);
+  %Fourier transform with same zerofilling as experimental data
+  simspec{Index} = fftshift(fft2(tdx,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints));
+  
+  
+  % (SimSystems{s}.weight is taken into account in the simulation function)
+  % simspec = out{FitData.OutArgument}; % pick last output argument
+  
+  % Scale simulated spectrum to experimental spectrum ----------
+  simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},FitOpt.Scaling);
+  simspec{Index}  = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
+  
+  rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
+  rmsd = rmsd + rmsd_individual{Index};
+  
 end
 
 FitData.errorlist = [FitData.errorlist rmsd];
@@ -1878,6 +1881,12 @@ return
 function speedUpCallback(object,src,event)
   global FitData
   FitData.CurrentCoreUsage = get(object,'value') - 1;
+  
+  if FitData.CurrentCoreUsage > length(FitData.Exp)
+    w  = warndlg(sprintf('%i cores accesed. This exceeds the number of spectra loaded (%i). No speed-up will be obtained from exceeding %i cores. Consider reducing the number of cores.' ...
+                          ,FitData.CurrentCoreUsage,length(FitData.Exp),length(FitData.Exp)),'Warning','modal');
+    waitfor(w)
+  end
   
   delete(gcp('nocreate'))
 
