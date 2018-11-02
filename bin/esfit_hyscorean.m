@@ -335,35 +335,48 @@ if FitData.GUI
   set(hFig,'CloseRequestFcn',...
     'global UserCommand; UserCommand = 99; drawnow; delete(gcf);');
   
+  %-----------------------------------------------------------------
   % axes
   %-----------------------------------------------------------------
   excludedRegions = [];
-  % data display
+  %Construct main axes
   hAx = axes('Parent',hFig,'Units','pixels',...
     'Position',[50 50 900 420],'FontSize',8,'Layer','top');
   hsubAx1 = axes('Parent',hFig,'Units','pixels',...
     'Position',[50 480 900 100],'FontSize',8,'Layer','top');
   hsubAx2 = axes('Parent',hFig,'Units','pixels',...
     'Position',[960 50 100 420],'FontSize',8,'Layer','top');
+  
+  %Get experimental data to display
   dispData = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
+  %Set rest of data to NaN to not display it
   NaNdata = ones(length(dispData))*NaN;
   maxy = max(max(dispData)); miny = min(min(dispData));
+  %Not sure if this is still needed
   YLimits = [miny maxy] + [-1 1]*FitOpt.PlotStretchFactor*(maxy-miny);
   for r = 1:size(excludedRegions,1)
     h = patch(excludedRegions(r,[1 2 2 1]),YLimits([1 1 2 2]),[1 1 1]*0.8);
     set(h,'EdgeColor','none');
   end
-  x = (1:length(dispData)) - round(length(dispData)/2);
+  
+  %Get frequency axis
   FrequencyAxis = linspace(-1/(2*Exp{1}.dt),1/(2*Exp{1}.dt),length(dispData));
+  
+  %Remove all warnings to avoid contour w/ NaN warning at initialization
   warning('off','all')
   grid(hAx,'on')
   hold(hAx,'on')
+  
+  %Plot auxiliary lines
   plot(hAx,ones(length(FrequencyAxis),1)*0,linspace(0,max(FrequencyAxis),length(FrequencyAxis)),'k-')
   plot(hAx,FrequencyAxis,abs(FrequencyAxis),'k-.')  
-%   colormap(hAx,'bone')
+  
+  %Construct all contour handles
   [~,h] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'Color','k','LevelList',linspace(0,1,40));
   [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
   [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,40));
+  
+  %Construct all projection inset handles
   NaNdata = ones(1,length(dispData))*NaN;
   hold(hsubAx1,'on')
   hsub1 = plot(hsubAx1,FrequencyAxis,NaNdata,'Color','k');
@@ -374,10 +387,13 @@ if FitData.GUI
   hsub2_2 = plot(hsubAx2,FrequencyAxis,NaNdata,'Color','g');
   hsub2_3 = plot(hsubAx2,FrequencyAxis,NaNdata,'Color','r');
   warning('on','all')
+  
+  %Set data and tags to contours
   set(h,'Tag','expdata','XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',dispData);
   set(h2,'Tag','bestsimdata');
   set(h3,'Tag','currsimdata');
   
+  %Set data and tags to insets
   Inset = sum(dispData(round(length(dispData)/2,0):end,:));
   Inset = abs(Inset - Inset(end));
   set(hsub1,'Tag','expdata_projection1','XData',FrequencyAxis,'YData',Inset/max(Inset));
@@ -388,6 +404,8 @@ if FitData.GUI
   set(hsub2,'Tag','expdata_projection2','XData',FrequencyAxis,'YData',Inset/max(Inset));
   set(hsub2_2,'Tag','bestsimdata_projection2');
   set(hsub2_3,'Tag','currsimdata_projection2');
+  
+  %Set properties of axes
   set(hAx,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
   set(hAx,'YLim',[0 SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
   set(hsubAx1,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
@@ -404,6 +422,7 @@ if FitData.GUI
   box(hsubAx2,'on')
   camroll(hsubAx2,-90)
   
+  %-----------------------------------------------------------------
   %Current spectrum display
   %-----------------------------------------------------------------
     x0 = 960; y0 = 380; dx = 80;
@@ -418,9 +437,10 @@ if FitData.GUI
     'String',AvailableFields,...
     'Value',FitData.CurrentSpectrumDisplay,...
     'BackgroundColor','w',...
-    'Tooltip','Scaling mode',...
+    'Tooltip','Change displayed spectrum',...
     'Callback',@ChangeCurrentDisplay);  
   
+  %-----------------------------------------------------------------
   % iteration and rms error displays
   %-----------------------------------------------------------------
   x0 = 1070; y0 = 175;
@@ -438,7 +458,7 @@ if FitData.GUI
   set(h,'FontSize',7,'Tag','logLine','Tooltip','Information from fitting algorithm');
   set(h,'Horizontal','left');
   
-  
+  %-----------------------------------------------------------------
   % Parameter table
   %-----------------------------------------------------------------
   columnname = {'','Name','best','current','center','vary'};
@@ -513,6 +533,8 @@ if FitData.GUI
     'String','none','Enable','on','Callback',@selectNoneButtonCallback,...
     'HorizontalAl','left',...
     'Tooltip','Unselect all parameters');
+  
+  %-----------------------------------------------------------------
   % popup menus
   %-----------------------------------------------------------------
   x0 = 1070; dx = 60; y0 = 299; dy = 24;
@@ -557,6 +579,7 @@ if FitData.GUI
     'Position',[x0+dx y0+dy 150 20]);
   if (FitOpts.Startpoint==2), set(h,'Value',2); end
   
+  %-----------------------------------------------------------------
   % Start/Stop buttons
   %-----------------------------------------------------------------
   pos =  [x0+220 y0-3+50 110 45];
@@ -583,6 +606,7 @@ if FitData.GUI
     'Tooltip','Save latest fitting result',...
     'Position',pos1);
 
+  %-----------------------------------------------------------------
   % Fitset list
   %-----------------------------------------------------------------
   x0 = 1070; y0 = 10;
@@ -624,6 +648,7 @@ if FitData.GUI
   set(hFig,'NextPlot','new');
   
 end
+
 
 % Run fitting routine
 %------------------------------------------------------------
@@ -831,45 +856,54 @@ else
   fs = FinalSys;
 end
 
+numSpec = length(FitData.Exp);
+
+%initialize rmsd to allow recursive summation
 rmsd = 0;
+BestSpec = cell(numSpec,1);
+BestSpecScaled = cell(numSpec,1);
+Residuals = cell(numSpec,1);
+rmsd_individual = cell(numSpec,1);
 
-for Index = 1:length(FitData.Exp)
+%Loop over all field positions (i.e. different files/spectra)
+for Index = 1:numSpec
 
-[t1,t2,~,out{1:FitData.nOutArguments}] = FitData.SimFcn(fs,FitData.Exp{Index},FitData.SimOpt{Index});
-%Get time-domain signal
-Out = out{1:FitData.nOutArguments};
-td = Out.td;
-%Do base-correction as would be done in saffron
-tdx = basecorr(td,[1 2],[0 0]);
-%If done for experimental data, then do Lorentz-Gauss transformation
-if FitData.SimOpt{Index}.Lorentz2GaussCheck
-  Processed.TimeAxis1 = t1;
-  Processed.TimeAxis2 = t2;
-  Processed.Signal = tdx;
-  [Processed]=Lorentz2Gauss2D(Processed,FitData.SimOpt{Index}.L2GParameters);
-  tdx = Processed.Signal;
-end
-%Use same apodization window as experimental data
-tdx = apodizationWin(tdx,FitData.SimOpt{Index}.WindowType,FitData.SimOpt{Index}.WindowDecay);
-%Fourier transform with same zerofilling as experimental data
-BestSpec{Index} = fftshift(fft2(tdx,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints));
-
-% (SimSystems{s}.weight is taken into account in the simulation function)
-% BestSpec = out{FitData.OutArgument}; % pick last output argument
-BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
-if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
-  BestSpecScaled{Index} = reshape(BestSpecScaled{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
-end
-BestSpec{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpec{Index},FitOpts.Scaling);
-if length(FitData.ExpSpec)~=BestSpec{Index}
-  BestSpec{Index} = reshape(BestSpec{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
-end
-
-Residuals{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index});
-
-rmsd_individual{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index})/sqrt(numel(FitData.ExpSpec{Index}));
-rmsd = rmsd + rmsd_individual{Index};
-
+  %Run saffron for a given field position
+  [t1,t2,~,out{1:FitData.nOutArguments}] = FitData.SimFcn(fs,FitData.Exp{Index},FitData.SimOpt{Index});
+  %Get time-domain signal
+  Out = out{1:FitData.nOutArguments};
+  td = Out.td;
+  %Do base-correction as would be done in saffron
+  tdx = basecorr(td,[1 2],[0 0]);
+  %If done for experimental data, then do Lorentz-Gauss transformation
+  if FitData.SimOpt{Index}.Lorentz2GaussCheck
+    Processed.TimeAxis1 = t1;
+    Processed.TimeAxis2 = t2;
+    Processed.Signal = tdx;
+    [Processed]=Lorentz2Gauss2D(Processed,FitData.SimOpt{Index}.L2GParameters);
+    tdx = Processed.Signal;
+  end
+  %Use same apodization window as experimental data
+  tdx = apodizationWin(tdx,FitData.SimOpt{Index}.WindowType,FitData.SimOpt{Index}.WindowDecay);
+  %Fourier transform with same zerofilling as experimental data
+  BestSpec{Index} = fftshift(fft2(tdx,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints));
+  
+  % (SimSystems{s}.weight is taken into account in the simulation function)
+  % BestSpec = out{FitData.OutArgument}; % pick last output argument
+  BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
+  if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
+    BestSpecScaled{Index} = reshape(BestSpecScaled{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
+  end
+  BestSpec{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpec{Index},FitOpts.Scaling);
+  if length(FitData.ExpSpec)~=BestSpec{Index}
+    BestSpec{Index} = reshape(BestSpec{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
+  end
+  
+  Residuals{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index});
+  
+  rmsd_individual{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index})/sqrt(numel(FitData.ExpSpec{Index}));
+  rmsd = rmsd + rmsd_individual{Index};
+  
 end
 
 % Output
@@ -943,14 +977,20 @@ Sys0 = FitDat.Sys0;
 Vary = FitDat.Vary;
 Exp = FitDat.Exp;
 SimOpt = FitDat.SimOpt;
-rmsd = 0;
+
 % Simulate spectra ------------------------------------------
 inactive = FitData.inactiveParams;
 x_all = FitData.startx;
 x_all(~inactive) = x;
 [SimSystems,simvalues] = getSystems(Sys0,Vary,x_all);
 
-for Index = 1:length(Exp)
+numSpec = length(Exp);
+rmsd = 0;
+simspec = cell(numSpec,1);
+rmsd_individual = cell(numSpec,1);
+
+%Loop over all field positions (i.e. different files/spectra)
+for Index = 1:numSpec
 
 if numel(SimSystems)==1
   [t1,t2,~,out{1:FitData.nOutArguments}] = FitData.SimFcn(SimSystems,Exp{Index},SimOpt{Index});
@@ -962,7 +1002,7 @@ end
 Out = out{1:FitData.nOutArguments};
 td = Out.td;
 %Do base-correction as would be done in saffron
-tdx = basecorr(td,[1 2],[0 0]);
+tdx = basecorr(td,[1 2],[2 2]);
 %If done for experimental data, then do Lorentz-Gauss transformation
 if SimOpt{Index}.Lorentz2GaussCheck
   Processed.TimeAxis1 = t1;
@@ -1006,7 +1046,7 @@ if FitData.GUI && (UserCommand~=99)
     CurrentSimSpec = simspec{FitData.CurrentSpectrumDisplay};
     CurrentBestSpec = FitData.bestspec{FitData.CurrentSpectrumDisplay};
 
-    %not sure about this...
+    %Baseline correction
     CurrentSimSpec = CurrentSimSpec - CurrentSimSpec(end,end);
     CurrentBestSpec = CurrentBestSpec - CurrentBestSpec(end,end);
 
@@ -1613,7 +1653,6 @@ set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset/max
 % update lower projection graph
 Inset = sum(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
 set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-drawnow;
 
 
 if isfield(FitData,'FitSets')

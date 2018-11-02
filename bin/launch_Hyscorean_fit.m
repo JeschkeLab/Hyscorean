@@ -31,7 +31,5 @@ for Index = 1:numSpec
   Opt{Index}.L2GParameters = DataForFitting.L2GParameters;
   Opt{Index}.Lorentz2GaussCheck = DataForFitting.Lorentz2GaussCheck;
 end
-
-
   esfit_hyscorean('saffron',ExpSpectra,[],[],Exp,Opt)
 end
