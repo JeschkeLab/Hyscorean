@@ -224,6 +224,7 @@ if isfield(handles.Data,'BrukerParameters')
 elseif isfield(handles.Data,'AWG_Parameters')
   DataForFitting.Field =  0.1*handles.Data.AWG_Parameters.B;
 end
+DataForFitting.Field = DataForFitting.Field + str2double(Offset(1:end-2));
 DataForFitting.nPoints = length(handles.Data.PreProcessedSignal);
 DataForFitting.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 DataForFitting.FreqLim = str2double(get(handles.XUpperLimit,'string'));
