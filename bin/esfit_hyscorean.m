@@ -52,7 +52,17 @@ FitOpts = [];
 FitData.currFitSet = [];
 
 FitData.CurrentSpectrumDisplay = 1;
-FitData.CurrentCoreUsage = 1;
+FitData.CurrentCoreUsage = 0;
+
+if ~iscell(Exp)
+  Exp = {Exp};
+end
+if ~iscell(SimOpt)
+  SimOpt = {SimOpt};
+end
+FitData.DefaultExp = Exp;
+FitData.DefaultSimOpt = SimOpt;
+
 % Simulation function
 %--------------------------------------------------------------------
 switch class(SimFunctionName)
@@ -92,9 +102,10 @@ for i=1:Size
   end
 end
 StringForEval = char(strjoin(string(SpinSystemInput{1})));
+try
 eval(StringForEval)
-
-
+catch
+end
 %Check if any changes/additions to the Opt structure are requested
 if exist('Opt','var')
     if ~iscell(Opt)
@@ -107,6 +118,23 @@ if exist('Opt','var')
         end
       end
     end
+else
+    SimOpt = FitData.DefaultSimOpt;
+end
+%Check if any changes/additions to the Exp structure are requested
+if exist('Exp','var')
+    if ~iscell(Exp)
+      %Get Opt fields
+      ExpFields = fields(Exp);
+      for i=1:length(ExpFields)
+        for j=1:length(Exp)
+          %Set these fields on the existing Exp structure
+          Exp{j} = setfield(Exp{j},ExpFields{i},getfield(Exp,ExpFields{i}));
+        end
+      end
+    end
+else
+  Exp = FitData.DefaultExp;
 end
 
 Sys0 = Sys;
@@ -135,6 +163,7 @@ end
 if ~iscell(SimOpt)
   SimOpt = {SimOpt};
 end
+FitData.DefaultExp;
 FitData.nSpectra = 1;
 FitData.ExpSpec = ExpSpec;
 for i=1:length(ExpSpec)
@@ -638,7 +667,7 @@ if FitData.GUI
   uicontrol(hFig,'Style','popupmenu',...
     'Tag','SpeedUp',...
     'String',AvailableCores,...
-    'Value',FitData.CurrentCoreUsage,...
+    'Value',FitData.CurrentCoreUsage+1,...
     'Callback',@speedUpCallback,...
     'Enable','on',...
     'Tooltip','Parallel computing options',...
@@ -721,8 +750,9 @@ clear global UserCommand
 
 function [FinalSys,BestSpec,Residuals] = runFitting(object,src,event)
 
-% try
 global FitOpts FitData UserCommand
+
+try
 
 UserCommand = 0;
 
@@ -967,7 +997,7 @@ if ~FitData.GUI
   end
 
 else
-  
+    
   % Save current set to set list
   newFitSet.rmsd = rmsd;
   if strcmp(FitOpts.Scaling, 'none')
@@ -991,13 +1021,26 @@ else
   
 end
 
-% catch
-%  fprintf('Something went wrong and fitting failed. Check your system definition.')
-%   % If fails hide Stop button, show Start button
-%   set(findobj('Tag','StopButton'),'Visible','off');
-%   set(findobj('Tag','StartButton'),'Visible','on');
-%   set(findobj('Tag','SaveButton'),'Enable','off');
-% end
+catch
+  w = errordlg('An error ocurred during fitting. Please check your input definition.','Error','modal');
+  waitfor(w);
+  % If fails hide Stop button, show Start button
+  set(findobj('Tag','StopButton'),'Visible','off');
+  set(findobj('Tag','StartButton'),'Visible','on');
+  set(findobj('Tag','SaveButton'),'Enable','off');
+  % Re-enable listboxes
+  set(findobj('Tag','MethodMenu'),'Enable','on');
+  set(findobj('Tag','TargetMenu'),'Enable','on');
+  set(findobj('Tag','ScalingMenu'),'Enable','on');
+  set(findobj('Tag','StartpointMenu'),'Enable','on');
+  
+  % Re-enable parameter table and its selection controls
+  set(findobj('Tag','selectAllButton'),'Enable','on');
+  set(findobj('Tag','selectNoneButton'),'Enable','on');
+  set(findobj('Tag','selectInvButton'),'Enable','on');
+  set(getParameterTableHandle,'Enable','on');
+
+end
 
 return
 %===============================================================================
@@ -1578,7 +1621,7 @@ Path2Hyscorean = Path2Hyscorean(1:end-11);
 clear Sys Vary
 while true
   load([Path2Hyscorean 'bin\DefaultSystemEasySpin']);
-  SpinSystemInput = inputdlg('Input','Spin System & Variables', [20 80],{DefaultInput});
+  SpinSystemInput = inputdlg_mod('Input','Spin System & Variables', [20 80],{DefaultInput});
   if isempty(SpinSystemInput) %if canceled
     return
   end
@@ -1622,6 +1665,8 @@ if exist('Opt','var')
         end
       end
     end
+else
+  FitData.SimOpt = FitData.DefaultSimOpt;
 end
 %Check if any changes/additions to the Exp structure are requested
 if exist('Exp','var')
@@ -1635,6 +1680,8 @@ if exist('Exp','var')
         end
       end
     end
+else
+  FitData.Exp = FitData.DefaultExp;
 end
 
 set(findobj('Tag','SystemName'),'string',Sys.Nucs)
