@@ -182,7 +182,7 @@ yticks(handles.mainPlot,curerntXTicks(curerntXTicks>=0))
 if isfield(handles,'AddedLines')
   for i=1:length(handles.AddedLines)
     hold(handles.mainPlot,'on')
-    plot(handles.mainPlot,handles.AddedLines{i}.x,handles.AddedLines{i}.y,'k-.','LineWidth',0.5)
+    plot(handles.mainPlot,handles.AddedLines{i}.x,handles.AddedLines{i}.y,'k-.','LineWidth',1)
     hold(handles.mainPlot,'off')
   end
 end

@@ -1318,7 +1318,7 @@ function AddHelpLine_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 %Get gyromagnetic ratio from selected nuclei
-gyromagneticRatio = getgyro(get(handles.AddTagList,'Value'));
+gyromagneticRatio = getgyro_Hyscorean(get(handles.AddTagList,'Value'));
 %Get center field in gauss
 if isfield(handles.Data,'BrukerParameters')
   CenterField = handles.Data.BrukerParameters.CenterField;
@@ -1331,7 +1331,7 @@ end
 CenterField = CenterField*1e-4;
 %Get field offset
 Offset = get(handles.FieldOffset,'string');
-Offset = str2double(Offset(1:end-2))*1e-4;
+Offset = str2double(Offset)*1e-4;
 %get Larmor frequency in MHz
 Larmorfrequency = gyromagneticRatio*(CenterField + Offset);
 
@@ -1343,12 +1343,12 @@ if X>0
   Xaxis = Xaxis(Xaxis>0);
   Slope = -1;
 else
-    Xaxis = Xaxis(Xaxis<0);
-    Slope = 1;
+    Xaxis = Xaxis(Xaxis>0);
+    Slope = -1;
 end
-Yaxis =  Y + Slope*(Xaxis - X);
+Yaxis =  Y + Slope*(Xaxis - abs(X));
 hold(handles.mainPlot,'on')
-plot(handles.mainPlot,Xaxis,Yaxis,'k-.','LineWidth',0.5);
+plot(handles.mainPlot,Xaxis,Yaxis,'k-.','LineWidth',1);
 hold(handles.mainPlot,'off')
 if isfield(handles,'AddedLines')
 size = length(handles.AddedLines);
@@ -1367,7 +1367,7 @@ function AddTag_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 %Get gyromagnetic ratio from selected nuclei
-gyromagneticRatio = getgyro(get(handles.AddTagList,'Value'));
+gyromagneticRatio = getgyro_Hyscorean(get(handles.AddTagList,'Value'));
 %Get center field in gauss
 if isfield(handles.Data,'BrukerParameters')
   CenterField = handles.Data.BrukerParameters.CenterField;
@@ -1614,9 +1614,6 @@ function FieldOffset_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of FieldOffset as text
 %        str2double(get(hObject,'String')) returns contents of FieldOffset as a double
-FieldOffset = (get(hObject,'string'));
-Tag = [FieldOffset ' G'];
-set(hObject,'string',Tag);
 
 % --- Executes during object creation, after setting all properties.
 function FieldOffset_CreateFcn(hObject, eventdata, handles)
