@@ -62,7 +62,7 @@ if ~iscell(SimOpt)
 end
 FitData.DefaultExp = Exp;
 FitData.DefaultSimOpt = SimOpt;
-
+FitData.numSpec = length(Exp);
 % Simulation function
 %--------------------------------------------------------------------
 switch class(SimFunctionName)
@@ -373,6 +373,13 @@ FitOpts = FitOpt;
 if FitData.GUI
   clc
   
+  %Close the rmsd detached plot if open
+    hObj = findobj('Tag','detachedRMSD');
+
+  if ~isempty(hObj)
+    close(hObj)
+  end
+  
   % main figure
   %------------------------------------------------------------------
   hFig = findobj('Tag','esfitFigure');
@@ -515,6 +522,16 @@ if FitData.GUI
 
   h = uicontrol('Style','text','Position',[x0 y0+100 270 16]);
   set(h,'FontSize',7,'Tag','logLine','Tooltip','Information from fitting algorithm');
+  set(h,'Horizontal','left');
+  
+   h = uicontrol('Style','pushbutton','Position',[x0 y0-25 22 22]);
+   load([Path2Hyscorean 'bin\detach_icon'])
+  set(h,'FontSize',7,'Tag',...
+    'ExpandRMSD',...
+    'Tooltip','Show individual fits RMSD',...
+    'CData',CData,...
+    'Tooltip','Change displayed spectrum',...
+    'Callback',@DetachRMSD);
   set(h,'Horizontal','left');
   
   %-----------------------------------------------------------------
@@ -1064,11 +1081,15 @@ end
 if ~isfield(FitData,'errorlist')
   FitData.errorlist = [];
 end
+if ~isfield(FitData,'individualErrors')
+  FitData.individualErrors = cell(FitData.numSpec,1);
+end
 
 Sys0 = FitDat.Sys0;
 Vary = FitDat.Vary;
 Exp = FitDat.Exp;
 SimOpt = FitDat.SimOpt;
+  rmsd_individual = cell(FitData.numSpec,1);
 
 % Simulate spectra ------------------------------------------
 inactive = FitData.inactiveParams;
@@ -1123,7 +1144,12 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   
   rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
   rmsd = rmsd + rmsd_individual{Index};
-  
+ 
+
+end
+
+for i=1:FitData.numSpec
+ FitData.individualErrors{i} = [FitData.individualErrors{i} rmsd_individual{i}];
 end
 
 FitData.errorlist = [FitData.errorlist rmsd];
@@ -1236,7 +1262,23 @@ if FitData.GUI && (UserCommand~=99)
     axis(ax,'tight');
     drawnow
   end
-  
+ 
+  hObj = findobj('Tag','detachedRMSD');
+  if ~isempty(hObj)
+      numPlots = FitData.numSpec+1;
+      for j=2:2:2*numPlots
+          hDetachedErrorPlot = FitData.DetachedRMSD_Fig.Children(j);
+          if j < 2*numPlots
+            CurrentError = FitData.individualErrors{j/2};
+          else
+            CurrentError = FitData.errorlist;
+          end
+          set(hDetachedErrorPlot.Children,'XData',1:n,'YData',log10(CurrentError(end-n+1:end)));
+          axis(hDetachedErrorPlot,'tight');
+      end
+  end
+  drawnow
+
 end
 %-------------------------------------------------------------------
 
@@ -1990,3 +2032,54 @@ catch
 end
 
 return
+%==========================================================================
+
+%==========================================================================
+function DetachRMSD(object,src,event)
+
+global FitData
+
+  
+numSpec = FitData.numSpec;
+
+FitData.DetachedRMSD_Fig = findobj('Tag','detachedRMSD');
+  if isempty(FitData.DetachedRMSD_Fig)
+    FitData.DetachedRMSD_Fig = figure('Tag','detachedRMSD','WindowStyle','normal');
+  else
+    figure(FitData.DetachedRMSD_Fig);
+    clf(FitData.DetachedRMSD_Fig);
+  end 
+    set(FitData.DetachedRMSD_Fig,'WindowStyle','normal','DockControls','off','MenuBar','none');
+  set(FitData.DetachedRMSD_Fig,'Resize','off');
+  set(FitData.DetachedRMSD_Fig,'Name','Hyscorean: EasySpin - Individual Fit RMSD','NumberTitle','off');
+    numPlots = numSpec+1;
+    Tags{1} = 'DetachedRmsdPlot_Total';
+    for i=2:numPlots
+          Tags{i} = sprintf('DetachedRmsdPlot%i', i);
+    end
+  sz = [600 numPlots*200]; % figure size
+  screensize = get(0,'ScreenSize');
+  xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
+  ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
+  set(FitData.DetachedRMSD_Fig,'Position',[xpos ypos sz(1) sz(2)])
+cmp = lines(numPlots);
+for i=1:numPlots
+  AxisWidth = 0.85/numPlots;
+  YPositionAxis = 1 - i*AxisWidth - i*0.04;
+  hAx = axes('Parent',FitData.DetachedRMSD_Fig,'Units','normalized','Position',[0.05 YPositionAxis 0.85 AxisWidth]);
+  h = plot(hAx,1,NaN,'.');
+  set(hAx,'Tag',Tags{i})
+  set(h,'Tag',Tags{i},'MarkerSize',10,'Color',cmp(i,:));
+  set(gca,'FontSize',9,'YScale','lin','XTick',[],'YAxisLoc','right','Layer','top');
+  if i>1
+    LegendTag = sprintf('RMSD @ %.2f mT', FitData.Exp{i-1}.Field);
+  else
+    LegendTag = 'Total RMSD';
+  end
+  legend(hAx,LegendTag)
+end
+
+return
+%==========================================================================
+
+
