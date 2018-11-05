@@ -2,13 +2,13 @@ function [BlinSpotsMap,BlindSpotsAxis1,BlindSpotsAxis2] = imposeBlindSpots(handl
 
 
 TauValues = handles.currentTaus;
-FrequencyAxis = handles.Processed.axis1;
-Dimension = length(FrequencyAxis); 
+Dimension = 1000; 
 
   XupperLimit = str2double(get(handles.XUpperLimit,'string'));
   XlowerLimit = -XupperLimit;
   YupperLimit = XupperLimit;
   YlowerLimit = 0;
+FrequencyAxis = linspace(XlowerLimit,XupperLimit,Dimension);
 
   BlindSpotsAxis1  = FrequencyAxis;
   BlindSpotsAxis2  = FrequencyAxis;
