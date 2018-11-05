@@ -6,8 +6,6 @@ function Settings = getSettings(handles)
   Settings.zerofilling1 = str2double(get(handles.ZeroFilling1,'string'));
   Settings.tauFactor2 = str2double(get(handles.L2G_tau2,'string'));
   Settings.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
-  Settings.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'value');
-
   Settings.zerofilling1 = str2double(get(handles.ZeroFilling1,'string'));
   Settings.zerofilling2 = str2double(get(handles.ZeroFilling2,'string'));
   Settings.WindowDecay = str2double(get(handles.Hammingedit,'string'));
@@ -30,14 +28,7 @@ function Settings = getSettings(handles)
   Settings.SavitzkyGolayFrameLength = str2double(get(handles.FrameLength,'string'));
   Settings.SavitzkyGolayOrder = str2double(get(handles.FilterOrder,'string'));
   Settings.SavitzkyGolayFilter = get(handles.SavitzkyFilter,'Value');
-  Settings.FieldOffset = get(handles.FieldOffset,'string');
-Settings.AutomaticBackgroundStart = get(handles.AutomaticBackgroundStart,'value');
-Settings.BackgroundStart1 = get(handles.BackgroundStart1,'string');
-Settings.BackgroundStart2 = get(handles.BackgroundStart2,'string');
-Settings.MultiTauDimension = get(handles.MultiTauDimensions,'value');
-Settings.MinimalContourLevel = get(handles.MinimalContourLevel,'string');
-Settings.XUpperLimit = get(handles.XUpperLimit,'string');
 
-  Settings.ReconstructionAlgorithm = get(handles.ReconstructionAlgorithm,'value');
+  Settings.ReconstructionAlgorithm = get(handles.ReconstructionAlgorithm,'value'));
   Settings.MaxEntBackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
   Settings.MaxEntLagrangianMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));

@@ -34,17 +34,17 @@ end
 %Find which of the signals to be plotted has the largest maximum
 ylimMax = max(max(real(Processed.Signal)/max(max(real(Processed.Signal)))));
 ylimMin = min(min(real(Processed.Signal)/max(max(real(Processed.Signal)))));
-if ylimMax < max(max(real(handles.Data.NonCorrectedIntegral)))
-  ylimMax = max(max(real(handles.Data.NonCorrectedIntegral)));
+if ylimMax < max(max(real(handles.Data.NonCorrectedIntegral)/max(max(real(handles.Data.NonCorrectedIntegral)))))
+  ylimMax = max(max(real(handles.Data.NonCorrectedIntegral/max(max(real(handles.Data.NonCorrectedIntegral))))));
 end
-if ylimMin > min(min(real(handles.Data.NonCorrectedIntegral)))
-  ylimMin =  min(min(real(handles.Data.NonCorrectedIntegral)));
+if ylimMin > min(min(real(handles.Data.NonCorrectedIntegral)/max(max(real(handles.Data.NonCorrectedIntegral)))))
+  ylimMin =  min(min(real(handles.Data.NonCorrectedIntegral)/max(max(real(handles.Data.NonCorrectedIntegral)))));
 end
-if ylimMax < max(max(real(handles.Data.PreProcessedSignal)))
-  ylimMax = max(max(real(handles.Data.PreProcessedSignal)));
+if ylimMax < max(max(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))))
+  ylimMax = max(max(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))));
 end
-if ylimMin > min(min(real(handles.Data.PreProcessedSignal)))
-  ylimMin =  min(min(real(handles.Data.PreProcessedSignal)));
+if ylimMin > min(min(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))))
+  ylimMin =  min(min(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))));
 end
 %Construct time axes for the signals
 if  PlotWithZeroFilling
@@ -116,7 +116,7 @@ if get(handles.NonCorrectedTrace,'value')
   
   %Set line and label with background fit start time
   XCoordinate = Axis(handles.Data.BackgroundStartIndex1)*[1 1];
-  YCoordinate = [1.1*ylimMin 1.1*ylimMax];
+  YCoordinate = [0.9*ylimMin 1.1*ylimMax];
   line(handles.signal_t1,XCoordinate,YCoordinate,'Color',[0.2 0.2 0.9],'LineStyle','--')
   text(handles.signal_t1,1.1*Axis(handles.Data.BackgroundStartIndex1),ylimMin,sprintf('%i ns',round(1000*Axis(handles.Data.BackgroundStartIndex1),0)),'Color',[0.2 0.2 0.9])
   hold(handles.signal_t1,'on')
@@ -156,7 +156,7 @@ if PlotSecondCorrection
   
   %Set line and label with background fit start time
   XCoordinate = Axis(handles.Data.BackgroundStartIndex2)*[1 1];
-  YCoordinate = [1.1*ylimMin 1.1*ylimMax];
+  YCoordinate = [0.9*ylimMin 1.1*ylimMax];
   line(handles.signal_t1,XCoordinate,YCoordinate,'Color',[0.6 0.0 0.8],'LineStyle','--')
   text(handles.signal_t1,1.1*Axis(handles.Data.BackgroundStartIndex2),ylimMax,sprintf('%i ns',round(1000*Axis(handles.Data.BackgroundStartIndex2),0)),'Color',[0.6 0.0 0.8])
   hold(handles.signal_t1,'on')
@@ -232,7 +232,7 @@ end
 %------------------------------------------------------------------------
 
 %Set axes limits
-set(handles.signal_t1,'ytick',[],'ylim',[1.1*ylimMin 1.1*ylimMax],'xlim',[min(TimeAxis1) max(TimeAxis1)])
+set(handles.signal_t1,'ytick',[],'ylim',[0.9*ylimMin 1.1*ylimMax],'xlim',[min(TimeAxis1) max(TimeAxis1)])
 
 %Format axis labels and trace information according to current dimension
 if get(handles.ChangeSignalPlotDimension,'Value')

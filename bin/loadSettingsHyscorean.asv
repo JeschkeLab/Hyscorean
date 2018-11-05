@@ -32,10 +32,7 @@ set(handles.Lorentz2GaussCheck,'value',Settings.Lorentz2GaussCheck);
 set(handles.AutomaticBackgroundStart,'value',Settings.AutomaticBackgroundStart);
 set(handles.BackgroundStart1,'string',Settings.BackgroundStart1);
 set(handles.BackgroundStart2,'string',Settings.BackgroundStart2);
-set(handles.MinimalContourLevel,'string',Settings.MinimalContourLevel);
-set(handles.XUpperLimit,'string',Settings.XUpperLimit);
-
-try %Try because if not the exact same file is loaded, value of list may exceed current one
+try %Try because if not the exact same file is loaded, tau 
 set(handles.MultiTauDimensions,'value',Settings.MultiTauDimension);
 catch
 end

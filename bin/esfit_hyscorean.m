@@ -784,6 +784,8 @@ if FitData.GUI
   set(findobj('Tag','sortIDSetButton'),'Enable','off');
   set(findobj('Tag','sortRMSDSetButton'),'Enable','off');
   
+  drawnow
+  
   % Determine selected method, target, and scaling
   FitOpts.MethodID = get(findobj('Tag','MethodMenu'),'Value');
   FitOpts.TargetID = 1;
