@@ -98,13 +98,13 @@ reportdata.TauValues = handles.Data.TauValues;
 reportdata.TimeStep1 = handles.Data.TimeStep1;
 reportdata.TimeStep2 = handles.Data.TimeStep2;
 Offset = get(handles.FieldOffset,'string');
-reportdata.FieldOffset = str2double(Offset(1:end-2));
+reportdata.FieldOffset = str2double(Offset);
 reportdata.currentTaus = handles.currentTaus;
 reportdata.L2GActive = get(handles.Lorentz2GaussCheck,'Value');
 reportdata.mainPlotHandle = handles.mainPlot;
 BackgroundAxis = linspace(min(reportdata.Data.CorrectedTimeAxis1),max(reportdata.Data.CorrectedTimeAxis1),length(reportdata.Data.Background1));      
 reportdata.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
-reportdata.BackgroundStart2 =round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex2),0);
+reportdata.BackgroundStart2 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex2),0);
 reportdata.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
 
 %Bruker-spectrometer specific parameters
@@ -214,7 +214,7 @@ DataForFitting.TauValues = handles.Data.TauValues/1000;
 DataForFitting.TimeStep1 = handles.Data.TimeStep1;
 DataForFitting.TimeStep2 = handles.Data.TimeStep2;
 Offset = get(handles.FieldOffset,'string');
-DataForFitting.FieldOffset = str2double(Offset(1:end-2));
+DataForFitting.FieldOffset = str2double(Offset);
 DataForFitting.currentTaus = handles.currentTaus;
 DataForFitting.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'Value');
 DataForFitting.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
@@ -224,7 +224,7 @@ if isfield(handles.Data,'BrukerParameters')
 elseif isfield(handles.Data,'AWG_Parameters')
   DataForFitting.Field =  0.1*handles.Data.AWG_Parameters.B;
 end
-DataForFitting.Field = DataForFitting.Field + str2double(Offset(1:end-2));
+DataForFitting.Field = DataForFitting.Field + str2double(Offset);
 DataForFitting.nPoints = length(handles.Data.PreProcessedSignal);
 DataForFitting.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 DataForFitting.FreqLim = str2double(get(handles.XUpperLimit,'string'));

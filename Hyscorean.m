@@ -1156,8 +1156,9 @@ function detachMainContour_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Figure = figure(51002);
+AxesHandles = copyobj(handles.mainPlot,Figure);
 set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE Spectrum','Units','pixels','Position',[100 100 790 450]);
-copyobj(handles.mainPlot,Figure)
+set(AxesHandles,'Position',[0.07 0.11 0.9 0.85]);
 
 % --- Executes on button press in detachMainSurface.
 function detachMainSurface_Callback(hObject, eventdata, handles)
@@ -1835,6 +1836,8 @@ if isfield(handles.Data,'BrukerParameters')
 elseif isfield(handles.Data,'AWG_Parameters')
   Exp.Field =  0.1*handles.Data.AWG_Parameters.B;
 end
+Offset = str2double(get(handles.FieldOffset,'string'));
+Exp.Field = Exp.Field + 0.1*Offset;
 Exp.tau = handles.Data.TauValues/1000;
 Exp.dt = handles.Data.TimeStep1;
 Exp.nPoints = length(handles.Data.PreProcessedSignal);
