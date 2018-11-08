@@ -1802,7 +1802,9 @@ function WindowType_Callback(hObject, eventdata, handles)
     case 6
       WindowType = 'connes';
     case 7
-      WindowType = 'cosine';      
+      WindowType = 'cosine';   
+    case 8
+      WindowType = 'none';  
   end
 handles.WindowTypeString = WindowType;
 guidata(hObject, handles);

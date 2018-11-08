@@ -29,6 +29,8 @@ switch WindowType
   case 'cosine'
     arg=linspace(0,1,WindowDecay);
     Window = cos(pi*arg/2);
+  case 'none'
+    Window = ones(1,WindowDecay);
 end
 
 %Apodization of time-dimension 1
