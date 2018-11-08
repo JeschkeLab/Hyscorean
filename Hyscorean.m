@@ -187,6 +187,13 @@ else
 end
  set(handles.ProcessingInfo, 'String', 'Status: Loading...');drawnow
 
+ if isfield(handles,'AddedLines')
+   handles = rmfield(handles,'AddedLines');
+ end
+ if isfield(handles,'AddedTags')
+   handles = rmfield(handles,'AddedTags');
+ end
+ 
 handles.Data = mountHYSCOREdata(handles.FileNames,handles);
 TauValues = handles.Data.TauValues;
 
