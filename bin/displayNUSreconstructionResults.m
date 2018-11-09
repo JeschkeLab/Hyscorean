@@ -28,15 +28,16 @@ xlabel('t_1 [ns]'),ylabel('t_2 [ns]'),title('Reconstructed Signal')
 subplot(2,4,[3 4])
 handles.Data.PreProcessedSignal(isnan(handles.Data.PreProcessedSignal)) = 0;
 NUSSpectrum = abs(fftshift(fft2(handles.Data.PreProcessedSignal,2*Dimension,2*Dimension)));
-contour(FrequencyAxis1,FrequencyAxis2,NUSSpectrum,20)
+contour(FrequencyAxis1,FrequencyAxis2,NUSSpectrum,handles.GraphicalSettings.Levels)
 hold on
 plot(-50:1:50,abs(-50:1:50),'k-.'),grid on
 plot(zeros(length(0:50),1),abs(0:50),'k-')
 xlabel('\omega_1 [MHz]'),ylabel('\omega_2 [MHz]'),title('nuDFT HYSCORE Spectrum')
 xlim([-20 20]),ylim([0 20])
+
 subplot(2,4,[7 8])
 ReconstructedSpectrum = abs(fftshift(fft2(handles.Data.ReconstructedSignal,2*Dimension,2*Dimension)));
-contour(FrequencyAxis1,FrequencyAxis2,ReconstructedSpectrum,20)
+contour(FrequencyAxis1,FrequencyAxis2,ReconstructedSpectrum,handles.GraphicalSettings.Levels)
 hold on
 plot(-50:1:50,abs(-50:1:50),'k-.'),grid on
 plot(zeros(length(0:50),1),abs(0:50),'k-')

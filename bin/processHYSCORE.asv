@@ -154,7 +154,7 @@ if Data.NUSflag && handles.ReconstructionSwitch
   switch get(handles.ReconstructionAlgorithm,'Value')
     case 1 %Constant-lambda CAMERA Reconstruction
       SingleLagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
-      BackgroundParameterVector = 10^(str2double(get(handles.MaxEntBackgroundParameter,'string')));
+      BackgroundParameterVector = str2double(get(handles.MaxEntBackgroundParameter,'string'));
       [Data.ReconstructedSignal,FunctionEvaluations] = camera_hyscorean(Data.PreProcessedSignal,Schedule,[],SingleLagrangeMultiplier,BackgroundParameterVector,[],[],[],[],[],handles);
     case 2 %CAMERA 
         [Data.ReconstructedSignal,FunctionEvaluations] = camera_hyscorean(Data.PreProcessedSignal,Schedule,[],[],[],[],[],[],[],[],handles);
@@ -162,7 +162,7 @@ if Data.NUSflag && handles.ReconstructionSwitch
       BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
       [Data.ReconstructedSignal,FunctionEvaluations] = ffm_cg_hyscorean(Data.PreProcessedSignal, Schedule, BackgroundParameter, 5000,handles);
     case 4 %FFM-GD 
-      BackgroundParameter = 10^(str2double(get(handles.MaxEntBackgroundParameter,'string')));
+      BackgroundParameter = 10^(str2double(get(handles.MaxEntBackgroundParameter,'string'));
       [Data.ReconstructedSignal,FunctionEvaluations] = ffm_cg_hyscorean(Data.PreProcessedSignal, Schedule, BackgroundParameter, 5000,handles);
     case 5 %IST-D Reconstruction
       [Data.ReconstructedSignal,FunctionEvaluations] = ists(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.05,5000,handles);

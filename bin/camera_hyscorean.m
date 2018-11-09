@@ -1,4 +1,4 @@
-function [Reconstruction, FunctionalValues, NumberOfOperations] = camera (Signal,Schedule,NoiseLevel,SingleLagrangeMultiplier,BackgroundParameterVector,MultiplierBackgroundParameter,MaxOutIter,MaxInIter,NZeroFillings,Weights)
+function [Reconstruction, FunctionalValues, NumberOfOperations] = camera_hyscorean (Signal,Schedule,NoiseLevel,SingleLagrangeMultiplier,BackgroundParameterVector,MultiplierBackgroundParameter,MaxOutIter,MaxInIter,NZeroFillings,Weights,handles)
 %--------------------------------------------------------------------------  
 % Convex Accelerated Maximum Entropy Reconstruction (CAMERA)
 %--------------------------------------------------------------------------
@@ -63,7 +63,7 @@ end
 % check for an inner loop count argument.
 if (nargin < 8 || isempty(MaxInIter))
   % none supplied, use a default value.
-  MaxInIter = 5000;
+  MaxInIter = 1000;
 end
 
 % check for a zero-fill count argument.
@@ -114,6 +114,7 @@ vareps = sqrt(2 * ScheduleLength) * NoiseLevel;
 
 % initialize the objective value vector.
 FunctionalValues = [];
+LagrangeMultiplierVector = [];
 
 % initialize the operation count vector.
 NumberOfOperations = 0;
@@ -170,6 +171,13 @@ for OuterIteration = 1 : MaxOutIter
       % compute a potential x-update.
       ReconstructionUpdate = (1 + VelocityFactor) .* ReconstructionUpdate - VelocityFactor .* y;
       ReconstructedSpectrum = fft2(ReconstructionUpdate);
+      FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
+      contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
+      set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
+      hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
+%     figure(999),clf,plot(FunctionalValues),xlabel('Iterations'),ylabel('Functional')
+
+      drawnow
       NumberOfOperations(end) =  NumberOfOperations +1;
       
       %Check for a primary termination criterion.
@@ -191,9 +199,9 @@ for OuterIteration = 1 : MaxOutIter
     Reconstruction = ReconstructionUpdate;
     
     %Check for a final termination criterion
-    if InnerIteration>500
+    if InnerIteration>1
       FunctionalDecrease = FunctionalValues(end)-FunctionalValues(end-1);
-      if abs(FunctionalDecrease) < FunctionalValues(1)/1e6
+      if abs(FunctionalDecrease) < FunctionalValues(1)/1e6 || FunctionalDecrease>0
         break; % Finishes algorithm
       end
     end

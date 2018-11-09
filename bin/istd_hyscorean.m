@@ -1,5 +1,5 @@
 % ists: barebones 1d stern ist reconstruction function.
-function [Reconstruction, FunctionalValue] = istd (Signal, SubSamplingVector, mu, MaxIterations)
+function [Reconstruction, FunctionalValue] = istd_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,handles)
 
 if (nargin < 2)
   error('At least two arguments are required');
@@ -51,13 +51,23 @@ end
     [CurrentFunctionalValue, Updater] = ists_functional(Updater, Treshold);
     ReconstructedSpectrum = ReconstructedSpectrum + Updater;
     FunctionalValue = [FunctionalValue; CurrentFunctionalValue];
-    if isnan(FunctionalValue(end)) || round(FunctionalValue(end),8)==0
+    if isnan(FunctionalValue(end)) || round(FunctionalValue(end),6)==0
       break
     end
     %Update estimate and threshold.
     Reconstruction = ifft2(ReconstructedSpectrum);
     Treshold = Treshold*mu;
     Treshold = Treshold*(MaxIterations-Iteration)/MaxIterations;
+    
+
+    FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
+    contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
+    set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
+    hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
+%     figure(999),clf,plot(FunctionalValue),xlabel('Iterations'),ylabel('Functional')
+
+    drawnow
+    
   end
 
 %--------------------------------------------------------------------------  
