@@ -262,7 +262,7 @@ else
   
 end
 
-if ~isfield(FitOpt,'Scaling'), FitOpt.Scaling = 'lsq0'; end
+if ~isfield(FitOpt,'Scaling'), FitOpt.Scaling = 'minmax'; end
 
 if ~isfield(FitOpt,'Method'), FitOpt.Method = ''; end
 FitOpt.MethodID = 1; % simplex
@@ -414,6 +414,7 @@ if FitData.GUI
     'Position',[960 50 100 420],'FontSize',8,'Layer','top');
   
   %Get experimental data to display
+  
   dispData = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
   %Set rest of data to NaN to not display it
   NaNdata = ones(length(dispData))*NaN;
@@ -461,13 +462,13 @@ if FitData.GUI
   
   %Set data and tags to insets
   Inset = sum(dispData(round(length(dispData)/2,0):end,:));
-  Inset = abs(Inset - Inset(end));
-  set(hsub1,'Tag','expdata_projection1','XData',FrequencyAxis,'YData',Inset/max(Inset));
+%   Inset = abs(Inset - Inset(end));
+  set(hsub1,'Tag','expdata_projection1','XData',FrequencyAxis,'YData',Inset);
   set(hsub1_2,'Tag','bestsimdata_projection1');
   set(hsub1_3,'Tag','currsimdata_projection1');
   Inset = sum(dispData(:,round(length(dispData)/2,0):end),2);
-  Inset = abs(Inset - Inset(end));
-  set(hsub2,'Tag','expdata_projection2','XData',FrequencyAxis,'YData',Inset/max(Inset));
+%   Inset = abs(Inset - Inset(end));
+  set(hsub2,'Tag','expdata_projection2','XData',FrequencyAxis,'YData',Inset);
   set(hsub2_2,'Tag','bestsimdata_projection2');
   set(hsub2_3,'Tag','currsimdata_projection2');
   
@@ -476,6 +477,9 @@ if FitData.GUI
   set(hAx,'YLim',[0 SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
   set(hsubAx1,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
   set(hsubAx2,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim 0]);
+%     set(hsubAx1,'YLim',[0 1.05]);
+%     set(hsubAx2,'YLim',[0 1.05]);
+
   xlabel(hAx,'\omega_1 [MHz]');
   ylabel(hAx,'\omega_2 [MHz]');
   set(hAx,'Tag', 'dataaxes');
@@ -1041,7 +1045,7 @@ else
 end
 
 catch e
-  w = errordlg(sprintf('The fit protocol stopped due to an error : \n %s \n Please check your input. If this error persists restart the program.',e.message),'Error','modal');
+  w = errordlg(sprintf('The fit protocol stopped due to an error : \n\n %s \n\n Please check your input. If this error persists restart the program.',getReport(e,'extended','hyperlinks','off')),'Error','modal');
   waitfor(w);
   % If fails hide Stop button, show Start button
   set(findobj('Tag','StopButton'),'Visible','off');
@@ -1089,7 +1093,7 @@ Sys0 = FitDat.Sys0;
 Vary = FitDat.Vary;
 Exp = FitDat.Exp;
 SimOpt = FitDat.SimOpt;
-  rmsd_individual = cell(FitData.numSpec,1);
+rmsd_individual = cell(FitData.numSpec,1);
 
 % Simulate spectra ------------------------------------------
 inactive = FitData.inactiveParams;
@@ -1103,7 +1107,7 @@ simspec = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
 nOutArguments = FitData.nOutArguments;
 SImFcnHandel = FitData.SimFcn;
-
+ScalingOption = FitOpt.Scaling;
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   if numel(SimSystems)==1
@@ -1139,7 +1143,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   % simspec = out{FitData.OutArgument}; % pick last output argument
   
   % Scale simulated spectrum to experimental spectrum ----------
-  simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},FitOpt.Scaling);
+  simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},ScalingOption);
   simspec{Index}  = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
   
   rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
@@ -1170,32 +1174,36 @@ if FitData.GUI && (UserCommand~=99)
     CurrentBestSpec = FitData.bestspec{FitData.CurrentSpectrumDisplay};
 
     %Baseline correction
-    CurrentSimSpec = CurrentSimSpec - CurrentSimSpec(end,end);
-    CurrentBestSpec = CurrentBestSpec - CurrentBestSpec(end,end);
+%     CurrentSimSpec = CurrentSimSpec - CurrentSimSpec(end,end);
+%     CurrentBestSpec = CurrentBestSpec - CurrentBestSpec(end,end);
 
   % update contour graph
   set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
-  set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec))));
-  set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec))));
+  set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentBestSpec));
+  set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec));
   % update upper projection graph
   Inset = sum(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),2);
-  set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-  Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
-  Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
-  set(findobj('Tag','bestsimdata_projection2'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-  Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
-  Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
-  set(findobj('Tag','currsimdata_projection2'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-  % update lower projection graph  
-  Inset = sum(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
-  set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-  Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
-  Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
-  set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-  Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
-  Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
-  set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
-  
+  set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
+    Temp = abs(CurrentBestSpec);
+    %   Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
+    Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
+    set(findobj('Tag','bestsimdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
+    %   Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
+    Temp = abs(CurrentSimSpec);
+    Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
+    set(findobj('Tag','currsimdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
+    % update lower projection graph
+    Inset = sum(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
+    set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+    %   Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
+    Temp = abs(CurrentBestSpec);
+    Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
+    set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+    %   Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
+    Temp = abs(CurrentSimSpec);
+    Inset = sum(Temp(:,round(length(Temp)/2,0):end),2);
+    set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+    
   if strcmp(FitOpts.Scaling, 'none')
     dispData = [FitData.ExpSpec;real(FitData.bestspec).';abs(CurrentSimSpec).'];
     maxy = max(max(dispData)); miny = min(min(dispData));
@@ -1614,15 +1622,15 @@ if ~isempty(str)
     CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
     CurrentFitSpec = abs(CurrentFitSpec - CurrentFitSpec(end,end));
     h = findobj('Tag','bestsimdata');
-    set(h,'ZData',abs(CurrentFitSpec)/max(max(abs(CurrentFitSpec))));
+    set(h,'ZData',abs(CurrentFitSpec));
     h = findobj('Tag','bestsimdata_projection1');
     Inset = sum(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),1);
-    Inset = abs(Inset - Inset(end));
-    set(h,'YData',Inset/max(Inset));
+%     Inset = abs(Inset - Inset(end));
+    set(h,'YData',Inset);
     h = findobj('Tag','bestsimdata_projection2');
     Inset = sum(CurrentFitSpec,2);
-    Inset = abs(Inset - Inset(end));
-    set(h,'YData',Inset/max(Inset));
+%     Inset = abs(Inset - Inset(end));
+    set(h,'YData',Inset);
     drawnow
   end
 else
@@ -1837,10 +1845,10 @@ CurrentExpSpec = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
 set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
 % update upper projection graph
 Inset = sum(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),2);
-set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
+set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
 % update lower projection graph
 Inset = sum(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
-set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset/max(Inset));
+set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
 
 
 if isfield(FitData,'FitSets')
@@ -1862,12 +1870,12 @@ if isfield(FitData,'FitSets')
   set(h,'ZData',abs(CurrentFitSpec)/max(max(abs(CurrentFitSpec))));
   h = findobj('Tag','bestsimdata_projection1');
   Inset = sum(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),1);
-  Inset = abs(Inset - Inset(end));
-  set(h,'YData',Inset/max(Inset));
+%   Inset = abs(Inset - Inset(end));
+  set(h,'YData',Inset);
   h = findobj('Tag','bestsimdata_projection2');
   Inset = sum(CurrentFitSpec,2);
-  Inset = abs(Inset - Inset(end));
-  set(h,'YData',Inset/max(Inset));
+%   Inset = abs(Inset - Inset(end));
+  set(h,'YData',Inset);
   drawnow
 end
 
