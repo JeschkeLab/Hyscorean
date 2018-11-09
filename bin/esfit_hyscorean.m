@@ -1040,8 +1040,8 @@ else
   
 end
 
-catch
-  w = errordlg('An error ocurred during fitting. Please check your input definition.','Error','modal');
+catch e
+  w = errordlg(sprintf('The fit protocol stopped due to an error : \n %s \n Please check your input. If this error persists restart the program.',e.message),'Error','modal');
   waitfor(w);
   % If fails hide Stop button, show Start button
   set(findobj('Tag','StopButton'),'Visible','off');
@@ -2071,6 +2071,7 @@ for i=1:numPlots
   set(hAx,'Tag',Tags{i})
   set(h,'Tag',Tags{i},'MarkerSize',10,'Color',cmp(i,:));
   set(gca,'FontSize',9,'YScale','lin','XTick',[],'YAxisLoc','right','Layer','top');
+  ylabel(gca,'log10(RMSD)')
   if i>1
     LegendTag = sprintf('RMSD @ %.2f mT', FitData.Exp{i-1}.Field);
   else

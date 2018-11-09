@@ -225,10 +225,16 @@ if ~isfield(handles,'Data')
  set(handles.ProcessingInfo,'String','Error: No data loaded.')
  return
 end
+try
 % set(hObject,'enable','inactive')
 set(handles.ProcessingInfo, 'String', 'Status: Processing...');drawnow;
 [handles] = processHYSCORE(handles);
 updateHyscoreanGUI(handles,handles.Processed)
+catch e  
+  w = errordlg(sprintf('The processing stopped due to an error : \n %s \n Please check your input. If this error persists restart the program.',e.message),'Error','modal');
+  waitfor(w);
+  return
+end
 
 set(handles.ImposeBlindSpots,'enable','on')
 set(handles.AddHelpLine,'enable','on')
