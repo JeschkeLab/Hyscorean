@@ -765,6 +765,7 @@ function ZeroTimeTruncation_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of ZeroTimeTruncation
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -777,6 +778,7 @@ function InvertCorrection_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of InvertCorrection
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -802,6 +804,7 @@ end
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 
 
 guidata(hObject, handles);
@@ -821,6 +824,7 @@ if ~mod(str2double(get(handles.FrameLength,'string')),2)
   set(handles.FrameLength,'string',str2double(get(handles.FrameLength,'string'))+1)
 end
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -857,18 +861,6 @@ set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
 
-% --- Executes during object creation, after setting all properties.
-function FrameLength_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to FrameLength (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on selection change in BackgroundMethod1.
 function BackgroundMethod1_Callback(hObject, eventdata, handles)
@@ -896,6 +888,7 @@ switch get(hObject,'Value')
     set(handles.BackgroundParameter1,'String','1')
 end
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -939,6 +932,7 @@ switch get(hObject,'Value')
     set(handles.BackgroundParameter2,'String','1')
 end
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -965,6 +959,7 @@ function BackgroundParameter1_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of BackgroundParameter1 as text
 %        str2double(get(hObject,'String')) returns contents of BackgroundParameter1 as a double
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -991,6 +986,7 @@ function BackgroundParameter2_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of BackgroundParameter2 as text
 %        str2double(get(hObject,'String')) returns contents of BackgroundParameter2 as a double
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch  = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -1018,6 +1014,18 @@ function ReconstructionAlgorithm_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from ReconstructionAlgorithm
 handles.ReconstructionSwitch = true;
 set(handles.ReconstructionCheck,'visible','off')
+    switch get(hObject,'Value')
+      case 1
+        set(handles.MaxEntLagrangianMultiplier,'enable','on')
+        set(handles.LagrangeMultiplierText,'enable','on')
+        set(handles.BackgroundParameterText,'enable','on')
+        set(handles.MaxEntBackgroundParameter,'enable','on')
+      otherwise
+        set(handles.MaxEntLagrangianMultiplier,'enable','off')
+        set(handles.LagrangeMultiplierText,'enable','off')
+        set(handles.BackgroundParameterText,'enable','off')
+        set(handles.MaxEntBackgroundParameter,'enable','off')
+    end
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -1666,6 +1674,7 @@ function AutomaticBackgroundStart_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of AutomaticBackgroundStart
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 
@@ -1690,6 +1699,7 @@ if str2double(get(hObject,'String'))<1
 end
   
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -1720,6 +1730,7 @@ if str2double(get(hObject,'String'))<1
 end
 
 handles.backgroundCorrectionSwitch = true;
+handles.ReconstructionSwitch = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);

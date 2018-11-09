@@ -7,11 +7,11 @@ switch Panel
     set(handles.BackgroundParameterText,'enable',Action)
     switch get(handles.ReconstructionAlgorithm,'Value')
       case 1
-        set(handles.MaxEntLagrangianMultiplier,'enable','off')
-        set(handles.LagrangeMultiplierText,'enable','off')
-      case 2
         set(handles.MaxEntLagrangianMultiplier,'enable','on')
         set(handles.LagrangeMultiplierText,'enable','on')
+      case 2
+        set(handles.MaxEntLagrangianMultiplier,'enable','off')
+        set(handles.LagrangeMultiplierText,'enable','off')
     end
     set(handles.ReconstructionAlgorithm,'enable',Action)
     set(handles.NUSReconstructionText,'enable',Action)
