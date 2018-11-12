@@ -233,6 +233,7 @@ updateHyscoreanGUI(handles,handles.Processed)
 catch e  
   w = errordlg(sprintf('The processing stopped due to an error : \n %s \n Please check your input. If this error persists restart the program.',e.message),'Error','modal');
   waitfor(w);
+  set(handles.ProcessingInfo,'String','Ready')
   return
 end
 
@@ -1869,6 +1870,16 @@ Exp.dt = handles.Data.TimeStep1;
 Exp.nPoints = length(handles.Data.PreProcessedSignal);
 
 %Fill known optional parameters
+if ~iscell(handles.FilePaths.Path)
+  Opt.FileNames = {handles.FilePaths.Path};
+else
+  Opt.FileNames = handles.FilePaths.Path;
+end
+if ~iscell(handles.FilePaths.Files)
+  Opt.FilePaths = {handles.FilePaths.Files};
+else
+  Opt.FilePaths = handles.FilePaths.Files;
+end
 Opt.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 Opt.FreqLim = str2double(get(handles.XUpperLimit,'string'));
 Opt.WindowType = handles.WindowTypeString;

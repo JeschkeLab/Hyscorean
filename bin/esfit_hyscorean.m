@@ -94,6 +94,7 @@ Path2Hyscorean = which('Hyscorean');
 Path2Hyscorean = Path2Hyscorean(1:end-11);
 load([Path2Hyscorean 'bin\DefaultSystemEasySpin'])
 SpinSystemInput = {DefaultInput};
+FitData.SpinSystemInput = SpinSystemInput{1};
 %Remove comments on the input
 Size = size(SpinSystemInput{1},1);
 for i=1:Size
@@ -106,6 +107,7 @@ try
 eval(StringForEval)
 catch
 end
+
 %Check if any changes/additions to the Opt structure are requested
 if exist('Opt','var')
     if ~iscell(Opt)
@@ -331,7 +333,8 @@ FitData.ScalingString = ScalingString;
 StartpointNames{1} = 'center of range';
 StartpointNames{2} = 'random within range';
 StartpointNames{3} = 'selected parameter set';
-
+FitData.StartpointNames = StartpointNames;
+FitOpt.StartID = 1; 
 
 FitOpt.ScalingID = find(strcmp(FitOpt.Scaling,ScalingString));
 if isempty(FitOpt.ScalingID)
@@ -613,7 +616,11 @@ if FitData.GUI
     'String','none','Enable','on','Callback',@selectNoneButtonCallback,...
     'HorizontalAl','left',...
     'Tooltip','Unselect all parameters');
-  
+    uicontrol(hFig,'Style','pushbutton','Tag','reportButton',...
+    'Position',[x0+270 y0+171 60 25],...
+    'String','Report',...
+    'Tooltip','Generate fitting report','Enable','off',...
+    'Callback',@reportButtonCallback);
   %-----------------------------------------------------------------
   % popup menus
   %-----------------------------------------------------------------
@@ -653,6 +660,7 @@ if FitData.GUI
   h = uicontrol(hFig,'Style','popupmenu',...
     'Tag','StartpointMenu',...
     'String',StartpointNames,...
+    'Callback',@StartpointNamesCallback,...
     'Value',1,...
     'BackgroundColor','w',...
     'Tooltip','Starting point for fit',...
@@ -735,7 +743,6 @@ if FitData.GUI
     'String','rmsd',...
     'Tooltip','Sort parameter sets by rmsd','Enable','off',...
     'Callback',@sortRMSDSetButtonCallback);
-
   drawnow
   
   set(hFig,'NextPlot','new');
@@ -798,6 +805,10 @@ if FitData.GUI
   set(findobj('Tag','selectNoneButton'),'Enable','off');
   set(findobj('Tag','selectInvButton'),'Enable','off');
   set(getParameterTableHandle,'Enable','off');
+  
+  set(findobj('Tag','SpeedUp'),'Enable','off');
+  set(findobj('Tag','reportButton'),'Enable','off');
+
 
   % Disable fitset list controls
   set(findobj('Tag','deleteSetButton'),'Enable','off');
@@ -923,7 +934,9 @@ if FitData.GUI
   % Hide stop button, show start button
   set(findobj('Tag','StopButton'),'Visible','off');
   set(findobj('Tag','StartButton'),'Visible','on');
-  
+  set(findobj('Tag','reportButton'),'Enable','on');
+  set(findobj('Tag','SpeedUp'),'Enable','on');
+
   % Re-enable listboxes
   set(findobj('Tag','MethodMenu'),'Enable','on');
   set(findobj('Tag','TargetMenu'),'Enable','on');
@@ -1044,6 +1057,8 @@ else
   
 end
 
+
+
 catch e
   w = errordlg(sprintf('The fit protocol stopped due to an error : \n\n %s \n\n Please check your input. If this error persists restart the program.',getReport(e,'extended','hyperlinks','off')),'Error','modal');
   waitfor(w);
@@ -1061,6 +1076,8 @@ catch e
   set(findobj('Tag','selectAllButton'),'Enable','on');
   set(findobj('Tag','selectNoneButton'),'Enable','on');
   set(findobj('Tag','selectInvButton'),'Enable','on');
+  set(findobj('Tag','reportButton'),'Enable','off');
+  set(findobj('Tag','SpeedUp'),'Enable','on');
   set(getParameterTableHandle,'Enable','on');
 
 end
@@ -1514,9 +1531,8 @@ if (FitOpt.Plot) && (UserCommand~=99)
   close(hFig); clf
   
   subplot(4,1,4);
-%   plot(x,BestSpec(:)-ExpSpec(:));
-      contour(FrequencyAxis,FrequencyAxis,ExpSpec);
-    contour(FrequencyAxis,FrequencyAxis,BestSpec/max(max(BestSpec)));
+  contour(FrequencyAxis,FrequencyAxis,ExpSpec);
+  contour(FrequencyAxis,FrequencyAxis,BestSpec);
   h = legend('best fit - data');
   legend boxoff
   set(h,'FontSize',8);
@@ -1677,6 +1693,7 @@ while true
   if isempty(SpinSystemInput) %if canceled
     return
   end
+  FitData.SpinSystemInput = SpinSystemInput{1};
   DefaultInput = SpinSystemInput{1};
   save([Path2Hyscorean 'bin\DefaultSystemEasySpin'],'DefaultInput')
   %Remove comments on the input
@@ -1935,6 +1952,7 @@ if (idx==-1), set(h,'Value',numel(s)); end
 if nSets>0, state = 'on'; else state = 'off'; end
 set(findobj('Tag','deleteSetButton'),'Enable',state);
 set(findobj('Tag','exportSetButton'),'Enable',state);
+set(findobj('Tag','reportButton'),'Enable',state);
 set(findobj('Tag','sortIDSetButton'),'Enable',state);
 set(findobj('Tag','sortRMSDSetButton'),'Enable',state);
 
@@ -2070,7 +2088,7 @@ FitData.DetachedRMSD_Fig = findobj('Tag','detachedRMSD');
   xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
   ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
   set(FitData.DetachedRMSD_Fig,'Position',[xpos ypos sz(1) sz(2)])
-cmp = lines(numPlots);
+  cmp = lines(numPlots);
 for i=1:numPlots
   AxisWidth = 0.85/numPlots;
   YPositionAxis = 1 - i*AxisWidth - i*0.04;
@@ -2090,5 +2108,39 @@ end
 
 return
 %==========================================================================
+
+
+%==========================================================================
+function StartpointNamesCallback(object,src,event)
+
+global FitOpts
+
+FitOpts.StartID = get(object,'value'); 
+
+return
+%==========================================================================
+%==========================================================================
+function reportButtonCallback(object,src,event)
+
+global FitData FitOpts
+ReportData.FitData = FitData; 
+ReportData.FitOpts = FitOpts; 
+Date = date;
+formatOut = 'yyyymmdd';
+Date = datestr(Date,formatOut);
+ReportData.SaveName = [Date '_FitReport'];
+ReportData.SavePath =  [ReportData.FitData.SimOpt{1}.FilePaths '\Fit reports'];
+%Send structure to workspace
+assignin('base', 'ReportData', ReportData);
+
+%Generate report
+ report Hyscorean_Fitting_report -fpdf ;
+
+
+return
+%==========================================================================
+
+
+
 
 

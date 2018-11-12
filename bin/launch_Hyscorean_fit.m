@@ -1,7 +1,21 @@
-function launch_Hyscorean_fit(FileNames)
+function launch_Hyscorean_fit(FileNames,Paths)
+
+if nargin < 2
+  Paths = {pwd};
+end
+
+if ~iscell(Paths)
+  Paths = {Paths};
+end
 
 if ~iscell(FileNames)
   FileNames = {FileNames};
+end
+
+if length(Paths) < length(FileNames)
+  for i=2:length(FileNames)
+    Paths{i} = Paths{1};
+  end
 end
 
 numSpec = length(FileNames);
@@ -12,10 +26,12 @@ Opt = cell(numSpec,1);
 
 for Index = 1:numSpec
   
-  load(FileNames{Index});
+  load(fullfile(Paths{Index},FileNames{Index}));
   
   ExpSpectra{Index} = abs(DataForFitting.Spectrum);
-  
+  Opt{Index}.FileNames = FileNames{Index};
+  Opt{Index}.FilePaths = Paths{Index};
+
   %Fill known experimental parameters
   Exp{Index}.Sequence = 'HYSCORE';
   Exp{Index}.Field = DataForFitting.Field + DataForFitting.FieldOffset;
