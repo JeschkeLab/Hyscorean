@@ -5,6 +5,7 @@ switch Panel
   case 'NUSReconstruction'
     set(handles.MaxEntBackgroundParameter,'enable',Action)
     set(handles.BackgroundParameterText,'enable',Action)
+    if strcmp(Action,'on')
     switch get(handles.ReconstructionAlgorithm,'Value')
       case 1
         set(handles.MaxEntLagrangianMultiplier,'enable','on')
@@ -12,6 +13,10 @@ switch Panel
       case 2
         set(handles.MaxEntLagrangianMultiplier,'enable','off')
         set(handles.LagrangeMultiplierText,'enable','off')
+    end
+    else
+      set(handles.MaxEntLagrangianMultiplier,'enable',Action)
+      set(handles.LagrangeMultiplierText,'enable',Action)
     end
     set(handles.ReconstructionAlgorithm,'enable',Action)
     set(handles.NUSReconstructionText,'enable',Action)
