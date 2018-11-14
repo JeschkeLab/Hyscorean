@@ -7,8 +7,7 @@ SaveHyscoreanSettings = handles.SaveHyscoreanSettings;
 %----------------------------------------------------------------------
 
 %Load default/predefined save path
-load Hyscorean_default_savepath.mat
-
+SavePath = getpref('hyscorean','savepath');
 % Prepare saving procedures
 DateFormatOut = 'yyyymmdd';
 Date = datestr(date,DateFormatOut);
@@ -89,6 +88,8 @@ set(handles.ProcessingInfo, 'String', 'Status: Saving session 60%'); drawnow;
 
 % Create report
 %----------------------------------------------------------------------  
+
+if getpref('hyscorean','reportlicense')
 reportdata = Settings;
 %Load data into report structure
 reportdata.Processed = handles.Processed;
@@ -203,6 +204,9 @@ assignin('base', 'reportdata', reportdata);
 %Generate report
  report Hyscorean_report -fpdf ;
  
+else
+  warning('MATLAB report generator not installed or license not found. Report generation was skipped.')
+end
  set(handles.ProcessingInfo, 'String', 'Status: Saving session 80%'); drawnow;
 
  

@@ -79,8 +79,9 @@ function Set_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 Default = load('Hyscorean_default_savepath.mat');
+DefaultSavePath = getpref('hyscorean','savepath');
 SavePath = get(handles.SavePath,'String');
-if ~strcmp(Default.SavePath,SavePath)
+if ~strcmp(DefaultSavePath,SavePath)
   
   if ~exist(SavePath,'dir')
     choice = questdlg('The folder given as default path does not exist. Do you want to create it (otherwise the previous default path will be set)?', ...
@@ -96,7 +97,7 @@ if ~strcmp(Default.SavePath,SavePath)
     if Answer
       mkdir(SavePath)
     else
-      set(handles.SavePath,'String',Default.SavePath)
+      set(handles.SavePath,'String',DefaultSavePath)
       SavePath = get(handles.SavePath,'String');
       return
     end   
@@ -105,7 +106,8 @@ if dialog_default_saver
 Root = which('Hyscorean');
 Root = Root(1:end-12);
 Path = fullfile(Root,'\bin');
-save(fullfile(Path,'Hyscorean_default_savepath.mat'),'SavePath')
+setpref('hyscorean','savepath',SavePath)
+% save(fullfile(Path,'Hyscorean_default_savepath.mat'),'SavePath')
 end
 end
 setappdata(0,'SaverSettings',handles.SaverSettings)
@@ -149,6 +151,8 @@ end
 
 load Hyscorean_default_savepath.mat
 set(hObject,'String',SavePath)
+set(hObject,'String',getpref('hyscorean','savepath'))
+
 
 
 function Identifier_Callback(hObject, eventdata, handles)

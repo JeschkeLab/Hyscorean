@@ -70,6 +70,15 @@ else
     setpref('hyscorean','repository_connected',false)
 end
 
+fprintf('===========================================================================\n')
+    fprintf('Setting Hyscorean preferences... \n')
+    SavePath = userpath;
+    setpref('hyscorean','savepath',SavePath)
+    fprintf('        Save path: %s \n',SavePath)
+
+
+
+
 %Look for required toolboxes 
 fprintf('===========================================================================\n')
 fprintf('Checking required MATLAB toolboxes... \n')
