@@ -57,31 +57,38 @@ handles.output = hObject;
 % Find all static text UICONTROLS whose 'Tag' starts with latex_
 handles.laxis = axes('parent',hObject,'units','normalized','position',[0 0 1 1],'visible','off');
 lbls = findobj(hObject,'-regexp','tag','latex_*');
-
 for i=1:length(lbls)
-
       l = lbls(i);
-
       % Get current text, position and tag
-
       set(l,'units','normalized');
-
       s = get(l,'string');
-
       p = get(l,'position');
-
       t = get(l,'tag');
-
       % Remove the UICONTROL
-
       delete(l);
-
       % Replace it with a TEXT object 
-
       handles.(t) = text(p(1),p(2),s,'interpreter','latex');
-
 end
 
+if  getpref('hyscorean','repository_connected')
+  %Check for updates in the repository
+  HyscoreanPath = which('Hyscorean');
+  HyscoreanPath = HyscoreanPath(1:end-12);
+  %Use OS commands to get to GIT-folder and check status
+  DOS_command = sprintf('cd %s & git status origin master',HyscoreanPath);
+  [DOS_failed,DOS_output] = dos(DOS_command);
+  %If everything goes well, this should show up
+  String = 'Your branch is up-to-date with ''origin/master''';
+  if isempty(strfind(DOS_output,String)) && ~DOS_failed
+    Answer = questdlg('A new update is available. Do you want to update now?','Hyscorean Update','Yes','No','No');
+    if strcmp(Answer,'Yes')
+      fprintf('Connecting to Hyscorean repository... \n ')
+      fprintf('Downloading updates... \n ')
+      DOS_command = sprintf('cd %s & git pull origin master',HyscoreanPath);
+      dos(DOS_command);
+    end
+  end
+end
 % Update handles structure
 guidata(hObject, handles);
 
