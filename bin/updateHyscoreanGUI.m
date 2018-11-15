@@ -151,9 +151,9 @@ switch GraphicalSettings.PlotType
   case 1 %Contour plot
     if get(handles.ImposeBlindSpots,'Value')
       %If blindspots are superimposed, make contour only black to adapt to hot-colormap
-      contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.Linewidth,'Color','k');
+      contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.LineWidth,'Color','k');
     else
-      contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.Linewidth);
+      contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.LineWidth);
     end
   case 2 %Filled contour plot
     contourf(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels);

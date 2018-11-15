@@ -2133,6 +2133,9 @@ return
 function reportButtonCallback(object,src,event)
 
 global FitData FitOpts
+
+if getpref('hyscorean','reportlicense')
+  
 ReportData.FitData = FitData; 
 ReportData.FitOpts = FitOpts; 
 Date = date;
@@ -2149,6 +2152,9 @@ assignin('base', 'ReportData', ReportData);
 %Generate report
  report Hyscorean_Fitting_report -fpdf ;
 
+else
+  warning('MATLAB report generator license missing. Report cannot be generated.')
+end
 
 return
 %==========================================================================

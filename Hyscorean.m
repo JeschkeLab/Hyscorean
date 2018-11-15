@@ -262,7 +262,9 @@ set(handles.AddTagList,'enable','on')
 set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
+if getpref('hyscorean','easyspin_installed')
 set(handles.EasyspinFitButton,'enable','on')
+end
 set(findall(handles.GraphicsPanel, '-property', 'enable'), 'enable', 'on')
 set(handles.SaveReportButton,'enable','on')
 
@@ -1780,7 +1782,7 @@ set(gcf,'NumberTitle','off','Name','Hyscorean: Projection Contour','Units','pixe
   options.xaxs = [-XUpperLimit XUpperLimit]; options.yaxs = [0 XUpperLimit];
   options.xlabel = '\nu_1 [MHz]'; options.ylabel = '\nu_2 [MHz]';
 options.levels=handles.GraphicalSettings.Levels;
-options.Linewidth=handles.GraphicalSettings.Linewidth;
+options.Linewidth=handles.GraphicalSettings.LineWidth;
 options.nonewfig = true;
 options.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
 switch handles.GraphicalSettings.Colormap
