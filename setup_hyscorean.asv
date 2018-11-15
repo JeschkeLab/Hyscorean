@@ -1,7 +1,7 @@
 
 clc, clearvars
 
-%Just check that (re)-installation is done in the right folder
+%Just check that 
 try
 InstallationPath = which('setup_hyscorean');
 InstallationPath = InstallationPath(1:end-length('\setup_hyscorean.m'));
@@ -9,10 +9,9 @@ CurrentPath = pwd;
 if ~strcmp(CurrentPath,InstallationPath)
   cd(InstallationPath)
 end
-catch 
+catch
+  
 end
-
-%Get system information
 InstallationPath = pwd;
 MATLAB_version = version;
 OS = computer;
@@ -34,9 +33,7 @@ if allFilesOK
 fprintf('no missing files \n')
 end
 
-%--------------------------------------------------------------------------
 %Set Hyscorean default paths
-%--------------------------------------------------------------------------
 fprintf('Setting Hyscorean paths... ')
 MatlabPaths = path;
 OldPaths = textscan(MatlabPaths,'%s','Delimiter',';');
@@ -54,10 +51,6 @@ end
 savepath
 end
 fprintf('done. \n')
-
-%--------------------------------------------------------------------------
-% GIT installation and environmental variables
-%--------------------------------------------------------------------------
 
 fprintf('Checking GIT installation and environmental variable... ')
 [DOS_Failed,DOS_Output] = dos('git --version');
@@ -88,7 +81,6 @@ if ~strcmp(DOS_output(1:14),'File Not Found')
 else
     fprintf('Sourcetree path not found. Make sure it is properly installed\n')
     fprintf('and located in the C: drive of your computer. \n')
-    fprintf('Alternatively you can install GIT externaly. \n')
     setpref('hyscorean','repository_connected',false)
 end
 else
@@ -96,11 +88,6 @@ else
     fprintf('GIT version: %s',DOS_Output)
 end
 fprintf('===========================================================================\n')
-
-%--------------------------------------------------------------------------
-% Connect to repository
-%--------------------------------------------------------------------------
-
   %Check status of repository as trial
    fprintf('Connecting to Hyscorean repository... ')
    DOS_failed = dos('git fetch');
@@ -114,11 +101,6 @@ fprintf('=======================================================================
    end
 
 fprintf('===========================================================================\n')
-
-%--------------------------------------------------------------------------
-% Hyscorean preferences
-%--------------------------------------------------------------------------
-
     fprintf('Setting Hyscorean preferences... \n')
     SavePath = userpath;
     %Check if preferences have been already defined to keep user preferences
@@ -155,10 +137,7 @@ fprintf('=======================================================================
       fprintf('        Easyspin input system: user-defined \n')
     end
 
-%--------------------------------------------------------------------------
-% Toolbox licenses checkout
-%--------------------------------------------------------------------------
-    
+
 %Look for required toolboxes 
 fprintf('===========================================================================\n')
 fprintf('Checking required MATLAB toolboxes... \n')
@@ -186,11 +165,6 @@ else
   setpref('hyscorean','reportlicense',false)
 end
 fprintf('===========================================================================\n')
-
-%--------------------------------------------------------------------------
-% Easyspin installation checkout
-%--------------------------------------------------------------------------
-
 fprintf('Easyspin installation \n')
 try
   warning('off','all')
