@@ -92,7 +92,8 @@ FitData.lastSetID = 0;
 %--------------------------------------------------------------------
 Path2Hyscorean = which('Hyscorean');
 Path2Hyscorean = Path2Hyscorean(1:end-11);
-load([Path2Hyscorean 'bin\DefaultSystemEasySpin'])
+% load([Path2Hyscorean 'bin\DefaultSystemEasySpin'])
+DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
 SpinSystemInput = {DefaultInput};
 FitData.SpinSystemInput = SpinSystemInput{1};
 %Remove comments on the input
@@ -102,9 +103,12 @@ for i=1:Size
     SpinSystemInput{1}(i,:) = ' ';
   end
 end
-StringForEval = char(strjoin(string(SpinSystemInput{1})));
+% StringForEval = char((string(SpinSystemInput{1})'));
+StringForEval = SpinSystemInput{1};
 try
-eval(StringForEval)
+  for i=1:size(StringForEval,1)
+    eval(StringForEval(i,:))
+  end
 catch
 end
 
@@ -1688,14 +1692,16 @@ Path2Hyscorean = which('Hyscorean');
 Path2Hyscorean = Path2Hyscorean(1:end-11);
 clear Sys Vary
 while true
-  load([Path2Hyscorean 'bin\DefaultSystemEasySpin']);
+%   load([Path2Hyscorean 'bin\DefaultSystemEasySpin']);
+  DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
   SpinSystemInput = inputdlg_mod('Input','Spin System & Variables', [20 80],{DefaultInput});
   if isempty(SpinSystemInput) %if canceled
     return
   end
   FitData.SpinSystemInput = SpinSystemInput{1};
   DefaultInput = SpinSystemInput{1};
-  save([Path2Hyscorean 'bin\DefaultSystemEasySpin'],'DefaultInput')
+%   save([Path2Hyscorean 'bin\DefaultSystemEasySpin'],'DefaultInput')
+  setpref('hyscorean','defaultsystemEasyspin',DefaultInput)
   %Remove comments on the input
   Size = size(SpinSystemInput{1},1);
   for i=1:Size
@@ -1703,8 +1709,12 @@ while true
       SpinSystemInput{1}(i,:) = ' ';
     end
   end
-  StringForEval = char(strjoin(string(SpinSystemInput{1})'));
-  eval(StringForEval)
+%   StringForEval = char(strjoin(string(SpinSystemInput{1})'));
+  StringForEval = SpinSystemInput{1};
+  for i=1:size(StringForEval,1)
+    eval(StringForEval(i,:))
+  end
+%   eval(StringForEval)
   
   %If Vary not defined then warn and repeat input
   if ~exist('Vary','var')
@@ -2129,7 +2139,10 @@ Date = date;
 formatOut = 'yyyymmdd';
 Date = datestr(Date,formatOut);
 ReportData.SaveName = [Date '_FitReport'];
-ReportData.SavePath =  [ReportData.FitData.SimOpt{1}.FilePaths '\Fit reports'];
+ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit reports\');
+if ~exist(ReportData.SavePath{1},'dir')
+  mkdir(ReportData.SavePath{1})
+end
 %Send structure to workspace
 assignin('base', 'ReportData', ReportData);
 

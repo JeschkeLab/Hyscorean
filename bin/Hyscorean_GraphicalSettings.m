@@ -55,7 +55,15 @@ function TrierAnalysis_GraphicalSettings_OpeningFcn(hObject, eventdata, handles,
 handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
-
+GraphicalSettings = getpref('hyscorean','graphicalsettings');
+handles.GraphicalSettings = GraphicalSettings;
+set(handles.Absolute,'value',handles.GraphicalSettings.Absolute);
+set(handles.Imaginary,'value',handles.GraphicalSettings.Imaginary);
+set(handles.Real,'value',handles.GraphicalSettings.Real);
+set(handles.Colormap,'value',handles.GraphicalSettings.Colormap);
+set(handles.PlotType,'value',handles.GraphicalSettings.PlotType);
+set(handles.Linewidth,'string',num2str(handles.GraphicalSettings.LineWidth));
+set(handles.ContourLevels,'string',num2str(handles.GraphicalSettings.Levels));
 % UIWAIT makes TrierAnalysis_GraphicalSettings wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
@@ -142,7 +150,8 @@ if dialog_default_graphics
 Root = which('Hyscorean');
 Root = Root(1:end-12);
 Path = fullfile(Root,'\bin');
-save(fullfile(Path,'GraphicalSettings_default.mat'),'GraphicalSettings')
+setpref('hyscorean','graphicalsettings',GraphicalSettings)
+% save(fullfile(Path,'GraphicalSettings_default.mat'),'GraphicalSettings')
 end
 
 % --- Executes on button press in LoadDefault.
@@ -153,8 +162,9 @@ function LoadDefault_Callback(hObject, eventdata, handles)
 Root = which('Hyscorean');
 Root = Root(1:end-12);
 Path = fullfile(Root,'\bin');
-data = load(fullfile(Path,'GraphicalSettings_default.mat'));
-handles.GraphicalSettings = data.GraphicalSettings;
+% data = load(fullfile(Path,'GraphicalSettings_default.mat'));
+GraphicalSettings = getpref('hyscorean','graphicalsettings');
+handles.GraphicalSettings = GraphicalSettings;
 set(handles.Absolute,'value',handles.GraphicalSettings.Absolute);
 set(handles.Imaginary,'value',handles.GraphicalSettings.Imaginary);
 set(handles.Real,'value',handles.GraphicalSettings.Real);

@@ -70,6 +70,7 @@ for i=1:length(lbls)
       handles.(t) = text(p(1),p(2),s,'interpreter','latex');
 end
 
+try
 if  getpref('hyscorean','repository_connected')
   %Check for updates in the repository
   HyscoreanPath = which('Hyscorean');
@@ -81,13 +82,15 @@ if  getpref('hyscorean','repository_connected')
   String = 'Your branch is up-to-date with ''origin/master''';
   if isempty(strfind(DOS_output,String)) && ~DOS_failed
     Answer = questdlg('A new update is available. Do you want to update now?','Hyscorean Update','Yes','No','No');
+    fprintf('Connecting to Hyscorean repository... \n ')
     if strcmp(Answer,'Yes')
-      fprintf('Connecting to Hyscorean repository... \n ')
       fprintf('Downloading updates... \n ')
       DOS_command = sprintf('cd %s & git pull origin master',HyscoreanPath);
       dos(DOS_command);
     end
   end
+end
+catch 
 end
 % Update handles structure
 guidata(hObject, handles);
@@ -1326,8 +1329,8 @@ function GraphicalSettingsButton_CreateFcn(hObject, eventdata, handles)
 Root = which('Hyscorean');
 Root = Root(1:end-12);
 Path = fullfile(Root,'\bin');
-data = load(fullfile(Path,'GraphicalSettings_default.mat'));
-handles.GraphicalSettings = data.GraphicalSettings;
+% data = load(fullfile(Path,'GraphicalSettings_default.mat'));
+handles.GraphicalSettings = getpref('hyscorean','graphicalsettings');
 guidata(hObject, handles);
 
 
@@ -1878,14 +1881,14 @@ Exp.nPoints = length(handles.Data.PreProcessedSignal);
 
 %Fill known optional parameters
 if ~iscell(handles.FilePaths.Path)
-  Opt.FileNames = {handles.FilePaths.Path};
+  Opt.FileNames = {handles.FilePaths.Files};
 else
-  Opt.FileNames = handles.FilePaths.Path;
+  Opt.FileNames = handles.FilePaths.Files;
 end
 if ~iscell(handles.FilePaths.Files)
-  Opt.FilePaths = {handles.FilePaths.Files};
+  Opt.FilePaths = {handles.FilePaths.Path};
 else
-  Opt.FilePaths = handles.FilePaths.Files;
+  Opt.FilePaths = handles.FilePaths.Path;
 end
 Opt.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 Opt.FreqLim = str2double(get(handles.XUpperLimit,'string'));

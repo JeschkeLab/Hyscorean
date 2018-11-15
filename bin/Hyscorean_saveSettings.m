@@ -78,7 +78,7 @@ function Set_Callback(hObject, eventdata, handles)
 % hObject    handle to Set (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Default = load('Hyscorean_default_savepath.mat');
+% Default = load('Hyscorean_default_savepath.mat');
 DefaultSavePath = getpref('hyscorean','savepath');
 SavePath = get(handles.SavePath,'String');
 if ~strcmp(DefaultSavePath,SavePath)
@@ -149,7 +149,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-load Hyscorean_default_savepath.mat
+% load Hyscorean_default_savepath.mat
+SavePath = getpref('hyscorean','savepath');
 set(hObject,'String',SavePath)
 set(hObject,'String',getpref('hyscorean','savepath'))
 
