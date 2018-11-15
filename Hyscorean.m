@@ -55,27 +55,33 @@ function Hyscorean_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for Hyscorean
 handles.output = hObject;
 % Find all static text UICONTROLS whose 'Tag' starts with latex_
-handles.laxis = axes('parent',hObject,'units','normalized','position',[0 0 1 1],'visible','off');
-lbls = findobj(hObject,'-regexp','tag','latex_*');
-for i=1:length(lbls)
-      l = lbls(i);
-      % Get current text, position and tag
-      set(l,'units','normalized');
-      s = get(l,'string');
-      p = get(l,'position');
-      t = get(l,'tag');
-      % Remove the UICONTROL
-      delete(l);
-      % Replace it with a TEXT object 
-      handles.(t) = text(p(1),p(2),s,'interpreter','latex');
-end
-
+% handles.laxis = axes('parent',hObject,'units','normalized','position',[0 0 1 1],'visible','off');
+% lbls = findobj(hObject,'-regexp','tag','latex_*');
+% for i=1:length(lbls)
+%       l = lbls(i);
+%       % Get current text, position and tag
+%       set(l,'units','normalized');
+%       s = get(l,'string');
+%       p = get(l,'position');
+%       t = get(l,'tag');
+%       % Remove the UICONTROL
+%       delete(l);
+%       % Replace it with a TEXT object 
+%       handles.(t) = text(p(1),p(2),s,'interpreter','latex');
+% end
+clc
 try
 if  getpref('hyscorean','repository_connected')
   %Check for updates in the repository
   HyscoreanPath = which('Hyscorean');
   HyscoreanPath = HyscoreanPath(1:end-12);
   %Use OS commands to get to GIT-folder and check status
+  fprintf('Looking for updates... \n')
+  DOS_command = sprintf('cd %s & git fetch',HyscoreanPath);
+  DOS_failed = dos(DOS_command);
+   if DOS_failed
+     fprintf('Connection failed check your internet connection \n')
+   end
   DOS_command = sprintf('cd %s & git status origin master',HyscoreanPath);
   [DOS_failed,DOS_output] = dos(DOS_command);
   %If everything goes well, this should show up
@@ -88,6 +94,8 @@ if  getpref('hyscorean','repository_connected')
       DOS_command = sprintf('cd %s & git pull origin master',HyscoreanPath);
       dos(DOS_command);
     end
+  else
+    fprintf('No updates available. \n')
   end
 end
 catch 

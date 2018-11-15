@@ -61,9 +61,15 @@ if ~strcmp(DOS_output(1:14),'File Not Found')
     dos(Command);
   end
   %Check status of repository as trial
-   fprintf('Connecting to Hyscorean repository... \n ')
-   !git status origin master
-   setpref('hyscorean','repository_connected',true)
+   fprintf('Connecting to Hyscorean repository... ')
+   DOS_failed = dos('git fetch');
+   if DOS_failed
+     fprintf(' connection failed \n')
+     fprintf(' (Check your internet connection) \n')
+   else
+     fprintf(' connection successful \n')
+     setpref('hyscorean','repository_connected',true)
+   end
 else
     fprintf('Sourcetree path not found. Make sure it is properly installed\n')
     fprintf('and located in the C: drive of your computer. \n')
