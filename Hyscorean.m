@@ -224,7 +224,7 @@ TauValues = handles.Data.TauValues;
 [handles.Selections,handles.Data.Combinations] = getTauCombinations(TauValues);
 
  set(handles.MultiTauDimensions,'enable','on');
-
+ set(handles.MultiTauDimensions,'Value',1)
  set(handles.MultiTauDimensions,'String',handles.Selections);
  set(handles.ZeroFilling1,'String',size(handles.Data.TauSignals,2));
  set(handles.ZeroFilling2,'String',size(handles.Data.TauSignals,3));

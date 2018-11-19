@@ -197,7 +197,10 @@ reportdata.ApodizationWindow = Window;
   %Add name and patyh of the original data file
     reportdata.OriginalFileName = handles.FilePaths.Files;
   reportdata.OriginalFilePath = handles.FilePaths.Path;
-
+  
+  HyscoreanPath = which('Hyscorean');
+  HyscoreanPath = HyscoreanPath(1:end-11);
+reportdata.ProcessingReport_logo_Path = [HyscoreanPath 'bin/ProcessingReport_logo.png'];
 %Send structure to workspace
 assignin('base', 'reportdata', reportdata);
 

@@ -137,6 +137,8 @@ function SaveButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 setappdata(0,'GraphicalSettings',handles.GraphicalSettings)
+setpref('hyscorean','graphicalsettings',handles.GraphicalSettings)
+
 close()
 
 
@@ -197,7 +199,7 @@ function ContourLevels_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-handles.GraphicalSettings = getappdata(0,'GraphicalSettings');
+handles.GraphicalSettings = getpref('hyscorean','graphicalsettings');
 set(hObject,'string',num2str(handles.GraphicalSettings.Levels))
 guidata(hObject, handles);
 

@@ -2146,6 +2146,10 @@ ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit rep
 if ~exist(ReportData.SavePath{1},'dir')
   mkdir(ReportData.SavePath{1})
 end
+  
+  HyscoreanPath = which('Hyscorean');
+  HyscoreanPath = HyscoreanPath(1:end-11);
+ReportData.FittingReport_logo_Path = [HyscoreanPath 'bin/FitReport_logo.png'];
 %Send structure to workspace
 assignin('base', 'ReportData', ReportData);
 
