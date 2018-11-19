@@ -233,7 +233,7 @@ catch
 end
 fprintf('============================================================================\n')
 fprintf('INSTALLATION FINISHED \n')
-fprintf(' - Please restart MATLAB to refresh the new system environment variables. \n')
+fprintf(' - Please restart MATLAB and re-run this setup to refresh the new system environment variables. \n')
 fprintf(' - MATLAB preferences may be changed later in the GUI \n')
 fprintf('============================================================================\n')
 

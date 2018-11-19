@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 30-Oct-2018 08:58:39
+% Last Modified by GUIDE v2.5 19-Nov-2018 15:12:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -185,6 +185,7 @@ set(handles.AddTag,'enable','off')
 set(handles.AddTagList,'enable','off')
 set(handles.ClearTags,'enable','off')
 set(handles.FieldOffsetTag,'enable','off')
+set(handles.ZoomButton,'visible','off')
 set(handles.ProcessButton,'enable','off')
 set(handles.SaveReportButton,'enable','off')
 set(handles.FieldOffset,'enable','off')
@@ -267,6 +268,7 @@ set(handles.AddTagList,'enable','on')
 set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
+set(handles.ZoomButton,'visible','on')
 if getpref('hyscorean','easyspin_installed')
 set(handles.EasyspinFitButton,'enable','on')
 end
@@ -1923,3 +1925,18 @@ Opt.L2GParameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
 Opt.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'value');
 
 esfit_hyscorean('saffron',abs(handles.Processed.spectrum),[],[],Exp,Opt)
+
+
+% --- Executes on button press in ZoomButton.
+function ZoomButton_Callback(hObject, eventdata, handles)
+% hObject    handle to ZoomButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+zoom
+
+
+% --- Executes during object creation, after setting all properties.
+function ZoomButton_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ZoomButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
