@@ -224,7 +224,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 handles.GraphicalSettings = getappdata(0,'GraphicalSettings');
-set(hObject,'string',num2str(handles.GraphicalSettings.Linewidth))
+set(hObject,'string',num2str(handles.GraphicalSettings.LineWidth))
 guidata(hObject, handles);
 
 
