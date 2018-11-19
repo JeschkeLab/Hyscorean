@@ -1396,7 +1396,7 @@ else
 end
 Yaxis =  Y + Slope*(Xaxis - abs(X));
 hold(handles.mainPlot,'on')
-plot(handles.mainPlot,Xaxis,Yaxis,'k-.','LineWidth',1);
+LineHandle = plot(handles.mainPlot,Xaxis,Yaxis,'k-.','LineWidth',1);
 hold(handles.mainPlot,'off')
 if isfield(handles,'AddedLines')
 size = length(handles.AddedLines);
@@ -1405,7 +1405,7 @@ else
 end
 handles.AddedLines{size +1}.x = Xaxis;
 handles.AddedLines{size +1}.y = Yaxis;
-
+handles.AddedLines{size +1}.handle = LineHandle;
 guidata(hObject, handles);
 
 
@@ -1428,7 +1428,7 @@ end
 CenterField = CenterField*1e-4;
 %Get field offset
 Offset = get(handles.FieldOffset,'string');
-Offset = str2double(Offset(1:end-2))*1e-4;
+Offset = str2double(Offset)*1e-4;
 %get Larmor frequency in MHz
 Larmorfrequency = gyromagneticRatio*(CenterField + Offset);
 
@@ -1446,7 +1446,7 @@ Tag = Tags(get(handles.AddTagList,'Value'));
   AestheticShift = Limit/20;
 
 
-text(handles.mainPlot,AestheticShift+X,Y,sprintf('^{%s}%s',Tag.isotope,Tag.name),'FontSize',14)
+TagHandle = text(handles.mainPlot,AestheticShift+X,Y,sprintf('^{%s}%s',Tag.isotope,Tag.name),'FontSize',14);
 
 if isfield(handles,'AddedTags')
 size = length(handles.AddedTags);
@@ -1456,6 +1456,7 @@ end
 handles.AddedTags{size +1}.x = X;
 handles.AddedTags{size +1}.y = Y;
 handles.AddedTags{size +1}.Tag = sprintf('^{%s}%s',Tag.isotope,Tag.name);
+handles.AddedTags{size +1}.handle = TagHandle;
 end
 
 guidata(hObject, handles);
@@ -1529,14 +1530,20 @@ function ClearTags_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 try
-handles = rmfield(handles,'AddedLines');
+  for i=1:length(handles.AddedLines)
+  delete(handles.AddedLines{i}.handle)
+  end
+  handles = rmfield(handles,'AddedLines');
 catch 
 end
 try
+  for i=1:length(handles.AddedTags)
+  delete(handles.AddedTags{i}.handle)
+  end
 handles = rmfield(handles,'AddedTags');
 catch 
 end
-updateHyscoreanGUI(handles,handles.Processed)
+% updateHyscoreanGUI(handles,handles.Processed)
 guidata(hObject, handles);
 
 
