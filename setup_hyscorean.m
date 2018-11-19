@@ -13,7 +13,7 @@ catch
 end
 
 %Get system information
-InstallationPath = pwd;
+% InstallationPath = pwd;
 MATLAB_version = version;
 OS = computer;
 allFilesOK = true;
@@ -64,33 +64,64 @@ fprintf('Checking GIT installation and environmental variable... ')
 if DOS_Failed
   fprintf('not found \n')
 % Set Sourcetree's local git path as a OS environmental path
-fprintf('Searching for Sourcetree path...')
-cd C:\
-[DOS_status,DOS_output] = dos('dir Atlassian /s /b /AD');
-cd(InstallationPath)
-fprintf('done. \n')
-if ~strcmp(DOS_output(1:14),'File Not Found')
-  %If Sourcetree is found
-  fprintf('Setting SourceTree local git environment path...\n')
+[~,DOS_output] = dos('echo %username%');
+Username = DOS_output(1:end-1);
+AtlassianDefaultPath  = sprintf('C:\\Users\\%s\\AppData\\Local\\Atlassian',Username);
+fprintf('Searching for Atlassian path at: \n')
+fprintf('      %s \n',AtlassianDefaultPath)
+[AtlassianNotFound,~] = dos(sprintf('dir %s',AtlassianDefaultPath));
+if ~AtlassianNotFound
+  AtlassianPath = AtlassianDefaultPath;
+  fprintf('Directory found.\n')
+else
+  fprintf('Searching for Atlassian path in C drive...\n')
+  cd C:\
+  [DOS_status,DOS_output] = dos('dir Atlassian /s /b /AD');
+  cd(InstallationPath)
+  fprintf('done. \n')
   StrPos = strfind(DOS_output,'C:\');
   AtlassianPath = DOS_output(StrPos(1):StrPos(2)-1);
-  EnviromentalVariablePATH = strcat(AtlassianPath,'\SourceTree\git_local\bin');
-  %Check if Atlassian path is already in the PATH variable
-  if isempty(strfind(getenv('PATH'),EnviromentalVariablePATH))
-    fprintf('done. \n')
-    NewPATH = [getenv('PATH') ';' EnviromentalVariablePATH];
-    fprintf('Writting to OS environment variable... ');
-    Command = sprintf('setx PATH "%s"',NewPATH);
-    dos(Command);
-  end
-  [DOS_Failed,DOS_Output] = dos('git --version');
-  fprintf('GIT version: %s ',DOS_Output)
-else
+  if strcmp(DOS_output(1:14),'File Not Found')
     fprintf('Sourcetree path not found. Make sure it is properly installed\n')
     fprintf('and located in the C: drive of your computer. \n')
     fprintf('Alternatively you can install GIT externaly. \n')
     setpref('hyscorean','repository_connected',false)
+  end
 end
+  fprintf('Setting Atlassian local git environment path...\n')
+  EnviromentalVariablePATH = strcat(AtlassianPath,'\SourceTree\git_local\bin');
+  fprintf('Editing powershell script...\n')
+  %Check if Atlassian path is already in the PATH variable
+fid = fopen('./bin/setPathRegistry.ps1','r+');
+    % Read all lines & collect in cell array
+    txt = textscan(fid,'%s','delimiter','\n');
+    txt{1}{2}  = sprintf('    [string] $AddedFolder =  "%s",',EnviromentalVariablePATH);
+    fid = fopen('./bin/setPathRegistry.ps1','w+');
+    % fid = fopen('setPathRegistry2.ps1','w+');
+    % fid = fopen('setPathRegistry2.ps1');
+    for i=1:length(txt{1})
+      fprintf(fid, '%s \n',txt{1}{i});
+    end
+    fclose('all');
+      fprintf('Appending path to OS environmental variable\n')
+    [~,AddedSuccesfully] = system('powershell -file ./bin/setPathRegistry.ps1 ');
+    if AddedSuccesfully
+          fprintf('Environmental variable was added succesfully. \n');
+    else
+      fprintf('Environmental variable addition failed. \n');
+    fprintf('Environmental variable has to be added manually \n');
+    fprintf('Press the Windows key and type: \n');
+    fprintf('          Edit the system environmental variables \n');
+    fprintf('Press "Environmental Variables..." \n');
+    fprintf('Double-click on "Path" under "User variables for %s" \n',Username);
+    fprintf('Press "New" and copy-paste the following line: \n');
+    fprintf('          %s \n',EnviromentalVariablePATH);
+    fprintf('Press Enter when finished \n');
+    pause
+  end
+  [DOS_Failed,DOS_Output] = dos('git --version');
+  fprintf('GIT version: %s ',DOS_Output)
+
 else
     fprintf('found \n')
     fprintf('GIT version: %s',DOS_Output)

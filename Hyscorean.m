@@ -77,13 +77,18 @@ if  getpref('hyscorean','repository_connected')
   HyscoreanPath = HyscoreanPath(1:end-12);
   %Use OS commands to get to GIT-folder and check status
   fprintf('Looking for updates... \n')
-  DOS_command = sprintf('cd %s & git fetch',HyscoreanPath);
+  CurrentPath = pwd;
+  cd(HyscoreanPath)
+  DOS_command = sprintf('git fetch');
   DOS_failed = dos(DOS_command);
-   if DOS_failed
-     fprintf('Connection failed check your internet connection \n')
-   end
-  DOS_command = sprintf('cd %s & git status origin master',HyscoreanPath);
+  cd(CurrentPath)
+  if DOS_failed
+    fprintf('Connection failed check your internet connection \n')
+  end
+  DOS_command = sprintf('git status origin master');
+  cd(HyscoreanPath)
   [DOS_failed,DOS_output] = dos(DOS_command);
+  cd(CurrentPath)
   %If everything goes well, this should show up
   String = 'Your branch is up-to-date with ''origin/master''';
   if isempty(strfind(DOS_output,String)) && ~DOS_failed
