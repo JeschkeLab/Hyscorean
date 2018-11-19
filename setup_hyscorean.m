@@ -91,34 +91,31 @@ end
   fprintf('Setting Atlassian local git environment path...\n')
   EnviromentalVariablePATH = strcat(AtlassianPath,'\SourceTree\git_local\bin');
   fprintf('Editing powershell script...\n')
-  %Check if Atlassian path is already in the PATH variable
-fid = fopen('./bin/setPathRegistry.ps1','r+');
+  fid = fopen('./bin/setPathRegistry.ps1','r+');
     % Read all lines & collect in cell array
     txt = textscan(fid,'%s','delimiter','\n');
     txt{1}{2}  = sprintf('    [string] $AddedFolder =  "%s",',EnviromentalVariablePATH);
     fid = fopen('./bin/setPathRegistry.ps1','w+');
-    % fid = fopen('setPathRegistry2.ps1','w+');
-    % fid = fopen('setPathRegistry2.ps1');
     for i=1:length(txt{1})
       fprintf(fid, '%s \n',txt{1}{i});
     end
     fclose('all');
       fprintf('Appending path to OS environmental variable\n')
-    [~,AddedSuccesfully] = system('powershell -file ./bin/setPathRegistry.ps1 ');
-    if AddedSuccesfully
-          fprintf('Environmental variable was added succesfully. \n');
+    [PS_failed,AddedSuccesfully] = system('powershell -file ./bin/setPathRegistry.ps1 ');
+    if AddedSuccesfully && ~PS_failed
+      fprintf('Environmental variable was added succesfully. \n');
     else
       fprintf('Environmental variable addition failed. \n');
-    fprintf('Environmental variable has to be added manually \n');
-    fprintf('Press the Windows key and type: \n');
-    fprintf('          Edit the system environmental variables \n');
-    fprintf('Press "Environmental Variables..." \n');
-    fprintf('Double-click on "Path" under "User variables for %s" \n',Username);
-    fprintf('Press "New" and copy-paste the following line: \n');
-    fprintf('          %s \n',EnviromentalVariablePATH);
-    fprintf('Press Enter when finished \n');
-    pause
-  end
+      fprintf('Environmental variable has to be added manually \n');
+      fprintf('Press the Windows key and type: \n');
+      fprintf('          Edit the system environmental variables \n');
+      fprintf('Press "Environmental Variables..." \n');
+      fprintf('Double-click on "Path" under "User variables for %s" \n',Username);
+      fprintf('Press "New" and copy-paste the following line: \n');
+      fprintf('          %s \n',EnviromentalVariablePATH);
+      fprintf('Press Enter when finished \n');
+      pause
+    end
   [DOS_Failed,DOS_Output] = dos('git --version');
   fprintf('GIT version: %s ',DOS_Output)
 
