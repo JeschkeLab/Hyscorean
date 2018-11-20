@@ -217,11 +217,11 @@ end
 %----------------------------------------------------------------------  
 DataForFitting.Spectrum = handles.Processed.spectrum;
 reportdata.Data = handles.Data;
-DataForFitting.TauValues = handles.Data.TauValues/1000;
-DataForFitting.TimeStep1 = handles.Data.TimeStep1;
-DataForFitting.TimeStep2 = handles.Data.TimeStep2;
+DataForFitting.TauValues = handles.Data.TauValues/1000; %us
+DataForFitting.TimeStep1 = handles.Data.TimeStep1;  %us
+DataForFitting.TimeStep2 = handles.Data.TimeStep2;  %us
 Offset = get(handles.FieldOffset,'string');
-DataForFitting.FieldOffset = str2double(Offset);
+DataForFitting.FieldOffset = 0.1*str2double(Offset); %mT
 DataForFitting.currentTaus = handles.currentTaus;
 DataForFitting.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'Value');
 DataForFitting.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
@@ -229,9 +229,8 @@ DataForFitting.BackgroundStart2 =round(1000*BackgroundAxis(reportdata.Data.Backg
 if isfield(handles.Data,'BrukerParameters')
   DataForFitting.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6)); %mT
 elseif isfield(handles.Data,'AWG_Parameters')
-  DataForFitting.Field =  0.1*handles.Data.AWG_Parameters.B;
+  DataForFitting.Field =  0.1*handles.Data.AWG_Parameters.B;%mT
 end
-DataForFitting.Field = DataForFitting.Field + str2double(Offset);
 DataForFitting.nPoints = length(handles.Data.PreProcessedSignal);
 DataForFitting.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 DataForFitting.FreqLim = str2double(get(handles.XUpperLimit,'string'));
