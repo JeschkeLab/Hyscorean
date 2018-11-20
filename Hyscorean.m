@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 19-Nov-2018 15:12:00
+% Last Modified by GUIDE v2.5 20-Nov-2018 09:00:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -129,6 +129,8 @@ Path = [Path(1:end-11) 'bin\'];
 image(matlabImage,'AlphaData',Alpha)
 axis off
 axis image
+set(handles.Icon,'HandleVisibility','off')
+
 plot(handles.mainPlot,zeros(length(0:50),1),abs(0:50),'k-')
 hold(handles.mainPlot,'off')
 set(handles.mainPlot,'xticklabel',[],'yticklabel',[])
@@ -186,6 +188,7 @@ set(handles.AddTagList,'enable','off')
 set(handles.ClearTags,'enable','off')
 set(handles.FieldOffsetTag,'enable','off')
 set(handles.ZoomButton,'visible','off')
+set(handles.ZoomOutButton,'visible','off')
 set(handles.ProcessButton,'enable','off')
 set(handles.SaveReportButton,'enable','off')
 set(handles.FieldOffset,'enable','off')
@@ -269,6 +272,8 @@ set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
 set(handles.ZoomButton,'visible','on')
+set(handles.ZoomOutButton,'visible','on')
+
 if getpref('hyscorean','easyspin_installed')
 set(handles.EasyspinFitButton,'enable','on')
 end
@@ -1940,3 +1945,13 @@ function ZoomButton_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to ZoomButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in ZoomOutButton.
+function ZoomOutButton_Callback(hObject, eventdata, handles)
+% hObject    handle to ZoomOutButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+zoom off
+Upperlimit = str2double(get(handles.XUpperLimit,'string'));
+set(handles.mainPlot,'xlim',[-Upperlimit Upperlimit],'ylim',[0 Upperlimit])
