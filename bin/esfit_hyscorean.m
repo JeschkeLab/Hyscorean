@@ -1822,6 +1822,7 @@ FitData.nParameters = sum(VaryVals);
 if (FitData.nParameters==0)
 %   error('No variable parameters to fit.');
 end
+FitData.inactiveParams = logical(zeros(1,FitData.nParameters));
 
 FitData.Vary = Vary;
 
