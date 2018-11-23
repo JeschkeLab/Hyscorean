@@ -6,16 +6,14 @@ function [Reconstruction, FunctionalValues] = ffm_cg_hyscorean (Signal, Schedule
 % sampled (NUS) signals basde on maximization of the Hoch-Hore entropy.
 % This method solves the FFM problem [1] by using Polak-Ribiere's conjugate
 % gradient method [2].
-% The signal is zero-filled during the procedure to double its dimension 
-% size and after reconstruction it is truncated to its original size.
-% 
+%
 % Literature:
 %  [1] N.M. Balsgart, T. Vosegaard, Journal of Magnetic Resonance 223, 
 %      2012, 164-169  
 %  [2] E. Polak, G. Ribière, Rev. Francaise Informat Recherche 
 %      Operationelle, (1969), 35–43
 %
-% Adapted from Bradley Worley under the GNU GPL 3.0. license.
+% Adapted from Bradley Worley under the GNU GPL 3.0. license
 % by
 % Luis Fabregas Ibanez, 2018
 
@@ -49,7 +47,7 @@ N = length(Signal);
 
 %Increase dimensions of all variables
 if isTwoDimensional
-  SearchDirection = zeros(2 * N);
+  SearchDirection = zeros(2*N);
   SubSamplingGrid = zeros(2*N);
   ZeroFiller = zeros(2*N);
   ZeroFiller(1:size(Signal,1),1:size(Signal,2)) = Signal;
@@ -97,12 +95,11 @@ for Iteration = 1 : MaxIter
   else
     PolakRibiereFactor = 0;
   end
-  
-  FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
+FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
   contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
   set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
   hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
-%   figure(999),clf,plot(FunctionalValues),xlabel('Iterations'),ylabel('Functional'),drawnow
+  figure(999), clf,plot(FunctionalValues),xlabel('Iterations'),ylabel('Functional'),drawnow
   
   
   % Update the reconstruction

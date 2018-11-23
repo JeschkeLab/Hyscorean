@@ -224,7 +224,7 @@ end
 %Store final integral (a.k.a the signal) into data structure
 Integral = Integral/max(max(Integral));
 
-Data.PreProcessedSignal = Integral';
+Data.PreProcessedSignal = Integral;
 
 % % If requested, display background corrected 2D-trace
 % if options.DisplayCorrected

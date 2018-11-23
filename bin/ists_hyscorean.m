@@ -1,17 +1,17 @@
 % ists: barebones 1d stern ist reconstruction function.
-function [Reconstruction, FunctionalValue] = istd_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,handles)
+function [Reconstruction, FunctionalValue] = ists_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,handles)
 
 if (nargin < 2)
   error('At least two arguments are required');
 end
 
-%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------  
 % Preparations
 %--------------------------------------------------------------------------
   %Store the input vector length.
   N = length(Signal);
   %Check if one or two dimensional data
-  isTwoDimensional = size(Signal,2)>1;
+  isTwoDimensional = ~isvector(Signal);
 
   %Increase dimensions of all variables
   if isTwoDimensional
@@ -31,45 +31,38 @@ end
     ReconstructedSpectrum = zeros(2*N, 1);
     Reconstruction = zeros(2*N, 1);
   end
-  
   % build an initial threshold value.
   Treshold = max(max(abs(fft2(Signal))));
   % initialize the objective value vector.
   FunctionalValue = [];
   
 %--------------------------------------------------------------------------  
-% IST-D Reconstruction
+% ISTS Reconstruction
 %--------------------------------------------------------------------------
 
   %Loop over the outer indices.
   for Iteration = 1 : MaxIterations
     %Compute the current spectral estimate.
     Updater = SubSamplingVector.*(Signal - Reconstruction);
-    Updater =  fft2(Updater);
+    ReconstructedSpectrum =  ReconstructedSpectrum + fft2(Updater);
 
     %Compute and store the functional values.
-    [CurrentFunctionalValue, Updater] = ists_functional(Updater, Treshold);
-    ReconstructedSpectrum = ReconstructedSpectrum + Updater;
+    [CurrentFunctionalValue, ReconstructedSpectrum] = ists_functional(ReconstructedSpectrum, Treshold);
     FunctionalValue = [FunctionalValue; CurrentFunctionalValue];
 
     %Update estimate and threshold.
     Reconstruction = ifft2(ReconstructedSpectrum);
     Treshold = Treshold*mu;
     Treshold = Treshold*(MaxIterations-Iteration)/MaxIterations;
-
-    FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
+    
+    
+        FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
     contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
     set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
     hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
     figure(999),clf,plot(FunctionalValue),xlabel('Iterations'),ylabel('Functional')
-
     drawnow
-    if Iteration>1
-    FunctionalDecrease = FunctionalValue(end) - FunctionalValue(end-1);
-    if isnan(FunctionalValue(end)) || round(FunctionalValue(end),6)==0 || FunctionalDecrease>0
-      break
-    end
-    end
+    
   end
 
 %--------------------------------------------------------------------------  

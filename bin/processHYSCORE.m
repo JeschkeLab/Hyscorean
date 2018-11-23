@@ -164,10 +164,10 @@ if Data.NUSflag && handles.ReconstructionSwitch
     case 4 %FFM-GD 
       BackgroundParameter = 10^(str2double(get(handles.MaxEntBackgroundParameter,'string')));
       [Data.ReconstructedSignal,FunctionEvaluations] = ffm_cg_hyscorean(Data.PreProcessedSignal, Schedule, BackgroundParameter, 5000,handles);
-    case 5 %IST-D Reconstruction
-      [Data.ReconstructedSignal,FunctionEvaluations] = ists(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.05,5000,handles);
+    case 5 %IST-S Reconstruction
+      [Data.ReconstructedSignal,FunctionEvaluations] = ists_hyscorean(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.5,5000,handles);
     case 6 %IST-D Reconstruction
-      [Data.ReconstructedSignal,FunctionEvaluations] = istd(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.05,5000,handles);
+      [Data.ReconstructedSignal,FunctionEvaluations] = istd_hyscorean(Data.PreProcessedSignal,Data.AWG_Parameters.NUS.SamplingGrid,0.9,5000,handles);
   end
   Data.ReconstructionConvergence = FunctionEvaluations;
   %Once processed turn the switch to the reconstruction off (will be turned on if parameters in pre-processing changed)
