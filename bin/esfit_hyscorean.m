@@ -445,11 +445,38 @@ if FitData.GUI
   plot(hAx,ones(length(FrequencyAxis),1)*0,linspace(0,max(FrequencyAxis),length(FrequencyAxis)),'k-')
   plot(hAx,FrequencyAxis,abs(FrequencyAxis),'k-.')  
   
+ax1 = axes('Parent',hFig,'Units','pixels',...
+    'Position',[50 50 900 420],'FontSize',8,'Layer','bottom');
+  [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,40));
+  hold(ax1,'on')
+
   %Construct all contour handles
-  [~,h] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'Color','k','LevelList',linspace(0,1,40));
-  [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
-  [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,40));
-  
+%   [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
+    [h2] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
+%                 [~,h2] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none','LevelList',linspace(-1,0,50))
+CustomColormap = [0 0.5 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0 0.4 0.2; 0 0.6 0.2; 0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
+          1 1 1;    1 1 1;
+          1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5; 1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.1 0.1;   1 0 0;    0.95 0 0;      0.9 0 0;     0.8 0 0;     0.7 0 0;   0.65 0 0;  0.6 0 0];
+        FitData.pcolorplotting = 1;
+%   [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,40));
+      [h3] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
+%             [~,h3] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none','LevelList',linspace(0,1,50))
+
+% FitData.pcolorplotting = 0;
+shading(hAx,'interp');
+% alphamap(hAx,'vdown')
+set(h2,'FaceAlpha',1)
+set(h3,'FaceAlpha',1)
+
+  linkaxes([ax1,hAx])
+  uistack(hAx)
+  uistack(ax1,'down')
+colormap(ax1,'gray');
+ax1.Visible = 'off';
+colormap(hAx,CustomColormap)
+
+    set(hAx,'CLim',[-1 1])
+
   %Construct all projection inset handles
   NaNdata = ones(1,length(dispData))*NaN;
   hold(hsubAx1,'on')
@@ -497,8 +524,9 @@ if FitData.GUI
   box(hAx,'on')
   box(hsubAx1,'on')
   box(hsubAx2,'on')
+    linkaxes([hAx,hsubAx1,hsubAx2],'x')
+
   camroll(hsubAx2,-90)
-  
   %-----------------------------------------------------------------
   %Current spectrum display
   %-----------------------------------------------------------------
@@ -625,6 +653,21 @@ if FitData.GUI
     'String','Report',...
     'Tooltip','Generate fitting report','Enable','off',...
     'Callback',@reportButtonCallback);
+  
+    [Image,~]=imread('zoomin_icon.jpg');
+    CData=imresize(Image, [30 30]);
+   uicontrol('Style','pushbutton','Tag','ZoomInButton',...
+    'Position',[52 438 30 30],'CData',CData,...
+    'String','','Enable','on','Callback',@zoomInButtonCallback,...
+    'HorizontalAl','left',...
+    'Tooltip','Zoom spectra');
+      [Image,~]=imread('zoomout_icon.jpg');
+    CData=imresize(Image, [30 30]);
+    uicontrol('Style','pushbutton','Tag','ZoomOutButton',...
+    'Position',[52 406 30 30],'CData',CData,...
+    'String','','Enable','on','Callback',@zoomOutButtonCallback,...
+    'HorizontalAl','left',...
+    'Tooltip','Reset zoom');
   %-----------------------------------------------------------------
   % popup menus
   %-----------------------------------------------------------------
@@ -915,7 +958,7 @@ if FitData.GUI
   set(hTable,'Data',Data);
   
   % Hide current sim plot in data axes
-  set(findobj('Tag','currsimdata'),'ZData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+  set(findobj('Tag','currsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   set(findobj('Tag','currsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   set(findobj('Tag','currsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   
@@ -1199,9 +1242,19 @@ if FitData.GUI && (UserCommand~=99)
 %     CurrentBestSpec = CurrentBestSpec - CurrentBestSpec(end,end);
 
   % update contour graph
-  set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
-  set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentBestSpec));
-  set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec));
+      set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
+  if FitData.pcolorplotting
+        if isequal(abs(CurrentBestSpec),abs(CurrentSimSpec))
+          set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
+          set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',NaN*abs(CurrentSimSpec));
+        else
+          set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
+          set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',abs(CurrentSimSpec));
+        end
+  else
+    set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentBestSpec));
+    set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec))
+  end
   % update upper projection graph
   Inset = sum(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),2);
   set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
@@ -1642,7 +1695,11 @@ if ~isempty(str)
     CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
     CurrentFitSpec = abs(CurrentFitSpec - CurrentFitSpec(end,end));
     h = findobj('Tag','bestsimdata');
-    set(h,'ZData',abs(CurrentFitSpec));
+      if FitData.pcolorplotting
+        set(h,'CData',-abs(CurrentFitSpec));
+      else
+        set(h,'ZData',-abs(CurrentFitSpec));
+      end
     h = findobj('Tag','bestsimdata_projection1');
     Inset = sum(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),1);
 %     Inset = abs(Inset - Inset(end));
@@ -1655,7 +1712,11 @@ if ~isempty(str)
   end
 else
   h = findobj('Tag','bestsimdata');
-  set(h,'ZData',get(h,'ZData')*NaN);
+  if FitData.pcolorplotting
+  set(h,'CData',get(h,'CData')*NaN);
+  else
+    set(h,'ZData',get(h,'ZData')*NaN);
+  end
   h = findobj('Tag','bestsimdata_projection1');
   set(h,'YData',get(h,'YData')*NaN);
   h = findobj('Tag','bestsimdata_projection2');
@@ -1870,7 +1931,7 @@ FitData.CurrentSpectrumDisplay = get(hObject,'value');
 FrequencyAxis = linspace(-1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
 CurrentExpSpec = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
 % update contour graph
-set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
+  set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
 % update upper projection graph
 Inset = sum(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),2);
 set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
@@ -2164,7 +2225,17 @@ end
 return
 %==========================================================================
 
+%==========================================================================
+function zoomInButtonCallback(object,src,event)
+zoom on 
+return
 
+function zoomOutButtonCallback(object,src,event)
+global FitData
+zoom off
+HObj = findobj('Tag','bestsimdata');
+set(HObj.Parent,'XLim',[-FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim FitData.SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
+set(HObj.Parent,'YLim',[0 FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
 
-
-
+return
+%==========================================================================
