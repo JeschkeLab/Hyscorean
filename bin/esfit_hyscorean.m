@@ -448,7 +448,7 @@ if FitData.GUI
 ax1 = axes('Parent',hFig,'Units','pixels',...
     'Position',[50 50 900 420],'FontSize',8,'Layer','bottom');
   [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,40));
-  hold(ax1,'on')
+%   hold(ax1,'on')
 
   %Construct all contour handles
 %   [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
@@ -654,14 +654,16 @@ colormap(hAx,CustomColormap)
     'Tooltip','Generate fitting report','Enable','off',...
     'Callback',@reportButtonCallback);
   
-    [Image,~]=imread('zoomin_icon.jpg');
+  Path = which('Hyscorean');
+  Path = Path(1:end-11);
+    [Image,~]=imread(fullfile(Path,'bin\zoomin_icon.jpg'));
     CData=imresize(Image, [30 30]);
    uicontrol('Style','pushbutton','Tag','ZoomInButton',...
     'Position',[52 438 30 30],'CData',CData,...
     'String','','Enable','on','Callback',@zoomInButtonCallback,...
     'HorizontalAl','left',...
     'Tooltip','Zoom spectra');
-      [Image,~]=imread('zoomout_icon.jpg');
+    [Image,~]=imread(fullfile(Path,'bin\zoomout_icon.jpg'));
     CData=imresize(Image, [30 30]);
     uicontrol('Style','pushbutton','Tag','ZoomOutButton',...
     'Position',[52 406 30 30],'CData',CData,...
