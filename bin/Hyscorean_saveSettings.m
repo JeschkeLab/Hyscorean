@@ -22,7 +22,7 @@ function varargout = Hyscorean_saveSettings(varargin)
 
 % Edit the above text to modify the response to help TrierAnalysis_saveSettings
 
-% Last Modified by GUIDE v2.5 17-May-2018 16:28:29
+% Last Modified by GUIDE v2.5 27-Nov-2018 17:19:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -152,7 +152,7 @@ end
 % load Hyscorean_default_savepath.mat
 SavePath = getpref('hyscorean','savepath');
 set(hObject,'String',SavePath)
-set(hObject,'String',getpref('hyscorean','savepath'))
+% set(hObject,'String',getpref('hyscorean','savepath'))
 
 
 
@@ -180,3 +180,12 @@ end
 handles.SaverSettings = getappdata(0,'SaverSettings');
 set(hObject,'String',handles.SaverSettings.IdentifierName)
 guidata(hObject, handles);
+
+
+% --- Executes on button press in pushbutton3.
+function pushbutton3_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+selpath = uigetdir;
+set(handles.SavePath,'String',selpath);

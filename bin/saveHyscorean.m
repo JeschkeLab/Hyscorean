@@ -195,9 +195,12 @@ reportdata.ApodizationWindow = Window;
   reportdata.path = FullPath;
   
   %Add name and patyh of the original data file
+  if  isfield(handles.Data,'AWG_Parameters')
+    reportdata.OriginalFileName = sprintf('%i files',length(handles.FilePaths.Files));
+  else
     reportdata.OriginalFileName = handles.FilePaths.Files;
-  reportdata.OriginalFilePath = handles.FilePaths.Path;
-  
+  end
+    reportdata.OriginalFilePath = handles.FilePaths.Path;
   HyscoreanPath = which('Hyscorean');
   HyscoreanPath = HyscoreanPath(1:end-11);
 reportdata.ProcessingReport_logo_Path = [HyscoreanPath 'bin/ProcessingReport_logo.png'];
