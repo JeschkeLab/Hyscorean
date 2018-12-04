@@ -167,17 +167,16 @@ for OuterIteration = 1 : MaxOutIter
       end
       ReconstructionUpdate = (1 ./ (1 + (LagrangeMultiplier / LipschitzConstant) .* AtA)) .* ...
         (Reconstruction + (LagrangeMultiplier / LipschitzConstant) .* At .* Signal - Gradient ./ LipschitzConstant);
-      
+
       % compute a potential x-update.
       ReconstructionUpdate = (1 + VelocityFactor) .* ReconstructionUpdate - VelocityFactor .* y;
       ReconstructedSpectrum = fft2(ReconstructionUpdate);
-      FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
-      contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
-      set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
-      hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
-%     figure(999),clf,plot(FunctionalValues),xlabel('Iterations'),ylabel('Functional')
-
-      drawnow
+%       FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
+%       contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
+%       set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
+%       hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
+% %     figure(999),clf,plot(FunctionalValues),xlabel('Iterations'),ylabel('Functional')
+%       drawnow
       NumberOfOperations(end) =  NumberOfOperations +1;
       
       %Check for a primary termination criterion.

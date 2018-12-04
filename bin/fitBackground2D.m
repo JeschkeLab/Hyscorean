@@ -61,6 +61,9 @@ for Index = 1:Dimension1
             BackgroundTrace = exp(polyval(PolynomialFit,Time2Extrapolate));
     end;
     Background(Index,:) = BackgroundTrace;
+%     figure(99999),clf
+%     plot(Time2Extrapolate,Data2Fit),hold on,plot(Time2Extrapolate,BackgroundTrace),drawnow
+%     a =1;
 end;
 %Prepare background for output
 Background=real(Background);

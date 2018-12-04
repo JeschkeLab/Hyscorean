@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 20-Nov-2018 09:00:06
+% Last Modified by GUIDE v2.5 30-Nov-2018 17:03:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -184,6 +184,7 @@ set(handles.ImposeBlindSpots,'enable','off')
 set(handles.EasyspinFitButton,'enable','off')
 set(handles.AddHelpLine,'enable','off')
 set(handles.AddTag,'enable','off')
+set(handles.Validation_Button,'enable','off')
 set(handles.AddTagList,'enable','off')
 set(handles.ClearTags,'enable','off')
 set(handles.FieldOffsetTag,'enable','off')
@@ -273,6 +274,7 @@ set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
 set(handles.ZoomButton,'visible','on')
 set(handles.ZoomOutButton,'visible','on')
+set(handles.Validation_Button,'enable','on')
 
 if getpref('hyscorean','easyspin_installed')
 set(handles.EasyspinFitButton,'enable','on')
@@ -1328,6 +1330,7 @@ handles.ReconstructionSwitch = true;
   set(handles.TauSelectionCheck,'visible','off')
   set(handles.BackgroundCorrectionCheck,'visible','off')
   set(handles.ReconstructionCheck,'visible','off')
+  set(handles.Validation_Button,'enable','off')
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -1955,3 +1958,44 @@ function ZoomOutButton_Callback(hObject, eventdata, handles)
 zoom off
 Upperlimit = str2double(get(handles.XUpperLimit,'string'));
 set(handles.mainPlot,'xlim',[-Upperlimit Upperlimit],'ylim',[0 Upperlimit])
+
+
+% --- Executes on button press in Validation_Button.
+function Validation_Button_Callback(hObject, eventdata, handles)
+% hObject    handle to Validation_Button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+RawData.Signal = handles.Data.Integral;
+RawData.TimeAxis1 = handles.Data.TimeAxis1;
+RawData.TimeAxis2 = handles.Data.TimeAxis2;
+RawData.NUSflag = handles.Data.NUSflag;
+switch get(handles.ReconstructionAlgorithm,'Value')
+    case 1 %Constant-lambda CAMERA Reconstruction
+      ReconstructionMethod = 'constantcamera';
+        case 2 %CAMERA 
+      ReconstructionMethod = 'camera';
+    case 3 %FFM-CG
+      ReconstructionMethod = 'ffmcg';
+    case 4 %FFM-GD 
+      ReconstructionMethod = 'ffmgd';
+    case 5 %IST-S Reconstruction
+      ReconstructionMethod = 'ists';
+    case 6 %IST-D Reconstruction
+      ReconstructionMethod = 'istd';
+end
+if handles.Data.NUSflag
+RawData.NUS = handles.Data.NUS;
+end
+
+Defaults.BackgroundDimension1 = str2double(get(handles.BackgroundParameter1,'string'));
+Defaults.BackgroundDimension2 = str2double(get(handles.BackgroundParameter2,'string'));
+Defaults.BackgroundMethod1 = get(handles.BackgroundMethod1,'value');
+Defaults.BackgroundMethod2 = get(handles.BackgroundMethod2,'value');
+Defaults.BackgroundStart1 = str2double(get(handles.BackgroundStart1,'string'));
+Defaults.BackgroundStart2 = str2double(get(handles.BackgroundStart2,'string'));
+Defaults.BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
+Defaults.LagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
+Defaults.ThresholdParameter = 0.99;
+Defaults.ReconstructionMethod = ReconstructionMethod;
+
+Hyscorean_validationModule(RawData,Defaults)

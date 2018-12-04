@@ -20,6 +20,8 @@ TimeIndex = find(Data.EchoAxis > -abs(options.FittingTime),1);
 AverageEcho = Data.AverageEcho;
 EchoAxis=Data.EchoAxis;
 
+% Integration = 'boxcar';
+
 switch Integration
 %--------------------------------------------------------------------------
 % Gaussian-Fit Integration
@@ -71,8 +73,11 @@ end
 plot([-options.FittingTime, -options.FittingTime],[0, 1],'b--','LineWidth',1.5)
 hold on
 plot([options.FittingTime, options.FittingTime],[0, 1],'b--','LineWidth',1.5)
-plot(EchoAxis,abs(AverageEcho(:,Pos,Pos2))/max(abs(AverageEcho(:,1,1))),'k','LineWidth',1)
+plot(EchoAxis,abs(AverageEcho(:,1,1))/max(abs(AverageEcho(:,1,1))),'k','LineWidth',1)
+try
 plot(EchoAxis,GaussianWindow,'r','LineWidth',1)
+catch
+end
 xlabel('Echo Time Axis [ns]'),ylabel('Intensity')
 set(gca,'fontsize',9)
 hold off

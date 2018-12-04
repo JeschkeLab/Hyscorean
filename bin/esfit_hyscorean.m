@@ -466,7 +466,7 @@ CustomColormap = [0 0.5 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2; 
 shading(hAx,'interp');
 % alphamap(hAx,'vdown')
 set(h2,'FaceAlpha',1)
-set(h3,'FaceAlpha',1)
+set(h3,'FaceAlpha',0.8)
 
   linkaxes([ax1,hAx])
   uistack(hAx)
