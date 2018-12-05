@@ -110,50 +110,79 @@ reportdata.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'str
 
 %Bruker-spectrometer specific parameters
 if isfield(handles.Data,'BrukerParameters')
-BrukerParameters = handles.Data.BrukerParameters;
-%Extract pulse lengths
-PulseSpelText = BrukerParameters.PlsSPELGlbTxt;
-Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
-Pulse180DefinitionIndex = strfind(PulseSpelText,'p1   = ');
-Shift = 7;
-while ~isspace(PulseSpelText(Pulse90DefinitionIndex + Shift))
-  Pulse90String(Shift - 2) =  PulseSpelText(Pulse90DefinitionIndex + Shift);
-  Shift = Shift + 1;
-end
-Shift = 7;
-while ~isspace(PulseSpelText(Pulse180DefinitionIndex + Shift))
-  Pulse180String(Shift - 2) =  PulseSpelText(Pulse180DefinitionIndex + Shift);
-  Shift = Shift + 1;
-end
-reportdata.Pulse90Length  = str2double(Pulse90String);
-reportdata.Pulse180Length  = str2double(Pulse180String);
-reportdata.MW_Frequency = BrukerParameters.MWFQ/1e9;
-reportdata.ShotRepTime = str2double(BrukerParameters.ShotRepTime(1:strfind(BrukerParameters.ShotRepTime,' ')));
-reportdata.ShotsPerLoop = BrukerParameters.ShotsPLoop;
-reportdata.NbScansDone = BrukerParameters.NbScansDone;
-reportdata.CenterField = str2double(BrukerParameters.CenterField(1:strfind(BrukerParameters.CenterField,' ')));
-reportdata.XDimension = BrukerParameters.XPTS;
-reportdata.YDimension = BrukerParameters.YPTS;
-reportdata.VideoGain = str2double(BrukerParameters.VideoGain(1:strfind(BrukerParameters.VideoGain,' ')));
-reportdata.VideoBandwidth = str2double(BrukerParameters.VideoBW(1:strfind(BrukerParameters.VideoBW,' ')));
+  BrukerParameters = handles.Data.BrukerParameters;
+  %Extract pulse lengths
+  PulseSpelText = BrukerParameters.PlsSPELGlbTxt;
+  Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
+  Pulse180DefinitionIndex = strfind(PulseSpelText,'p1   = ');
+  Shift = 7;
+  while ~isspace(PulseSpelText(Pulse90DefinitionIndex + Shift))
+    Pulse90String(Shift - 2) =  PulseSpelText(Pulse90DefinitionIndex + Shift);
+    Shift = Shift + 1;
+  end
+  Shift = 7;
+  while ~isspace(PulseSpelText(Pulse180DefinitionIndex + Shift))
+    Pulse180String(Shift - 2) =  PulseSpelText(Pulse180DefinitionIndex + Shift);
+    Shift = Shift + 1;
+  end
+  reportdata.Pulse90Length  = str2double(Pulse90String);
+  reportdata.Pulse180Length  = str2double(Pulse180String);
+  reportdata.MW_Frequency = BrukerParameters.MWFQ/1e9;
+  reportdata.ShotRepTime = str2double(BrukerParameters.ShotRepTime(1:strfind(BrukerParameters.ShotRepTime,' ')));
+  reportdata.ShotsPerLoop = BrukerParameters.ShotsPLoop;
+  reportdata.NbScansDone = BrukerParameters.NbScansDone;
+  reportdata.CenterField = str2double(BrukerParameters.CenterField(1:strfind(BrukerParameters.CenterField,' ')));
+  reportdata.XDimension = BrukerParameters.XPTS;
+  reportdata.YDimension = BrukerParameters.YPTS;
+  reportdata.VideoGain = str2double(BrukerParameters.VideoGain(1:strfind(BrukerParameters.VideoGain,' ')));
+  reportdata.VideoBandwidth = str2double(BrukerParameters.VideoBW(1:strfind(BrukerParameters.VideoBW,' ')));
 end
 
 %AWG-spectrometer specific parameters
 if isfield(handles.Data,'AWG_Parameters')
-AWG_Parameters = handles.Data.AWG_Parameters;
-reportdata.Pulse90Length  = AWG_Parameters.events{1}.pulsedef.tp;
-reportdata.Pulse180Length  = AWG_Parameters.events{3}.pulsedef.tp;
-reportdata.MW_Frequency = AWG_Parameters.LO + AWG_Parameters.nu_obs;
-reportdata.ShotRepTime = AWG_Parameters.reptime/1e6;
-reportdata.ShotsPerLoop = AWG_Parameters.shots;
-reportdata.NbScansDone = AWG_Parameters.store_avgs;
-reportdata.CenterField = round(AWG_Parameters.B,0);
-reportdata.XDimension = AWG_Parameters.hyscore_t1.dim;
-reportdata.YDimension = AWG_Parameters.hyscore_t2.dim;
-reportdata.VideoGain = NaN;
-reportdata.VideoBandwidth = NaN;
+  AWG_Parameters = handles.Data.AWG_Parameters;
+  reportdata.NUSflag  = AWG_Parameters.NUS_flag;
+  reportdata.Pulse90Length  = AWG_Parameters.events{1}.pulsedef.tp;
+  reportdata.Pulse180Length  = AWG_Parameters.events{3}.pulsedef.tp;
+  reportdata.MW_Frequency = AWG_Parameters.LO + AWG_Parameters.nu_obs;
+  reportdata.ShotRepTime = AWG_Parameters.reptime/1e6;
+  reportdata.ShotsPerLoop = AWG_Parameters.shots;
+  reportdata.NbScansDone = AWG_Parameters.store_avgs;
+  reportdata.CenterField = round(AWG_Parameters.B,0);
+  if AWG_Parameters.NUS_flag
+    reportdata.XDimension = AWG_Parameters.NUS.Dimension1;
+    reportdata.YDimension = AWG_Parameters.NUS.Dimension2;
+    reportdata.NUSgrid = AWG_Parameters.NUS.SamplingGrid;
+  else
+    reportdata.XDimension = AWG_Parameters.hyscore_t1.dim;
+    reportdata.YDimension = AWG_Parameters.hyscore_t2.dim;
+  end
+  reportdata.VideoGain = NaN;
+  reportdata.VideoBandwidth = NaN;
 end
 
+if reportdata.NUSflag
+switch get(handles.ReconstructionAlgorithm,'Value')
+    case 1 %Constant-lambda CAMERA Reconstruction
+      reportdata.ReconstructionMethod = 'Constant-aim CAMERA';
+        case 2 %CAMERA 
+      reportdata.ReconstructionMethod = 'CAMERA';
+    case 3 %FFM-CG
+      reportdata.ReconstructionMethod = 'FFM-CG';
+    case 4 %FFM-GD 
+      reportdata.ReconstructionMethod = 'FFM-GD';
+    case 5 %IST-S Reconstruction
+      reportdata.ReconstructionMethod = 'IST-S';
+    case 6 %IST-D Reconstruction
+      reportdata.ReconstructionMethod = 'IST-D';
+end
+reportdata.BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
+reportdata.LagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
+reportdata.ReconstructionFunctional = handles.Data.ReconstructionConvergence;
+SampledPoints = length(find(reportdata.NUSgrid==1));
+FullSampling = reportdata.XDimension*reportdata.YDimension;
+reportdata.SamplingDensity = sprintf('%.2f%%',round(100*SampledPoints/FullSampling,2));
+end
 %Store apodization window 
 WindowDecay = str2double(get(handles.Hammingedit,'string'));
     WindowMenuState = get(handles.WindowType,'value');
