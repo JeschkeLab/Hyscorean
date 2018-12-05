@@ -18,6 +18,14 @@ cla(handles.signal_t1)
 hold(handles.signal_t1,'on')
 
 %Check crucial fields and set defaults if needed
+if handles.Data.NUSflag
+  PlotStyle = '.';
+else
+  PlotStyle = '-';
+end
+if handles.Data.NUSflag
+  NUSgrid = handles.Data.NUS.SamplingGrid;
+end
 if ~isfield(handles,'PlotProcessedSignal')
   handles.PlotProcessedSignal = true;
 end
@@ -102,11 +110,11 @@ if get(handles.NonCorrectedTrace,'value')
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(SignalTrace));
-  plot(handles.signal_t1,Axis,SignalTrace,'Color',[0.2 0.2 0.9])
+  plot(handles.signal_t1,Axis,SignalTrace,PlotStyle,'MarkerSize',16,'Color',[0.2 0.2 0.9])
   hold(handles.signal_t1,'on')
   
   %Rescale and zero-adjust the background trace
-  Background1Trace = Background1Trace - mean(real(handles.Data.Background1(end,:)),'omitnan');
+  Background1Trace = Background1Trace - mean(real(handles.Data.NonCorrectedIntegral(end,:)),'omitnan');
   Background1Trace = Background1Trace/max(max(real(handles.Data.NonCorrectedIntegral)));
   
   %Construct axis and plot
@@ -142,11 +150,11 @@ if PlotSecondCorrection
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(SignalTrace));
-  plot(handles.signal_t1,Axis,SignalTrace,'Color',[0.6 0.0 0.8])
+  plot(handles.signal_t1,Axis,SignalTrace,PlotStyle,'MarkerSize',16,'Color',[0.6 0.0 0.8])
   hold(handles.signal_t1,'on')
   
   %Rescale and zero-adjust the background trace
-  Background2Trace = Background2Trace - mean(real(handles.Data.Background2(end,:)),'omitnan');
+  Background2Trace = Background2Trace - mean(real(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
   Background2Trace = Background2Trace/max(max(real(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
@@ -171,8 +179,10 @@ if get(handles.PreProcessedTrace,'value')
   %Switch to change between t1 and t2 traces
   if get(handles.ChangeSignalPlotDimension,'Value')
     PreProcessedSignalTrace = real(handles.Data.PreProcessedSignal(SliderPosition,:));
+    PreProcessedSignalTrace(NUSgrid(SliderPosition,:)==0) = NaN;
   else
     PreProcessedSignalTrace = real(handles.Data.PreProcessedSignal(:,SliderPosition));
+    PreProcessedSignalTrace(NUSgrid(:,SliderPosition)==0) = NaN;
   end
   
   %Rescale and zero-adjust the trace
@@ -183,7 +193,7 @@ if get(handles.PreProcessedTrace,'value')
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(PreProcessedSignalTrace));
   
   %Plot and hold
-  plot(handles.signal_t1,Axis,PreProcessedSignalTrace,'Color',[0.9 0.2 0.2])
+  plot(handles.signal_t1,Axis,PreProcessedSignalTrace,PlotStyle,'MarkerSize',16,'Color',[0.9 0.2 0.2])
   hold(handles.signal_t1,'on')
   
 end
