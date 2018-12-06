@@ -66,7 +66,7 @@ end
     drawnow
     if Iteration>1
     FunctionalDecrease = FunctionalValue(end) - FunctionalValue(end-1);
-    if isnan(FunctionalValue(end)) || round(FunctionalValue(end),6)==0 || FunctionalDecrease>0
+    if isnan(FunctionalValue(end)) || round(FunctionalValue(end),7)==0 || FunctionalDecrease>0
       break
     end
     end

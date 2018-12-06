@@ -136,6 +136,7 @@ if isfield(handles.Data,'BrukerParameters')
   reportdata.YDimension = BrukerParameters.YPTS;
   reportdata.VideoGain = str2double(BrukerParameters.VideoGain(1:strfind(BrukerParameters.VideoGain,' ')));
   reportdata.VideoBandwidth = str2double(BrukerParameters.VideoBW(1:strfind(BrukerParameters.VideoBW,' ')));
+  reportdata.NUSflag = false;
 end
 
 %AWG-spectrometer specific parameters
