@@ -15,8 +15,8 @@ FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),2*Dimension);
 xlabel('t_1 [ns]'),ylabel('t_2 [ns]'),title(sprintf('NUS Schedule (@%.2f%%)',Sampling))
 
 subplot(242)
-plot((-handles.Data.ReconstructionConvergence),'b','LineWidth',1.5),axis tight,grid on
-xlabel('Iterations'),ylabel('Functional'),title('Hoch - Hore Entropy')
+plot((handles.Data.ReconstructionConvergence),'b','LineWidth',1.5),axis tight,grid on
+xlabel('Iterations'),ylabel('Functional'),title('Reconstruction Functional')
 subplot(245)
 handles.Data.PreProcessedSignal(handles.Data.NUS.SamplingGrid==0) = NaN;
 pcolor(handles.Data.NUS.t1Timings,handles.Data.NUS.t1Timings,handles.Data.PreProcessedSignal),shading flat

@@ -69,42 +69,42 @@ handles.output = hObject;
 %       % Replace it with a TEXT object 
 %       handles.(t) = text(p(1),p(2),s,'interpreter','latex');
 % end
-clc
-try
-if  getpref('hyscorean','repository_connected')
-  %Check for updates in the repository
-  HyscoreanPath = which('Hyscorean');
-  HyscoreanPath = HyscoreanPath(1:end-12);
-  %Use OS commands to get to GIT-folder and check status
-  fprintf('Looking for updates... \n')
-  CurrentPath = pwd;
-  cd(HyscoreanPath)
-  DOS_command = sprintf('git fetch');
-  DOS_failed = dos(DOS_command);
-  cd(CurrentPath)
-  if DOS_failed
-    fprintf('Connection failed check your internet connection \n')
-  end
-  DOS_command = sprintf('git status origin master');
-  cd(HyscoreanPath)
-  [DOS_failed,DOS_output] = dos(DOS_command);
-  cd(CurrentPath)
-  %If everything goes well, this should show up
-  String = 'Your branch is up-to-date with ''origin/master''';
-  if isempty(strfind(DOS_output,String)) && ~DOS_failed
-    Answer = questdlg('A new update is available. Do you want to update now?','Hyscorean Update','Yes','No','No');
-    fprintf('Connecting to Hyscorean repository... \n ')
-    if strcmp(Answer,'Yes')
-      fprintf('Downloading updates... \n ')
-      DOS_command = sprintf('cd %s & git pull origin master',HyscoreanPath);
-      dos(DOS_command);
-    end
-  else
-    fprintf('No updates available. \n')
-  end
-end
-catch 
-end
+% clc
+% try
+% if  getpref('hyscorean','repository_connected')
+%   %Check for updates in the repository
+%   HyscoreanPath = which('Hyscorean');
+%   HyscoreanPath = HyscoreanPath(1:end-12);
+%   %Use OS commands to get to GIT-folder and check status
+%   fprintf('Looking for updates... \n')
+%   CurrentPath = pwd;
+%   cd(HyscoreanPath)
+%   DOS_command = sprintf('git fetch');
+%   DOS_failed = dos(DOS_command);
+%   cd(CurrentPath)
+%   if DOS_failed
+%     fprintf('Connection failed check your internet connection \n')
+%   end
+%   DOS_command = sprintf('git status origin master');
+%   cd(HyscoreanPath)
+%   [DOS_failed,DOS_output] = dos(DOS_command);
+%   cd(CurrentPath)
+%   %If everything goes well, this should show up
+%   String = 'Your branch is up-to-date with ''origin/master''';
+%   if isempty(strfind(DOS_output,String)) && ~DOS_failed
+%     Answer = questdlg('A new update is available. Do you want to update now?','Hyscorean Update','Yes','No','No');
+%     fprintf('Connecting to Hyscorean repository... \n ')
+%     if strcmp(Answer,'Yes')
+%       fprintf('Downloading updates... \n ')
+%       DOS_command = sprintf('cd %s & git pull origin master',HyscoreanPath);
+%       dos(DOS_command);
+%     end
+%   else
+%     fprintf('No updates available. \n')
+%   end
+% end
+% catch 
+% end
 % Update handles structure
 guidata(hObject, handles);
 
