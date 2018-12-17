@@ -167,7 +167,7 @@ while (k < tauDim)
 	while (j < scheduleDim)
 
 		# Set timing of second dimension #
-		strcpy(txt, "d11 =");
+		strcpy(txt, "d20 =");
 		current_t2 = getValue(scheduleP,j,REAL_ORD);;
 		strcat(txt, current_t2);
 		# Update value on PulseSPEL via Set PulseSPEL Variable command from XEPR-GUI #
