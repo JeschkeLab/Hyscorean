@@ -22,7 +22,7 @@ function varargout = Hyscorean_validationModule(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_validationModule
 
-% Last Modified by GUIDE v2.5 04-Dec-2018 10:42:55
+% Last Modified by GUIDE v2.5 13-Dec-2018 11:38:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -56,6 +56,14 @@ function Hyscorean_validationModule_OpeningFcn(hObject, eventdata, handles, vara
 handles.output = hObject;
 handles.RawData = varargin{1};
 handles.Defaults = varargin{2};
+
+%Prepare the sampling density slider 
+handles.RawData.NUS.SamplingDensity = length(find(handles.RawData.NUS.SamplingGrid ==1))/(handles.RawData.NUS.Dimension1*handles.RawData.NUS.Dimension2);
+Npoints  = length(1:0.1:100*handles.RawData.NUS.SamplingDensity );
+set(handles.SamplingDensity_Slider,'Min', 1, 'Max',100*handles.RawData.NUS.SamplingDensity  , 'SliderStep', [1/(Npoints - 1) 5/(Npoints - 1)], 'Value', 100*handles.RawData.NUS.SamplingDensity )
+String = sprintf('%.1f%%',100*handles.RawData.NUS.SamplingDensity );
+set(handles.SliderText,'string',String);
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -178,6 +186,18 @@ guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
+%------------------------------------------------------------------------------
+function SamplingDensity_Check_Callback(hObject, eventdata, handles)
+ if get(hObject,'value')
+  handles.NumberTrialsVector(8) = str2double(get(handles.SamplingDensity_Trials,'string'));
+else
+    handles.NumberTrialsVector(8) = 1;
+end
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
+guidata(hObject, handles);
+return
+
+%------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
@@ -258,6 +278,20 @@ function BackgroundParameter_Trials_Callback(hObject, eventdata, handles)
 handles.NumberTrialsVector(6) = str2double(get(hObject,'string'));
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 return
+%------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------
+function SamplingDensity_Trials_Callback(hObject, eventdata, handles)
+handles.NumberTrialsVector(8) = str2double(get(hObject,'string'));
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
+return
+%------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
+%                            OTHER BUTTONS CALLBACKS
+%------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
@@ -421,6 +455,15 @@ if get(handles.ThresholdParameter_Check,'value')
 else
   ThresholdParameter_Vector = Defaults.ThresholdParameter;
 end
+
+if get(handles.SamplingDensity_Check,'value')
+  SamplingDensity = get(handles.SamplingDensity_Slider,'value');
+  SamplingDensity_Trials = str2double(get(handles.SamplingDensity_Trials,'string'));
+  SamplingDensity_Vector  = [SamplingDensity,SamplingDensity_Trials];
+else
+  SamplingDensity_Vector = [handles.RawData.NUS.SamplingDensity 1];
+end
+
 %Flip vector so longer cpu times are are the start
 ThresholdParameter_Vector = fliplr(ThresholdParameter_Vector);
 
@@ -431,13 +474,12 @@ ValidationVectors.BackgroundDimension2_Vector = BackgroundDimension2_Vector;
 ValidationVectors.LagrangeMultiplier_Vector = LagrangeMultiplier_Vector;
 ValidationVectors.BackgroundParameter_Vector = BackgroundParameter_Vector;
 ValidationVectors.ThresholdParameter_Vector = ThresholdParameter_Vector;
-
+ValidationVectors.SamplingDensity_Vector  = SamplingDensity_Vector;
 handles.ValidationMainPlot = handles.ValidationMainPlot;
 handles.ValidationInset1 = handles.ValidationInset1;
 handles.ValidationInset2 = handles.ValidationInset2;
 
 set(handles.ValidationStatus,'string','Validation in progress...'),drawnow;
-
 
 [ReconstructedSpectra,ParameterSets] = validateHyscorean(handles.RawData,ValidationVectors,handles.ValidationStatus,Defaults);
 handles.ParameterSets = ParameterSets;
@@ -578,7 +620,8 @@ ParameterSets = handles.ParameterSets;
     set(handles.CurrentLagrangianMultiplier_Text,'string',ParameterSets(currentParameterSet).LagrangeMultiplier);
     set(handles.CurrentBackgroundParameter_Text,'string',ParameterSets(currentParameterSet).BackgroundParameter);
     set(handles.CurrentThresholdParameter_Text,'string',ParameterSets(currentParameterSet).ThresholdParameter);
-    
+    set(handles.CurrentSamplingDensity_Text,'string',ParameterSets(currentParameterSet).SamplingDensity);
+
 return
 %------------------------------------------------------------------------------
 
@@ -730,6 +773,16 @@ guidata(hObject, handles);
 %------------------------------------------------------------------------------
 function DisplayUncertainty_Radio_CreateFcn(hObject, eventdata, handles)
 handles.DisplayRadioStatus = 'uncertainty';
+guidata(hObject, handles);
+return
+%------------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------------
+function SamplingDensity_Slider_Callback(hObject, eventdata, handles)
+CurrentSliderValue = get(hObject,'Value');
+String = sprintf('%.1f%%',CurrentSliderValue);
+set(handles.SliderText,'string',String);
 guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
