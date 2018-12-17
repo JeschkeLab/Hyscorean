@@ -105,7 +105,11 @@ if get(handles.NonCorrectedTrace,'value')
   end
   
   %Rescale and zero-adjust the signal trace
-  SignalTrace = SignalTrace - mean(real(handles.Data.NonCorrectedIntegral(end,:)),'omitnan');
+  Mean = mean(real(handles.Data.NonCorrectedIntegral(:,end)),'omitnan');
+  if isnan(Mean)
+    Mean = 0;
+  end
+  SignalTrace = SignalTrace - Mean;
   SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
   
   %Construct axis and plot
@@ -114,7 +118,7 @@ if get(handles.NonCorrectedTrace,'value')
   hold(handles.signal_t1,'on')
   
   %Rescale and zero-adjust the background trace
-  Background1Trace = Background1Trace - mean(real(handles.Data.NonCorrectedIntegral(end,:)),'omitnan');
+  Background1Trace = Background1Trace - Mean;
   Background1Trace = Background1Trace/max(max(real(handles.Data.NonCorrectedIntegral)));
   
   %Construct axis and plot
@@ -144,8 +148,13 @@ if PlotSecondCorrection
     Background2Trace = real(handles.Data.Background2(SliderPosition,:));
   end
   
+  Mean = mean(real(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
+  if isnan(Mean)
+    Mean = 0;
+  end
+  
   %Rescale and zero-adjust the signal trace
-  SignalTrace = SignalTrace - mean(real(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
+  SignalTrace = SignalTrace - Mean;
   SignalTrace = SignalTrace/max(max(real(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
@@ -154,7 +163,7 @@ if PlotSecondCorrection
   hold(handles.signal_t1,'on')
   
   %Rescale and zero-adjust the background trace
-  Background2Trace = Background2Trace - mean(real(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
+  Background2Trace = Background2Trace - Mean;
   Background2Trace = Background2Trace/max(max(real(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
