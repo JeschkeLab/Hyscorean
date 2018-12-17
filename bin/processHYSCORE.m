@@ -56,19 +56,19 @@ if handles.backgroundCorrectionSwitch
   % Get values from GUI to pass to correctBackground.m function
   %Set-up options for the two individual background corrections
   switch get(handles.BackgroundMethod1,'Value')
-    case 1
+    case 1 %Fractal
       options.BackgroundMethod1 = 0;
       options.BackgroundPolynomOrder1 = [];
       options.BackgroundFractalDimension1 = [];
-    case 2
+    case 2 %n-Dimensional
       options.BackgroundMethod1 = 1;
       options.BackgroundPolynomOrder1 = [];
       options.BackgroundFractalDimension1 = str2double(get(handles.BackgroundParameter1,'string'));
-    case 3
+    case 3 %Polynomial
       options.BackgroundMethod1 = 2;
       options.BackgroundPolynomOrder1 = str2double(get(handles.BackgroundParameter1,'string'));
       options.BackgroundFractalDimension1 = [];
-    case 4
+    case 4 %Exponential
       options.BackgroundMethod1 = 3;
       options.BackgroundPolynomOrder1 = str2double(get(handles.BackgroundParameter1,'string'));
       options.BackgroundFractalDimension1 = [];

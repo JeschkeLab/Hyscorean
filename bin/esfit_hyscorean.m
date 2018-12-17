@@ -454,9 +454,9 @@ ax1 = axes('Parent',hFig,'Units','pixels',...
 %   [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
     [h2] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
 %                 [~,h2] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none','LevelList',linspace(-1,0,50))
-CustomColormap = [0 0.5 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0 0.4 0.2; 0 0.6 0.2; 0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
-          1 1 1;    1 1 1;
-          1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5; 1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.1 0.1;   1 0 0;    0.95 0 0;      0.9 0 0;     0.8 0 0;     0.7 0 0;   0.65 0 0;  0.6 0 0];
+CustomColormap = [0 0.5 0.2; 0 0.45 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2;  0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0.2 0.1 0.2; 0 0.4 0.2; 0 0.5 0.2; 0 0.6 0.2;  0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
+          1 1 1; 
+          1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5; 1 0.45 0.45; 1 0.4 0.4;  1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.1 0.1;   1 0 0;    0.95 0 0;      0.9 0 0; 0.85 0 0;    0.8 0 0;   0.7 0 0;   0.7 0 0;   0.65 0 0;  0.6 0 0];
         FitData.pcolorplotting = 1;
 %   [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,40));
       [h3] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
@@ -500,9 +500,9 @@ colormap(hAx,CustomColormap)
   set(hsub1,'Tag','expdata_projection1','XData',FrequencyAxis,'YData',Inset);
   set(hsub1_2,'Tag','bestsimdata_projection1');
   set(hsub1_3,'Tag','currsimdata_projection1');
-  Inset = max(dispData(:,round(length(dispData)/2,0):end),[],2);
+  Inset = max(dispData,[],2);
 %   Inset = abs(Inset - Inset(end));
-  set(hsub2,'Tag','expdata_projection2','XData',FrequencyAxis,'YData',Inset);
+  set(hsub2,'Tag','expdata_projection2','YData',FrequencyAxis,'XData',Inset);
   set(hsub2_2,'Tag','bestsimdata_projection2');
   set(hsub2_3,'Tag','currsimdata_projection2');
   
@@ -510,10 +510,9 @@ colormap(hAx,CustomColormap)
   set(hAx,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
   set(hAx,'YLim',[0 SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
   set(hsubAx1,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
-  set(hsubAx2,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim 0]);
-    set(hsubAx1,'YLim',[0 1]);
-    set(hsubAx2,'YLim',[0 1]);
-
+  set(hsubAx2,'YLim',[0 SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
+  set(hsubAx1,'YLim',[0 1]);
+  set(hsubAx2,'XLim',[0 1]);
   xlabel(hAx,'\omega_1 [MHz]');
   ylabel(hAx,'\omega_2 [MHz]');
   set(hAx,'Tag', 'dataaxes');
@@ -524,9 +523,9 @@ colormap(hAx,CustomColormap)
   box(hAx,'on')
   box(hsubAx1,'on')
   box(hsubAx2,'on')
-    linkaxes([hAx,hsubAx1,hsubAx2],'x')
+  linkaxes([hAx,hsubAx1],'x')
+  linkaxes([hAx,hsubAx2],'y')
 
-  camroll(hsubAx2,-90)
   %-----------------------------------------------------------------
   %Current spectrum display
   %-----------------------------------------------------------------
@@ -578,7 +577,7 @@ colormap(hAx,CustomColormap)
   %-----------------------------------------------------------------
   columnname = {'','Name','best','current','center','vary'};
   columnformat = {'logical','char','char','char','char','char'};
-  colEditable = [true false false false true true];
+  colEditable = [true false false true true true];
   if ~isempty(fieldnames(Vary{1}))
   [FitData.parNames,FitData.CenterVals,FitData.VaryVals] = getParamList(Sys0,Vary);
     for p = 1:numel(FitData.parNames)
@@ -964,9 +963,9 @@ if FitData.GUI
   set(findobj('Tag','currsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   set(findobj('Tag','currsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   
-  hErrorLine = findobj('Tag','errorline');
-  set(hErrorLine,'XData',1,'YData',NaN);
-  axis(get(hErrorLine,'Parent'),'tight');
+%   hErrorLine = findobj('Tag','errorline');
+%   set(hErrorLine,'XData',1,'YData',NaN);
+%   axis(get(hErrorLine,'Parent'),'tight');
   drawnow
   set(findobj('Tag','logLine'),'String','');
 
@@ -1258,19 +1257,19 @@ if FitData.GUI && (UserCommand~=99)
     set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec))
   end
   % update upper projection graph
-  Inset = max(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),[],2);
-  set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
+  Inset = max(CurrentExpSpec,[],1);
+  set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
     Temp = abs(CurrentBestSpec);
     %   Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
     Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
-%     set(findobj('Tag','bestsimdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
+    set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
     %   Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
     Temp = abs(CurrentSimSpec);
     Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
-%     set(findobj('Tag','currsimdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
+    set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
     % update lower projection graph
     Inset = max(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
-    set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+%     set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
     %   Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
     Temp = abs(CurrentBestSpec);
     Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
@@ -1709,7 +1708,7 @@ if ~isempty(str)
     h = findobj('Tag','bestsimdata_projection2');
     Inset = max(CurrentFitSpec,[],2);
 %     Inset = abs(Inset - Inset(end));
-    set(h,'YData',Inset);
+    set(h,'XData',Inset);
     drawnow
   end
 else
@@ -1722,7 +1721,7 @@ else
   h = findobj('Tag','bestsimdata_projection1');
   set(h,'YData',get(h,'YData')*NaN);
   h = findobj('Tag','bestsimdata_projection2');
-  set(h,'YData',get(h,'YData')*NaN);
+  set(h,'YData',get(h,'XData')*NaN);
 
   drawnow;
 end
@@ -1976,7 +1975,7 @@ if isfield(FitData,'FitSets')
   h = findobj('Tag','bestsimdata_projection2');
   Inset = max(CurrentFitSpec,[],2);
 %   Inset = abs(Inset - Inset(end));
-  set(h,'YData',Inset);
+  set(h,'XData',Inset);
   drawnow
 end
 
@@ -2217,8 +2216,8 @@ formatOut = 'yyyymmdd';
 Date = datestr(Date,formatOut);
 ReportData.SaveName = [Date '_FitReport'];
 ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit reports\');
-if ~exist(ReportData.SavePath{1},'dir')
-  mkdir(ReportData.SavePath{1})
+if ~exist(ReportData.SavePath,'dir')
+  mkdir(ReportData.SavePath)
 end
   
   HyscoreanPath = which('Hyscorean');

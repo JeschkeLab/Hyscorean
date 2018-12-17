@@ -69,7 +69,7 @@ end
 % check for a zero-fill count argument.
 if (nargin < 9 || isempty(NZeroFillings))
   % none supplied, use a default value.
-  NZeroFillings = 1;
+  NZeroFillings = 0;
 end
 
 % check for a weight argument.
@@ -171,14 +171,8 @@ for OuterIteration = 1 : MaxOutIter
       % compute a potential x-update.
       ReconstructionUpdate = (1 + VelocityFactor) .* ReconstructionUpdate - VelocityFactor .* y;
       ReconstructedSpectrum = fft2(ReconstructionUpdate);
-%       FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
-%       contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
-%       set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
-%       hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
-% %     figure(999),clf,plot(FunctionalValues),xlabel('Iterations'),ylabel('Functional')
-%       drawnow
       NumberOfOperations(end) =  NumberOfOperations +1;
-      
+
       %Check for a primary termination criterion.
       ok = 1;
       if (LipschitzConstant >= TresholdBackgroundparameter)
@@ -196,11 +190,12 @@ for OuterIteration = 1 : MaxOutIter
     % store the accepted new values.
     y = (ReconstructionUpdate + VelocityFactor .* y) ./ (1 + VelocityFactor);
     Reconstruction = ReconstructionUpdate;
-    
     %Check for a final termination criterion
     if InnerIteration>1
-      FunctionalDecrease = FunctionalValues(end)-FunctionalValues(end-1);
-      if abs(FunctionalDecrease) < FunctionalValues(1)/1e6 || FunctionalDecrease>0
+      NormalizedFunctionalValues = FunctionalValues/max(FunctionalValues);
+      RelativeFunctionalDecrease(InnerIteration) = NormalizedFunctionalValues(end)-NormalizedFunctionalValues(end-1);
+%       figure(99),clf,subplot(121),plot(FunctionalValues),subplot(122),plot(log10(abs(RelativeFunctionalDecrease))),drawnow
+      if  abs(RelativeFunctionalDecrease(InnerIteration) )<1e-7  % || RelativeFunctionalDecrease(InnerIteration)>0
         break; % Finishes algorithm
       end
     end
@@ -209,6 +204,7 @@ for OuterIteration = 1 : MaxOutIter
   
   % update the operation count vector.
   NumberOfOperations = NumberOfOperations +1;
+  
 end
 
 %--------------------------------------------------------------------------  

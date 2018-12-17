@@ -1989,8 +1989,8 @@ end
 
 Defaults.BackgroundDimension1 = str2double(get(handles.BackgroundParameter1,'string'));
 Defaults.BackgroundDimension2 = str2double(get(handles.BackgroundParameter2,'string'));
-Defaults.BackgroundMethod1 = get(handles.BackgroundMethod1,'value');
-Defaults.BackgroundMethod2 = get(handles.BackgroundMethod2,'value');
+Defaults.BackgroundMethod1 = get(handles.BackgroundMethod1,'value') - 1;
+Defaults.BackgroundMethod2 = get(handles.BackgroundMethod2,'value') - 1;
 Defaults.BackgroundStart1 = str2double(get(handles.BackgroundStart1,'string'));
 Defaults.BackgroundStart2 = str2double(get(handles.BackgroundStart2,'string'));
 Defaults.BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
