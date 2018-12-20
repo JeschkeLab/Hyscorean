@@ -99,15 +99,30 @@ return
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 
+function enableDisable_Edits(HandleBaseName,Status,handles)
+
+MinHandle = eval(['handles.',HandleBaseName,'_Min']);
+MaxHandle = eval(['handles.',HandleBaseName,'_Max']);
+TrialsHandle = eval(['handles.',HandleBaseName,'_Trials']);
+
+set(MinHandle,'Enable',Status)
+set(MaxHandle,'Enable',Status)
+set(TrialsHandle,'Enable',Status)
+
+return
+
 %------------------------------------------------------------------------------
 function BackgroundStart1_Check_Callback(hObject, eventdata, handles)
 if get(hObject,'value')
   handles.NumberTrialsVector(1) = str2double(get(handles.BackgroundStart1_Trials,'string'));
+  enableDisable_Edits('BackgroundStart1','on',handles)
 else
   handles.NumberTrialsVector(1) = 1;
+    enableDisable_Edits('BackgroundStart1','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
-guidata(hObject, handles);
+
+
 return
 %------------------------------------------------------------------------------
 
@@ -115,7 +130,9 @@ return
 function BackgroundDimension1_Check_Callback(hObject, eventdata, handles)
 if get(hObject,'value')
   handles.NumberTrialsVector(2) = str2double(get(handles.BackgroundDimension1_Trials,'string'));
+    enableDisable_Edits('BackgroundDimension1','on',handles)
 else
+  enableDisable_Edits('BackgroundDimension1','off',handles)
     handles.NumberTrialsVector(2) = 1;
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
@@ -128,8 +145,10 @@ return
 function BackgroundStart2_Check_Callback(hObject, eventdata, handles)
  if get(hObject,'value')
   handles.NumberTrialsVector(3) = str2double(get(handles.BackgroundStart2_Trials,'string'));
+  enableDisable_Edits('BackgroundStart2','on',handles)
 else
     handles.NumberTrialsVector(3) = 1;
+    enableDisable_Edits('BackgroundStart2','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
@@ -141,8 +160,10 @@ return
 function BackgroundDimension2_Check_Callback(hObject, eventdata, handles)
  if get(hObject,'value')
   handles.NumberTrialsVector(4) = str2double(get(handles.BackgroundDimension2_Trials,'string'));
+    enableDisable_Edits('BackgroundDimension2','on',handles)
 else
     handles.NumberTrialsVector(4) = 1;
+    enableDisable_Edits('BackgroundDimension2','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
@@ -152,10 +173,12 @@ return
 
 %------------------------------------------------------------------------------
 function LagrangeMultiplier_Check_Callback(hObject, eventdata, handles)
- if get(hObject,'value')
+if get(hObject,'value')
   handles.NumberTrialsVector(5) = str2double(get(handles.LagrangeMultiplier_Trials,'string'));
+  enableDisable_Edits('LagrangeMultiplier','on',handles)
 else
-    handles.NumberTrialsVector(5) = 1;
+  handles.NumberTrialsVector(5) = 1;
+  enableDisable_Edits('LagrangeMultiplier','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
@@ -166,8 +189,10 @@ return
 function BackgroundParameter_Check_Callback(hObject, eventdata, handles)
  if get(hObject,'value')
   handles.NumberTrialsVector(6) = str2double(get(handles.BackgroundParameter_Trials,'string'));
+  enableDisable_Edits('BackgroundParameter','on',handles)
 else
     handles.NumberTrialsVector(6) = 1;
+    enableDisable_Edits('BackgroundParameter','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
@@ -178,8 +203,10 @@ return
 function ThresholdParameter_Check_Callback(hObject, eventdata, handles)
  if get(hObject,'value')
   handles.NumberTrialsVector(7) = str2double(get(handles.ThresholdParameter_Trials,'string'));
+      enableDisable_Edits('BackgroundParameter','off',handles)
 else
     handles.NumberTrialsVector(7) = 1;
+        enableDisable_Edits('BackgroundParameter','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
