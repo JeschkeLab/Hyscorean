@@ -1,6 +1,6 @@
 function displayNUSreconstructionResults(handles)
 
-figure(12354987),set(gcf,'NumberTitle','off','Name','Hyscorean: NUS Reconstruction Overview','Position',[-1770 193 1659 684])
+figure(12354987),set(gcf,'NumberTitle','off','Name','Hyscorean: NUS Reconstruction Overview','Position',[150 100 1659 684])
 p = subplot(241);
 pcolor(handles.Data.NUS.t1Timings,handles.Data.NUS.t1Timings,abs(handles.Data.NUS.SamplingGrid-1));shading flat
 colormap(p,'bone')
