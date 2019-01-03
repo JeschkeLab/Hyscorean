@@ -1,4 +1,8 @@
-function launch_Hyscorean_fit(FileNames,Paths)
+function launch_Hyscorean_fit(FileNames,Paths,Input)
+
+if nargin < 3
+    Input = [];
+end
 
 if nargin < 2
   Paths = {pwd};
@@ -16,6 +20,18 @@ if length(Paths) < length(FileNames)
   for i=2:length(FileNames)
     Paths{i} = Paths{1};
   end
+end
+
+if isfield(Input,'Sys')
+Sys = Input.Sys;
+else
+    Sys = [];
+end
+
+if isfield(Input,'Vary')
+    Vary = Input.Vary;
+else
+   Vary = []; 
 end
 
 numSpec = length(FileNames);
@@ -40,6 +56,7 @@ for Index = 1:numSpec
   Exp{Index}.nPoints = DataForFitting.nPoints;
   
   %Fill known optional parameters
+  Opt{Index}.nKnots = 181;
   Opt{Index}.ZeroFillFactor = DataForFitting.ZeroFillFactor;
   Opt{Index}.FreqLim = DataForFitting.FreqLim;
   Opt{Index}.WindowType = DataForFitting.WindowType;
@@ -47,5 +64,7 @@ for Index = 1:numSpec
   Opt{Index}.L2GParameters = DataForFitting.L2GParameters;
   Opt{Index}.Lorentz2GaussCheck = DataForFitting.Lorentz2GaussCheck;
 end
-  esfit_hyscorean('saffron',ExpSpectra,[],[],Exp,Opt)
+
+  esfit_hyscorean('saffron',ExpSpectra,Sys,Vary,Exp,Opt)
+  
 end
