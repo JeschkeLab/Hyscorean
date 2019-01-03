@@ -26,6 +26,9 @@
 
 function varargout = esfit_hyscorean(SimFunctionName,ExpSpec,Sys0,Vary,Exp,SimOpt,FitOpt)
 
+Path2Hyscorean = which('Hyscorean');
+Path2Hyscorean = Path2Hyscorean(1:end-11);
+
 if (nargin==0), help(mfilename); return; end
 
 %Close all parpools
@@ -63,6 +66,7 @@ end
 FitData.DefaultExp = Exp;
 FitData.DefaultSimOpt = SimOpt;
 FitData.numSpec = length(Exp);
+
 % Simulation function
 %--------------------------------------------------------------------
 switch class(SimFunctionName)
@@ -88,12 +92,85 @@ switch class(SimFunctionName)
 end
 FitData.lastSetID = 0;
 
+if ~isempty(Sys0) || ~isempty(Vary)
+    FieldNames = fieldnames(Sys0);
+    for i = 1:length(FieldNames)
+        String = sprintf('Sys.%s  = ',FieldNames{i});
+        switch class(getfield(Sys0,FieldNames{i}))
+            case 'char'
+                String = [String '''' getfield(Sys0,FieldNames{i}) ''''];
+            case 'double'
+                FieldSize = size(getfield(Sys0,FieldNames{i}));
+                String = [String '['];
+                Temp = getfield(Sys0,FieldNames{i});
+                for ii = 1:FieldSize(1)
+                    String = [String sprintf('%.2f ',Temp(ii,1))];
+                    for jj=2:FieldSize(2)
+                        String = [String sprintf(', %.2f',Temp(ii,jj))];
+                    end
+                    if ii ~= FieldSize(1)
+                    String = [String '; '];
+                    end
+                end
+                String = [String ']'];
+        end
+        String = [String ';'];
+        SysDefString{i} = String;
+    end
+    
+        FieldNames = fieldnames(Vary);
+    for i = 1:length(FieldNames)
+        String = sprintf('Vary.%s  = ',FieldNames{i});
+        switch class(getfield(Vary,FieldNames{i}))
+            case 'char'
+                String = [String '''' getfield(Sys0,FieldNames{i}) ''''];
+            case 'double'
+                FieldSize = size(getfield(Vary,FieldNames{i}));
+                String = [String '['];
+                Temp = getfield(Vary,FieldNames{i});
+                for ii = 1:FieldSize(1)
+                    String = [String sprintf('%.2f ',Temp(ii,1))];
+                    for jj=2:FieldSize(2)
+                        String = [String sprintf(', %.2f',Temp(ii,jj))];
+                    end
+                    if ii ~= FieldSize(1)
+                    String = [String '; '];
+                    end
+                end
+                String = [String ']'];
+        end
+        String = [String ';'];
+        VaryDefString{i} = String;
+    end
+    
+    DefaultInput{1} = '%---------------------------------------------';
+    DefaultInput{2} = '% EasySpin Input                              ';
+    DefaultInput{3} = '%---------------------------------------------';
+    DefaultInput{4} = '                                              ';
+    DefaultInput{5} = '% Spin System definition                      ';
+    DefaultInput{6} = '%---------------------------------------------';
+    for i = 1:length(SysDefString)
+        DefaultInput{length(DefaultInput)+1} = SysDefString{i};
+    end
+    DefaultInput{length(DefaultInput) + 1} = '                                              ';
+    DefaultInput{length(DefaultInput) + 1} = '% Fit variables definition                    ';
+    DefaultInput{length(DefaultInput) + 1} = '%---------------------------------------------';
+    for i = 1:length(VaryDefString)
+        DefaultInput{length(DefaultInput)+1} = VaryDefString{i};
+    end
+    DefaultInput = char(DefaultInput);
+    setpref('hyscorean','defaultsystemEasyspin',DefaultInput)
+
+    
+else
+
 %Load system
 %--------------------------------------------------------------------
-Path2Hyscorean = which('Hyscorean');
-Path2Hyscorean = Path2Hyscorean(1:end-11);
 % load([Path2Hyscorean 'bin\DefaultSystemEasySpin'])
 DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
+
+end
+
 SpinSystemInput = {DefaultInput};
 FitData.SpinSystemInput = SpinSystemInput{1};
 %Remove comments on the input
@@ -304,10 +381,11 @@ end
 AvailableCores = cell(1,length(Exp));
 AvailableCores{1} = 'off';
 numcores = feature('numcores');
-for i = 1:numcores
-  AvailableCores{i+1} =sprintf('%i cores',i);
+if numcores>1
+    for i = 2:numcores
+        AvailableCores{i} =sprintf('%i cores',i);
+    end
 end
-
 MethodNames{1} = 'Nelder/Mead simplex';
 MethodNames{2} = 'Levenberg/Marquardt';
 MethodNames{3} = 'Monte Carlo';
@@ -447,7 +525,7 @@ if FitData.GUI
   
 ax1 = axes('Parent',hFig,'Units','pixels',...
     'Position',[50 50 900 420],'FontSize',8,'Layer','bottom');
-  [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,40));
+  [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,40),'LineStyle','-');
 %   hold(ax1,'on')
 
   %Construct all contour handles
@@ -457,7 +535,8 @@ ax1 = axes('Parent',hFig,'Units','pixels',...
 CustomColormap = [0 0.5 0.2; 0 0.45 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2;  0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0.2 0.1 0.2; 0 0.4 0.2; 0 0.5 0.2; 0 0.6 0.2;  0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
           1 1 1; 
           1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5; 1 0.45 0.45; 1 0.4 0.4;  1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.1 0.1;   1 0 0;    0.95 0 0;      0.9 0 0; 0.85 0 0;    0.8 0 0;   0.7 0 0;   0.7 0 0;   0.65 0 0;  0.6 0 0];
-        FitData.pcolorplotting = 1;
+      FitData.CustomColormap = CustomColormap;
+      FitData.pcolorplotting = 1;
 %   [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,40));
       [h3] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
 %             [~,h3] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none','LevelList',linspace(0,1,50))
@@ -466,7 +545,7 @@ CustomColormap = [0 0.5 0.2; 0 0.45 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.
 shading(hAx,'interp');
 % alphamap(hAx,'vdown')
 set(h2,'FaceAlpha',1)
-set(h3,'FaceAlpha',0.8)
+set(h3,'FaceAlpha',1)
 
   linkaxes([ax1,hAx])
   uistack(hAx)
@@ -741,6 +820,14 @@ colormap(hAx,CustomColormap)
     'Enable','off',...
     'Tooltip','Save latest fitting result',...
     'Position',pos1);
+  uicontrol(hFig,'Style','checkbox',...
+    'Tag','ProductRule',...
+    'String','Product Rule',...
+    'Value',0,...
+    'Callback',@ProductRuleCallback,...
+    'Enable','on',...
+    'Tooltip','Use product rule for simulations',...
+    'Position',[x0+250 y0-3 80 25]);
   uicontrol(hFig,'Style','popupmenu',...
     'Tag','SpeedUp',...
     'String',AvailableCores,...
@@ -748,10 +835,10 @@ colormap(hAx,CustomColormap)
     'Callback',@speedUpCallback,...
     'Enable','on',...
     'Tooltip','Parallel computing options',...
-    'Position',[x0+269 y0-5 60 25]);
+    'Position',[x0+185 y0-5 60 25]);
     uicontrol('Style','text',...
       'String','Speed-up',...
-    'Position',[x0+218 y0-8 50 25],...
+    'Position',[x0+133 y0-8 50 25],...
     'HorizontalAlignment','right',...
     'BackgroundColor',get(gcf,'Color'),...
     'HorizontalAl','left');
@@ -1694,7 +1781,7 @@ if ~isempty(str)
     set(h,'Data',data);
     
     CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
-    CurrentFitSpec = abs(CurrentFitSpec - CurrentFitSpec(end,end));
+    CurrentFitSpec = abs(CurrentFitSpec);
     h = findobj('Tag','bestsimdata');
       if FitData.pcolorplotting
         set(h,'CData',-abs(CurrentFitSpec));
@@ -1740,6 +1827,8 @@ ID = sscanf(s{v},'%d');
 for k=1:numel(FitData.FitSets), if FitData.FitSets(k).ID==ID, break; end, end
 varname = sprintf('fit%d',ID);
 fitSet = rmfield(FitData.FitSets(k),'bestx');
+fitSet = rmfield(fitSet,'Target');
+
 assignin('base',varname,fitSet);
 fprintf('Fit set %d assigned to variable ''%s''.\n',ID,varname);
 evalin('base',varname);
@@ -1931,25 +2020,25 @@ FitData.CurrentSpectrumDisplay = get(hObject,'value');
 
 FrequencyAxis = linspace(-1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
 CurrentExpSpec = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
-
+CurrentExpSpec = CurrentExpSpec/max(max(CurrentExpSpec));
 % update contour graph
   set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
 % update upper projection graph
 Inset = max(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),[],2);
-set(findobj('Tag','expdata_projection2'),'XData',FrequencyAxis,'YData',Inset);
-% update lower projection graph
-Inset = max(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:),[],1);
 set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+% update lower projection graph
+  Inset = max(CurrentExpSpec,[],2);
+set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
 if isfield(FitData,'bestspec')
   CurrentBestSpec = abs(FitData.bestspec{FitData.CurrentSpectrumDisplay});
 % update contour graph
-  set(findobj('Tag','bestspec'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentBestSpec);
+  set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-CurrentBestSpec);
 % update upper projection graph
 Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],2);
-set(findobj('Tag','bestspec'),'XData',FrequencyAxis,'YData',Inset);
+set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
 % update lower projection graph
-Inset = max(CurrentBestSpec(round(length(CurrentBestSpec)/2,0):end,:),[],1);
-set(findobj('Tag','bestspec'),'XData',FrequencyAxis,'YData',Inset);
+  Inset = max(CurrentBestSpec,[],2);
+set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
 end
 if isfield(FitData,'FitSets')
   h = findobj('Tag','SetListBox');
@@ -2080,7 +2169,7 @@ return
 %==========================================================================
 function speedUpCallback(object,src,event)
   global FitData
-  FitData.CurrentCoreUsage = get(object,'value') - 1;
+  FitData.CurrentCoreUsage = get(object,'value');
   
   if FitData.CurrentCoreUsage > length(FitData.Exp)
     w  = warndlg(sprintf('%i cores accesed. This exceeds the number of spectra loaded (%i). No speed-up will be obtained from exceeding %i cores. Consider reducing the number of cores.' ...
@@ -2090,10 +2179,15 @@ function speedUpCallback(object,src,event)
   
   delete(gcp('nocreate'))
 
-  if FitData.CurrentCoreUsage>0
-   FitData.PoolData =  parpool(FitData.CurrentCoreUsage);
+  if FitData.CurrentCoreUsage>1
+% h = figure('units','pixels','position',[500 500 200 50],'windowstyle','modal');
+            w  = warndlg('Connecting workers to parallel computing pool...','Warning','modal');
+ delete(w.Children(1))
+% uicontrol(h,'style','text','string','Connecting workers to pool...','units','pixels','position',[75 10 100 30]);
+% drawnow
+FitData.PoolData =  parpool(FitData.CurrentCoreUsage);
+  close(w);
   end
-
 return
 %==========================================================================
 
@@ -2222,7 +2316,9 @@ end
   
   HyscoreanPath = which('Hyscorean');
   HyscoreanPath = HyscoreanPath(1:end-11);
-ReportData.FittingReport_logo_Path = [HyscoreanPath 'bin/FitReport_logo.png'];
+ReportData.FittingReport_logo_Path = [HyscoreanPath 'bin\FitReport_logo.png'];
+
+
 %Send structure to workspace
 assignin('base', 'ReportData', ReportData);
 
@@ -2247,6 +2343,33 @@ zoom off
 HObj = findobj('Tag','bestsimdata');
 set(HObj.Parent,'XLim',[-FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim FitData.SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
 set(HObj.Parent,'YLim',[0 FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
+
+return
+%==========================================================================
+
+%==========================================================================
+function ProductRuleCallback(object,src,event)
+
+global FitData
+
+    if get(object,'value')
+        numNuclei =  length(strfind(FitData.Sys0{1}.Nucs,','))+1;
+        if numNuclei < 3
+            w  = warndlg(sprintf('Product rule usage activated. However only %i nuclei are defined in the system. This may result in a slow down of the simulation.' ...
+                ,numNuclei),'Warning','modal');
+            waitfor(w)
+        end
+    end
+    
+for i=1:length(FitData.SimOpt)
+   
+    if get(object,'value')
+        FitData.SimOpt{i}.ProductRule = 1;
+    else
+        FitData.SimOpt{i}.ProductRule = 0;
+    end
+    
+end
 
 return
 %==========================================================================
