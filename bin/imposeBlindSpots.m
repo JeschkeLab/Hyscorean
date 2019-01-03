@@ -20,10 +20,12 @@ BlinSpotsMap =zeros(Dimension1,Dimension2);
 TauValues=TauValues/1e3;  % us
 
 for i= 1:length(TauValues)
-  BlinSpots1=1-cos(2*pi*BlindSpotsAxis1*TauValues(i)); % 1 tau value
-  BlinSpots2=1-cos(2*pi*BlindSpotsAxis2*TauValues(i)); % 1 tau value
+%   BlinSpots1=1-cos(2*pi*BlindSpotsAxis1*TauValues(i)); % 1 tau value
+%   BlinSpots2=1-cos(2*pi*BlindSpotsAxis2*TauValues(i)); % 1 tau value
+  BlinSpots1=sin(2*pi*BlindSpotsAxis1*TauValues(i)/2); % 1 tau value
+  BlinSpots2=sin(2*pi*BlindSpotsAxis2*TauValues(i)/2); % 1 tau value
 
-  BlinSpotsContribution=(BlinSpots1'*BlinSpots2)/4;
+  BlinSpotsContribution=(2*BlinSpots1'.*BlinSpots2);
  
   BlinSpotsMap = BlinSpotsMap + BlinSpotsContribution;
   
