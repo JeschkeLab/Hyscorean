@@ -1,4 +1,4 @@
-function [Reconstruction, FunctionalValues, NumberOfOperations] = camera_hyscorean (Signal,Schedule,NoiseLevel,SingleLagrangeMultiplier,BackgroundParameterVector,MultiplierBackgroundParameter,MaxOutIter,MaxInIter,NZeroFillings,Weights,handles)
+function [Reconstruction, FunctionalValues, NumberOfOperations,LagrangeMultipliers_Used] = camera_hyscorean (Signal,Schedule,NoiseLevel,SingleLagrangeMultiplier,BackgroundParameterVector,MultiplierBackgroundParameter,MaxOutIter,MaxInIter,NZeroFillings,Weights,handles)
 %--------------------------------------------------------------------------  
 % Convex Accelerated Maximum Entropy Reconstruction (CAMERA)
 %--------------------------------------------------------------------------
@@ -165,6 +165,7 @@ for OuterIteration = 1 : MaxOutIter
       else
         LagrangeMultiplier = SingleLagrangeMultiplier;
       end
+      LagrangeMultipliers_Used(InnerIteration) = LagrangeMultiplier;
       ReconstructionUpdate = (1 ./ (1 + (LagrangeMultiplier / LipschitzConstant) .* AtA)) .* ...
         (Reconstruction + (LagrangeMultiplier / LipschitzConstant) .* At .* Signal - Gradient ./ LipschitzConstant);
 
