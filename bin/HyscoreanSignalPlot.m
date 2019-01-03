@@ -25,6 +25,8 @@ else
 end
 if handles.Data.NUSflag
   NUSgrid = handles.Data.NUS.SamplingGrid;
+else
+    NUSgrid = ones(size(Processed.Signal));
 end
 if ~isfield(handles,'PlotProcessedSignal')
   handles.PlotProcessedSignal = true;
