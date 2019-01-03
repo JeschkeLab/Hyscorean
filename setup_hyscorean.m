@@ -12,6 +12,9 @@ end
 catch 
 end
 
+  fullyInstalled = true;
+
+
 %Get system information
 % InstallationPath = pwd;
 MATLAB_version = version;
@@ -32,6 +35,58 @@ fprintf('=======================================================================
 fprintf('Verfying Hyscorean directory contents... ')
 if allFilesOK
 fprintf('no missing files \n')
+end
+
+
+%--------------------------------------------------------------------------
+% License agreement
+%--------------------------------------------------------------------------
+
+%If license has been accepted, do not ask again
+if ~ispref('hyscorean','LGPL_license')
+    
+    %Construct GUI with license agreement
+    FigureHandle = figure('NumberTitle','off','Name','Hyscorean: License Agreement','menu','none','WindowStyle','modal','toolbar','none','units','normalized','Position',[0.25 0.15 0.31 0.75]);
+    FileID = fopen(fullfile(InstallationPath,'LICENSE.LGPL.txt'));
+    PanelHandel = uipanel(FigureHandle,'Units','normalized','position',[0.02 0.05 0.96 0.86],'title','License');
+    ListBoxHandle = uicontrol(PanelHandel,'style','listbox','Units','normalized','position',[0 0 1 1],'FontSize',9);
+    uicontrol(FigureHandle,'style','pushbutton','Units','normalized','position',[0.25 0.005 0.2 0.04],'FontSize',9,'String','Agree','Callback',@AgreeCallback);
+    uicontrol(FigureHandle,'style','pushbutton','Units','normalized','position',[0.56 0.005 0.2 0.04],'FontSize',9,'String','Disagree','Callback',@DisagreeCallback); 
+    AxisHandle = axes(FigureHandle,'Units','normalized','position',[0.02 0.92 0.35 0.075]);
+    [matlabImage,~,Alpha] = imread(fullfile(InstallationPath,'\bin\licenseLogo.png'));
+    image(matlabImage,'AlphaData',Alpha)
+    axis(AxisHandle,'off')
+    %Copy text into list box
+    indic = 1;
+    while 1
+        tline = fgetl(FileID);
+        if ~ischar(tline)
+            break
+        end
+        strings{indic}=tline;
+        indic = indic + 1;
+    end
+    fclose(FileID);
+    set(ListBoxHandle,'string',strings);
+    set(ListBoxHandle,'Value',1);
+    set(ListBoxHandle,'Selected','on');
+    
+    %Wait for user response
+    waitfor(FigureHandle)
+    
+    %Set Hyscorean preference accordingly. If not agreed abort installation
+    if exist('LicenseAgreed','var')
+        if LicenseAgreed
+            fprintf('Hyscorean GNU LGPL 3.0 license accepted \n')
+            setpref('hyscorean','LGPL_license',true)
+        else
+            fprintf('Hyscorean GNU LGPL 3.0 license needs to be accepted. Aborting installation... \n')
+            return
+        end
+    else
+        fprintf('Hyscorean GNU LGPL 3.0 license needs to be accepted. Aborting installation... \n')
+        return
+    end
 end
 
 %--------------------------------------------------------------------------
@@ -200,6 +255,7 @@ else
   fprintf('    Signal Processing Toolbox  (not found) \n')
   fprintf('    (Hyscorean is not able to work and cannot be used) \n')
   setpref('hyscorean','signalprocessinglicense',false)
+    fullyInstalled = false;
 end
 
 %Report generator
@@ -212,6 +268,7 @@ else
   fprintf('    MATLAB Report Generator    (not found) \n')
   fprintf('    (Hyscorean is able to work without this functionality) \n')
   setpref('hyscorean','reportlicense',false)
+    fullyInstalled = false;
 end
 fprintf('===========================================================================\n')
 
@@ -230,11 +287,27 @@ catch
   fprintf('to the MATLAB default search path and run this installation again.\n')
   fprintf('Otherwise the fitting functionalities of Hyscorean will be unavailable\n')
   setpref('hyscorean','easyspin_installed',false)
+  fullyInstalled = false;
 end
 fprintf('============================================================================\n')
 fprintf('INSTALLATION FINISHED \n')
-fprintf(' - Please restart MATLAB and re-run this setup to refresh the new system environment variables. \n')
+if fullyInstalled
+fprintf(' - Hyscorean was successfully and fully installed and all functionalities are operational.\n')
+else
+fprintf(' - Hyscorean was successfully  but incompletely installed.\n')
+end
 fprintf(' - MATLAB preferences may be changed later in the GUI \n')
 fprintf('============================================================================\n')
 
 clearvars
+
+function AgreeCallback(Object,event)
+
+assignin('base','LicenseAgreed',1)
+close(Object.Parent)
+end
+function DisagreeCallback(Object,event)
+
+assignin('base','LicenseAgreed',0)
+close(Object.Parent)
+end

@@ -22,9 +22,22 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 30-Nov-2018 17:03:31
+% Last Modified by GUIDE v2.5 30-Dec-2018 12:17:39
 
 % Begin initialization code - DO NOT EDIT
+
+if ispref('hyscorean','LGPL_license')
+    if ~getpref('hyscorean','LGPL_license')
+        w  = warndlg('Hyscorean''s GNU LGPL 3.0 license agreement not accepted. Please run setup_hyscorean again and accept the license agreemen.','Warning','modal');
+        waitfor(w)
+        return
+    end
+else
+    w  = warndlg('Hyscorean''s GNU LGPL 3.0 license agreement not found. Please run setup_hyscorean again and accept the license agreemen.','Warning','modal');
+    waitfor(w)
+    return
+end
+
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
@@ -1922,6 +1935,7 @@ if ~iscell(handles.FilePaths.Files)
 else
   Opt.FilePaths = handles.FilePaths.Path;
 end
+Opt.nKnots = 181;
 Opt.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 Opt.FreqLim = str2double(get(handles.XUpperLimit,'string'));
 Opt.WindowType = handles.WindowTypeString;
@@ -1999,3 +2013,31 @@ Defaults.ThresholdParameter = 0.99;
 Defaults.ReconstructionMethod = ReconstructionMethod;
 
 Hyscorean_validationModule(RawData,Defaults)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over text87.
+function text87_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to text87 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+f = figure('menu','none','toolbar','none','units','normalized','Position',[0.25 0.25 0.3 0.65]);
+fid = fopen('LGNP_license.txt');
+ph = uipanel(f,'Units','normalized','position',[0.01 0.01 0.99 0.99],'title',...
+    'Display window');
+lbh = uicontrol(ph,'style','listbox','Units','normalized','position',...
+    [0 0 1 1],'FontSize',9);
+indic = 1;
+while 1
+     tline = fgetl(fid);
+     if ~ischar(tline), 
+         break
+     end
+     strings{indic}=tline; 
+     indic = indic + 1;
+end
+fclose(fid);
+set(lbh,'string',strings);
+set(lbh,'Value',1);
+set(lbh,'Selected','on');
