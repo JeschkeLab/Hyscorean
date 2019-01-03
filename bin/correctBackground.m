@@ -131,11 +131,7 @@ else
     Parameters.BackgroundModel = options.BackgroundMethod1;
     Parameters.homdim = options.BackgroundFractalDimension1;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
-    if options.AutomaticBackgroundStart
-      [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis2,sum(Integral,1),Parameters);
-    else
       StartIndex1 = options.BackgroundStart1;
-    end
     Parameters.start = StartIndex1;
     Background1 = fitBackground2D(Integral,Parameters);
     Integral = real(Integral) - Background1;
