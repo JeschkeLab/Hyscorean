@@ -70,7 +70,8 @@ if handles.SignalPlotIsDetached
   setappdata(0,'InvertCorrection',get(handles.InvertCorrection,'value'))
   setappdata(0,'ZeroFilling1',str2double(get(handles.ZeroFilling1,'String')))
   setappdata(0,'ZeroFilling2',str2double(get(handles.ZeroFilling2,'String')))
-  setappdata(0,'Hammingedit',get(handles.Hammingedit,'String'))
+  setappdata(0,'WindowLength1',get(handles.WindowLength1,'String'))
+    setappdata(0,'WindowLength2',get(handles.WindowLength2,'String'))
 setappdata(0,'WindowType',get(handles.WindowType,'Value'))
   
   %Call graphical settings GUI

@@ -1,4 +1,4 @@
-function [Signal,Window] = apodizationWin(Signal,WindowType,WindowDecay1,WindowDecay2)
+function [Signal,Window1,Window2] = apodizationWin(Signal,WindowType,WindowDecay1,WindowDecay2)
 
 [size1,size2]=size(Signal);
 
@@ -47,6 +47,8 @@ for k=1:size2
    Signal(:,k)=TruncatedWindow'.*Signal(:,k);
 end
   
+Window1 = Window;
+
 %------------------------------------------------------------------------
 % Apodization of second dimension
 %------------------------------------------------------------------------
@@ -96,3 +98,7 @@ end
 for k=1:size1
    Signal(k,:)=TruncatedWindow'.*Signal(k,:);
 end
+
+Window2 = Window';
+
+return

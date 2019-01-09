@@ -1558,7 +1558,8 @@ setappdata(0,'Data',handles.Data)
 setappdata(0,'InvertCorrection',get(handles.InvertCorrection,'value'))
 setappdata(0,'ZeroFilling1',str2double(get(handles.ZeroFilling1,'String')))
 setappdata(0,'ZeroFilling2',str2double(get(handles.ZeroFilling2,'String')))
-setappdata(0,'Hammingedit',get(handles.WindowLength1,'String'))
+setappdata(0,'WindowLength1',get(handles.WindowLength1,'String'))
+setappdata(0,'WindowLength2',get(handles.WindowLength2,'String'))
 % setappdata(0,'HammingWindow',get(handles.HammingWindow,'Value'))
 setappdata(0,'WindowType',get(handles.WindowType,'Value'))
 
@@ -1971,7 +1972,7 @@ lbh = uicontrol(ph,'style','listbox','Units','normalized','position',...
 indic = 1;
 while 1
      tline = fgetl(fid);
-     if ~ischar(tline), 
+     if ~ischar(tline)
          break
      end
      strings{indic}=tline; 

@@ -22,7 +22,7 @@ function varargout = Hyscorean_detachedSignalPlot(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_detachedSignalPlot
 
-% Last Modified by GUIDE v2.5 01-Oct-2018 09:06:16
+% Last Modified by GUIDE v2.5 09-Jan-2019 11:06:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,10 +59,12 @@ handles.Processed = Processed;
 handles.Data = getappdata(0,'Data');
 InvertCorrection = getappdata(0,'InvertCorrection');
 set(handles.InvertCorrection,'value',InvertCorrection)
-Hammingedit = getappdata(0,'Hammingedit');
+WindowLength1 = getappdata(0,'WindowLength1');
+WindowLength2 = getappdata(0,'WindowLength2');
 HammingWindow = getappdata(0,'HammingWindow');
 set(handles.HammingWindow,'Value',HammingWindow)
-set(handles.Hammingedit,'string',Hammingedit)
+set(handles.WindowLength1,'string',WindowLength1)
+set(handles.WindowLength2,'string',WindowLength2)
 ZeroFilling1 = getappdata(0,'ZeroFilling1');
 ZeroFilling2 = getappdata(0,'ZeroFilling2');
 WindowTypeState =  getappdata(0,'WindowType');
@@ -262,18 +264,18 @@ end
 
 
 
-function Hammingedit_Callback(hObject, eventdata, handles)
-% hObject    handle to Hammingedit (see GCBO)
+function WindowLength1_Callback(hObject, eventdata, handles)
+% hObject    handle to WindowLength1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of Hammingedit as text
-%        str2double(get(hObject,'String')) returns contents of Hammingedit as a double
+% Hints: get(hObject,'String') returns contents of WindowLength1 as text
+%        str2double(get(hObject,'String')) returns contents of WindowLength1 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Hammingedit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Hammingedit (see GCBO)
+function WindowLength1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to WindowLength1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -341,6 +343,29 @@ function WindowType_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function WindowLength2_Callback(hObject, eventdata, handles)
+% hObject    handle to WindowLength2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of WindowLength2 as text
+%        str2double(get(hObject,'String')) returns contents of WindowLength2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function WindowLength2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to WindowLength2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
