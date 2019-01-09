@@ -31,9 +31,7 @@ end
 if get(handles.AutomaticBackgroundStart,'Value')
       enableDisableGUI(handles,'AutomaticBackground','off')
 end
-if ~get(handles.SavitzkyFilter,'Value')
-      enableDisableGUI(handles,'SG-Filtering','off')
-end
+
 drawnow;
 %Enable all graphics-related GUI components
 set(handles.PreProcessedTrace,'visible','on')
@@ -217,8 +215,5 @@ if ~handles.Data.NUSflag
 end
 if get(handles.AutomaticBackgroundStart,'Value')
       enableDisableGUI(handles,'AutomaticBackground','off')
-end
-if ~get(handles.SavitzkyFilter,'Value')
-      enableDisableGUI(handles,'SG-Filtering','off')
 end
 drawnow

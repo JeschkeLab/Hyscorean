@@ -75,6 +75,9 @@ if ~isfield(options,'DisplayCorrected')
   options.DisplayCorrected = false;
 end
 %Set defaults for Savitzky-Golay filter
+if ~isfield(options,'SavitzkyGolayFiltering')
+  options.SavitzkyGolayFiltering = false;
+end
 if ~isfield(options,'SavitzkyOrder')
   options.SavitzkyOrder = 3;
 end
