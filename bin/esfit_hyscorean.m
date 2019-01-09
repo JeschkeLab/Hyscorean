@@ -366,7 +366,8 @@ for k = 1:numel(keywords)
     case 'montecarlo', FitOpt.MethodID = 3;
     case 'genetic',    FitOpt.MethodID = 4;
     case 'grid',       FitOpt.MethodID = 5;
-    case 'swarm',      FitOpt.MethodID = 6;      
+    case 'swarm',      FitOpt.MethodID = 6;  
+    case 'manual',     FitOpt.TargetID = 7;
     case 'fcn',        FitOpt.TargetID = 1;
     otherwise
       error('Unknown ''%s'' in FitOpt.Method.',keywords{k});
@@ -392,6 +393,7 @@ MethodNames{3} = 'Monte Carlo';
 MethodNames{4} = 'genetic algorithm';
 MethodNames{5} = 'grid search';
 MethodNames{6} = 'particle swarm';
+MethodNames{7} = 'Manual single run';
 FitData.MethodNames = MethodNames;
 
 ScalingNames{1} = 'scale & shift (min/max)';
@@ -1033,6 +1035,9 @@ if (nParameters_>0)
       bestx0_ = esfit_grid(@assess,nParameters_,FitOpts,funArgs{:});
     case 6 % Particle swarm
       bestx0_ = esfit_swarm(@assess,nParameters_,FitOpts,funArgs{:});
+    case 7 %Manual fit
+      assess(startx,funArgs{:});
+      bestx0_ = startx;
   end
   bestx(~FitData.inactiveParams) = bestx0_;
 end
@@ -1045,11 +1050,16 @@ if FitData.GUI
   for p = 1:size(Data,1), Data{p,4} = '-'; end
   set(hTable,'Data',Data);
   
+  if FitOpts.MethodID~=7
   % Hide current sim plot in data axes
   set(findobj('Tag','currsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   set(findobj('Tag','currsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   set(findobj('Tag','currsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
-  
+  else
+    set(findobj('Tag','bestsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    set(findobj('Tag','bestsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    set(findobj('Tag','bestsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+  end
 %   hErrorLine = findobj('Tag','errorline');
 %   set(hErrorLine,'XData',1,'YData',NaN);
 %   axis(get(hErrorLine,'Parent'),'tight');
@@ -1132,7 +1142,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     tdx = Processed.Signal;
   end
   %Use same apodization window as experimental data
-  tdx = apodizationWin(tdx,FitData.SimOpt{Index}.WindowType,FitData.SimOpt{Index}.WindowDecay);
+  tdx = apodizationWin(tdx,FitData.SimOpt{Index}.WindowType,FitData.SimOpt{Index}.WindowDecay1,FitData.SimOpt{Index}.WindowDecay2);
   %Fourier transform with same zerofilling as experimental data
   BestSpec{Index} = fftshift(fft2(tdx,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints));
   
@@ -1286,7 +1296,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     tdx = Processed.Signal;
   end
   %Use same apodization window as experimental data
-  tdx = apodizationWin(tdx,SimOpt{Index}.WindowType,SimOpt{Index}.WindowDecay);
+  tdx = apodizationWin(tdx,SimOpt{Index}.WindowType,SimOpt{Index}.WindowDecay1,SimOpt{Index}.WindowDecay2);
   %Fourier transform with same zerofilling as experimental data
   simspec{Index} = fftshift(fft2(tdx,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints));
   
@@ -1325,15 +1335,15 @@ if FitData.GUI && (UserCommand~=99)
     CurrentSimSpec = simspec{FitData.CurrentSpectrumDisplay};
     CurrentBestSpec = FitData.bestspec{FitData.CurrentSpectrumDisplay};
 
-    %Baseline correction
-%     CurrentSimSpec = CurrentSimSpec - CurrentSimSpec(end,end);
-%     CurrentBestSpec = CurrentBestSpec - CurrentBestSpec(end,end);
-
+if FitOpts.MethodID~=7
   % update contour graph  
-%       set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
+  %       set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
+  handle = findobj('Tag','currsimdata');
+  colormap(handle.Parent,(FitData.CustomColormap))
+  
   if FitData.pcolorplotting
-        if isequal(abs(CurrentBestSpec),abs(CurrentSimSpec))
-          set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
+    if isequal(abs(CurrentBestSpec),abs(CurrentSimSpec))
+      set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
           set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',NaN*abs(CurrentSimSpec));
         else
           set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
@@ -1353,7 +1363,7 @@ if FitData.GUI && (UserCommand~=99)
     %   Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
     Temp = abs(CurrentSimSpec);
     Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
-    set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
+    set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color','r');
     % update lower projection graph
     Inset = max(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
 %     set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
@@ -1364,7 +1374,7 @@ if FitData.GUI && (UserCommand~=99)
     %   Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
     Temp = abs(CurrentSimSpec);
     Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
-    set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+    set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset,'Color','r');
     
   if strcmp(FitOpts.Scaling, 'none')
     dispData = [FitData.ExpSpec;real(FitData.bestspec).';abs(CurrentSimSpec).'];
@@ -1372,6 +1382,23 @@ if FitData.GUI && (UserCommand~=99)
     YLimits = [miny maxy] + [-1 1]*FitOpt.PlotStretchFactor*(maxy-miny);
     set(findobj('Tag','dataaxes'),'YLim',YLimits);
   end
+  
+else
+  if FitData.pcolorplotting
+    handle = findobj('Tag','currsimdata');
+    colormap(handle.Parent,fliplr(FitData.CustomColormap))
+    set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',abs(CurrentSimSpec));
+  else
+    set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec))
+  end
+  Temp = abs(CurrentSimSpec);
+  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color','b');
+  Temp = abs(CurrentSimSpec);
+  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset,'Color','b');
+  
+end
   drawnow
   
   % update numbers parameter table

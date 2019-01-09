@@ -60,7 +60,14 @@ for Index = 1:numSpec
   Opt{Index}.ZeroFillFactor = DataForFitting.ZeroFillFactor;
   Opt{Index}.FreqLim = DataForFitting.FreqLim;
   Opt{Index}.WindowType = DataForFitting.WindowType;
-  Opt{Index}.WindowDecay = DataForFitting.WindowDecay;
+  if isfield(DataForFitting,'WindowDecay')
+    %Compatibility with older versions
+    Opt{Index}.WindowDecay1 = DataForFitting.WindowDecay;
+    Opt{Index}.WindowDecay2 = DataForFitting.WindowDecay;
+  else
+    Opt{Index}.WindowDecay1 = DataForFitting.WindowDecay1;
+    Opt{Index}.WindowDecay2 = DataForFitting.WindowDecay2;
+  end
   Opt{Index}.L2GParameters = DataForFitting.L2GParameters;
   Opt{Index}.Lorentz2GaussCheck = DataForFitting.Lorentz2GaussCheck;
 end
