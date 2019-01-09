@@ -215,7 +215,8 @@ end
 if get(handles.PlotApodizationWindow,'value')
   
 %   %Get window decay
-  WindowDecay = str2double(get(handles.Hammingedit,'string'));
+    WindowDecay1 = str2double(get(handles.WindowLength1,'string'));
+    WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
     WindowMenuState = get(handles.WindowType,'value');
   switch WindowMenuState
     case 1
@@ -233,10 +234,18 @@ if get(handles.PlotApodizationWindow,'value')
     case 7
       WindowType = 'cosine';      
   end
-  [~,Window] = apodizationWin(Processed.Signal,WindowType,WindowDecay);
+  [~,Window1,Window2] = apodizationWin(Processed.Signal,WindowType,WindowDecay1,WindowDecay2);
+    if ~get(handles.ChangeSignalPlotDimension,'Value')
+      Window = Window1;
+      WindowDecay = WindowDecay1;
+    else
+      Window = Window2;
+      WindowDecay = WindowDecay2;
+    end
+  
   %Adjust window to current axis
   Window = Window/max(Window);
-  Window = Window';
+%   Window = Window';
   if WindowDecay>=length(TimeAxis1)
     Window=Window(1:length(TimeAxis1));
   end
