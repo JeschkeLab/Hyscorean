@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 30-Dec-2018 12:17:39
+% Last Modified by GUIDE v2.5 09-Jan-2019 10:21:04
 
 % Begin initialization code - DO NOT EDIT
 
@@ -245,7 +245,9 @@ TauValues = handles.Data.TauValues;
  set(handles.MultiTauDimensions,'String',handles.Selections);
  set(handles.ZeroFilling1,'String',size(handles.Data.TauSignals,2));
  set(handles.ZeroFilling2,'String',size(handles.Data.TauSignals,3));
- set(handles.Hammingedit,'String',size(handles.Data.TauSignals,2));
+ set(handles.WindowLength1,'String',size(handles.Data.TauSignals,2));
+  set(handles.WindowLength2,'String',size(handles.Data.TauSignals,3));
+
 set(handles.ProcessButton,'enable','on')
 
   %Check if data is NUS and activate the panels in the GUI
@@ -418,7 +420,9 @@ TauValues = handles.Data.TauValues;
  set(handles.MultiTauDimensions,'String',handles.Selections);
  set(handles.ZeroFilling1,'String',2*size(handles.Data.TauSignals,2));
  set(handles.ZeroFilling2,'String',2*size(handles.Data.TauSignals,3));
- set(handles.Hammingedit,'String',size(handles.Data.TauSignals,2));
+ set(handles.WindowLength1,'String',size(handles.Data.TauSignals,2));
+  set(handles.WindowLength2,'String',size(handles.Data.TauSignals,3));
+
 set(handles.ProcessingInfo, 'String', 'Status: Ready'); drawnow;
 
  end
@@ -633,18 +637,18 @@ end
 
 
 
-function Hammingedit_Callback(hObject, eventdata, handles)
-% hObject    handle to Hammingedit (see GCBO)
+function WindowLength1_Callback(hObject, eventdata, handles)
+% hObject    handle to WindowLength1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of Hammingedit as text
-%        str2double(get(hObject,'String')) returns contents of Hammingedit as a double
+% Hints: get(hObject,'String') returns contents of WindowLength1 as text
+%        str2double(get(hObject,'String')) returns contents of WindowLength1 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function Hammingedit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Hammingedit (see GCBO)
+function WindowLength1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to WindowLength1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -827,84 +831,6 @@ function InvertCorrection_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of InvertCorrection
 handles.backgroundCorrectionSwitch = true;
 handles.ReconstructionSwitch  = true;
-set(handles.BackgroundCorrectionCheck,'visible','off')
-set(handles.ReconstructionCheck,'visible','off')
-guidata(hObject, handles);
-
-% --- Executes on button press in SavitzkyFilter.
-function SavitzkyFilter_Callback(hObject, eventdata, handles)
-% hObject    handle to SavitzkyFilter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of SavitzkyFilter
-if get(hObject,'Value')
-  set(handles.FilterOrder, 'enable', 'on')
-  set(handles.FilterOrderText, 'enable', 'on')
-  set(handles.FrameLength, 'enable', 'on')
-  set(handles.FrameLengthText, 'enable', 'on')
-else
-  set(handles.FilterOrder, 'enable', 'off')
-  set(handles.FilterOrderText, 'enable', 'off')
-  set(handles.FrameLength, 'enable', 'off')
-  set(handles.FrameLengthText, 'enable', 'off')
-end
-set(handles.BackgroundCorrectionCheck,'visible','off')
-set(handles.ReconstructionCheck,'visible','off')
-handles.backgroundCorrectionSwitch = true;
-handles.ReconstructionSwitch  = true;
-
-
-guidata(hObject, handles);
-
-
-function FilterOrder_Callback(hObject, eventdata, handles)
-% hObject    handle to FilterOrder (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of FilterOrder as text
-%        str2double(get(hObject,'String')) returns contents of FilterOrder as a double
-if str2double(get(handles.FrameLength,'string'))< str2double(get(hObject,'string'))
-    set(handles.FrameLength,'string',str2double(get(hObject,'string'))+1)
-end
-if ~mod(str2double(get(handles.FrameLength,'string')),2)
-  set(handles.FrameLength,'string',str2double(get(handles.FrameLength,'string'))+1)
-end
-handles.backgroundCorrectionSwitch = true;
-handles.ReconstructionSwitch  = true;
-set(handles.BackgroundCorrectionCheck,'visible','off')
-set(handles.ReconstructionCheck,'visible','off')
-guidata(hObject, handles);
-
-% --- Executes during object creation, after setting all properties.
-function FilterOrder_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to FilterOrder (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function FrameLength_Callback(hObject, eventdata, handles)
-% hObject    handle to FrameLength (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of FrameLength as text
-%        str2double(get(hObject,'String')) returns contents of FrameLength as a double
-if str2double(get(hObject,'string'))< str2double(get(handles.FilterOrder,'string'))
-    set(hObject,'string',str2double(get(handles.FilterOrder,'string'))+1)
-end
-if ~mod(str2double(get(hObject,'string')),2)
-  set(hObject,'string',str2double(get(hObject,'string'))+1)
-end
-handles.backgroundCorrectionSwitch = true;
 set(handles.BackgroundCorrectionCheck,'visible','off')
 set(handles.ReconstructionCheck,'visible','off')
 guidata(hObject, handles);
@@ -1632,7 +1558,7 @@ setappdata(0,'Data',handles.Data)
 setappdata(0,'InvertCorrection',get(handles.InvertCorrection,'value'))
 setappdata(0,'ZeroFilling1',str2double(get(handles.ZeroFilling1,'String')))
 setappdata(0,'ZeroFilling2',str2double(get(handles.ZeroFilling2,'String')))
-setappdata(0,'Hammingedit',get(handles.Hammingedit,'String'))
+setappdata(0,'Hammingedit',get(handles.WindowLength1,'String'))
 % setappdata(0,'HammingWindow',get(handles.HammingWindow,'Value'))
 setappdata(0,'WindowType',get(handles.WindowType,'Value'))
 
@@ -1879,6 +1805,18 @@ function WindowType_Callback(hObject, eventdata, handles)
     case 8
       WindowType = 'none';  
   end
+
+  if WindowMenuState == 8
+    set(handles.WindowLength1,'enable','off')
+    set(handles.WindowLength2,'enable','off')
+    set(handles.WindowLengthText1,'enable','off')
+    set(handles.WindowLengthText2,'enable','off')
+  else
+    set(handles.WindowLength1,'enable','on')
+    set(handles.WindowLength2,'enable','on')
+    set(handles.WindowLengthText1,'enable','on')
+    set(handles.WindowLengthText2,'enable','on')
+  end
 handles.WindowTypeString = WindowType;
 guidata(hObject, handles);
 
@@ -1939,7 +1877,7 @@ Opt.nKnots = 181;
 Opt.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 Opt.FreqLim = str2double(get(handles.XUpperLimit,'string'));
 Opt.WindowType = handles.WindowTypeString;
-Opt.WindowDecay = str2double(get(handles.Hammingedit,'string'));
+Opt.WindowDecay = str2double(get(handles.WindowLength1,'string'));
 Opt.L2GParameters.tauFactor2 = str2double(get(handles.L2G_tau2,'string'));
 Opt.L2GParameters.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
 Opt.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
@@ -2022,10 +1960,12 @@ function text87_ButtonDownFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-f = figure('menu','none','toolbar','none','units','normalized','Position',[0.25 0.25 0.3 0.65]);
-fid = fopen('LGNP_license.txt');
+f = figure('NumberTitle','off','Name','Hyscorean: License','menu','none','toolbar','none','units','normalized','Position',[0.25 0.25 0.3 0.65]);
+Path = which('Hyscorean');
+Path = Path(1:end-11);
+fid = fopen(fullfile(Path,'LICENSE.LGPL.txt'));
 ph = uipanel(f,'Units','normalized','position',[0.01 0.01 0.99 0.99],'title',...
-    'Display window');
+    'License Agreement');
 lbh = uicontrol(ph,'style','listbox','Units','normalized','position',...
     [0 0 1 1],'FontSize',9);
 indic = 1;
@@ -2041,3 +1981,59 @@ fclose(fid);
 set(lbh,'string',strings);
 set(lbh,'Value',1);
 set(lbh,'Selected','on');
+
+
+% --- Executes on selection change in Symmetrization_ListBox.
+function Symmetrization_ListBox_Callback(hObject, eventdata, handles)
+% hObject    handle to Symmetrization_ListBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns Symmetrization_ListBox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from Symmetrization_ListBox
+switch get(hObject,'Value')
+  case 1
+    handles.SymmetrizationString = 'None';
+  case 2
+    handles.SymmetrizationString = 'Diagonal';
+  case 3
+    handles.SymmetrizationString = 'Anti-Diagonal';
+  case 4
+    handles.SymmetrizationString = 'Both';
+end
+guidata(hObject, handles);
+
+% --- Executes during object creation, after setting all properties.
+function Symmetrization_ListBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Symmetrization_ListBox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+handles.SymmetrizationString = 'None';
+guidata(hObject, handles);
+
+function WindowLength2_Callback(hObject, eventdata, handles)
+% hObject    handle to WindowLength2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of WindowLength2 as text
+%        str2double(get(hObject,'String')) returns contents of WindowLength2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function WindowLength2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to WindowLength2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

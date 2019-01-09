@@ -8,7 +8,9 @@ function [handles]=processHYSCORE(handles)
 ZeroFilling1 = str2double(get(handles.ZeroFilling1,'string'));
 ZeroFilling2 = str2double(get(handles.ZeroFilling2,'string'));
 % HammingWindow = get(handles.HammingWindow,'Value');
-WindowDecay = str2double(get(handles.Hammingedit,'string'));
+WindowDecay1 = str2double(get(handles.WindowLength1,'string'));
+WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
+
 BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
 LagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
 
@@ -98,9 +100,6 @@ if handles.backgroundCorrectionSwitch
   options.BackgroundCorrection2D = 0;
   options.ZeroTimeTruncation = get(handles.ZeroTimeTruncation,'Value');
   options.InvertCorrection = get(handles.InvertCorrection,'Value');
-  options.SavitzkyGolayFiltering = get(handles.SavitzkyFilter,'Value');
-  options.SavitzkyOrder = str2double(get(handles.FilterOrder,'string'));
-  options.SavitzkyFrameLength = str2double(get(handles.FrameLength,'string'));
   
   set(handles.ProcessingInfo, 'String', 'Status: Correct background'); drawnow;
   
@@ -219,7 +218,7 @@ end
 %--------------------------------------------------------------------------
 
 WindowMenuState = get(handles.WindowType,'value');
-Processed.Signal = apodizationWin(Processed.Signal,handles.WindowTypeString,WindowDecay);
+Processed.Signal = apodizationWin(Processed.Signal,handles.WindowTypeString,WindowDecay1, WindowDecay2);
 
 %--------------------------------------------------------------------------
 % Fourier Transformation
@@ -231,11 +230,28 @@ Processed.Signal = apodizationWin(Processed.Signal,handles.WindowTypeString,Wind
 FrequencyAxis1 = linspace(-1/(2*Data.TimeStep1),1/(2*Data.TimeStep1),Dimension1);
 FrequencyAxis2 = linspace(-1/(2*Data.TimeStep2),1/(2*Data.TimeStep2),Dimension2);
 
-Processed.spectrum = fftshift(fft2(Processed.Signal));
+Spectrum = fftshift(fft2(Processed.Signal));
+
+%--------------------------------------------------------------------------
+% Symmetrization
+%--------------------------------------------------------------------------
+switch handles.SymmetrizationString
+  
+  case 'Diagonal'
+    Spectrum = (Spectrum.*Spectrum').^0.5;
+  case 'Anti-Diagonal'
+    Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
+  case 'Both'
+    Spectrum = (Spectrum.*Spectrum').^0.5;
+    Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
+end
+
+%Save in structure and return
+Processed.spectrum = Spectrum;
 Processed.axis1 = FrequencyAxis1;
 Processed.axis2 = FrequencyAxis2;
 
 handles.Data = Data;
 handles.Processed = Processed;
-assignin('base', 'Processed', Processed);
+% assignin('base', 'Processed', Processed);
 
