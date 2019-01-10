@@ -40,7 +40,7 @@ for Index6 = 1:Length6 %Loop this one first since this determines time duration
   
  %Extract NUS grid and get schedule
  if RawData.NUSflag
-  NUSgrid = RawData.NUS.SamplingGrid;
+  NUSgrid = RawData.NUSgrid;
   %Check if smpling density has to be validated
 
   if (FullDensity > ReducedDensity(Index8))
@@ -137,8 +137,33 @@ end
 
 %Check if some NaN has appeared (should not)
 ReconstructedSignal(isnan(ReconstructedSignal)) = 0;
+
+%If done for experimental data, then do Lorentz-Gauss transformation
+  if Defaults.L2GCheck
+    Processed.TimeAxis1 = RawData.TimeAxis1;
+    Processed.TimeAxis2 = RawData.TimeAxis2;
+    Processed.Signal = ReconstructedSignal;
+    [Processed]=Lorentz2Gauss2D(Processed,Defaults.L2GParameters);
+    ReconstructedSignal = Processed.Signal;
+  end
+%Use same apodization window as experimental data
+ReconstructedSignal =  apodizationWin(ReconstructedSignal,Defaults.WindowType,Defaults.WindowDecay1,Defaults.WindowDecay2);
+ 
+
 %Compute spectrum for current parameter set
-Reconstruction = abs(fftshift(fft2(ReconstructedSignal,2*Dimension1,2*Dimension1)));
+Reconstruction = abs(fftshift(fft2(ReconstructedSignal,Dimension1+Defaults.ZeroFilling1,Dimension1+Defaults.ZeroFilling2)));
+
+% if done for experimental data, then symmetrize
+switch Defaults.SymmetrizationString
+  case 'Diagonal'
+    Reconstruction = (Reconstruction.*Reconstruction').^0.5;
+  case 'Anti-Diagonal'
+    Reconstruction = fliplr(fliplr(Reconstruction).*fliplr(Reconstruction)').^0.5;
+  case 'Both'
+    Reconstruction = (Reconstruction.*Reconstruction').^0.5;
+    Reconstruction = fliplr(fliplr(Reconstruction).*fliplr(Reconstruction)').^0.5;
+end
+
 %Normalize and save spectrum
 ReconstructedSpectra(:,:,TrialsCompleted+1) = abs(Reconstruction)/max(max(abs(Reconstruction)));
 
