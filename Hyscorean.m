@@ -1938,7 +1938,9 @@ switch get(handles.ReconstructionAlgorithm,'Value')
       ReconstructionMethod = 'istd';
 end
 if handles.Data.NUSflag
+RawData.NUSgrid = handles.Data.NUSgrid;
 RawData.NUS = handles.Data.NUS;
+
 end
 
 Defaults.BackgroundDimension1 = str2double(get(handles.BackgroundParameter1,'string'));
@@ -1952,6 +1954,18 @@ Defaults.LagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,
 Defaults.ThresholdParameter = 0.99;
 Defaults.ReconstructionMethod = ReconstructionMethod;
 
+Defaults.ZeroFilling1 = str2double(get(handles.ZeroFilling1,'string'));
+Defaults.ZeroFilling2 = str2double(get(handles.ZeroFilling2,'string'));
+Defaults.WindowType = handles.WindowTypeString;
+Defaults.WindowDecay1 = str2double(get(handles.WindowLength1,'string'));
+Defaults.WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
+Defaults.SymmetrizationString = handles.SymmetrizationString;
+Parameters.tauFactor2 = str2double(get(handles.L2G_tau2,'string'));
+Parameters.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
+Parameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
+Parameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
+Defaults.L2GParameters = Parameters;
+Defaults.L2GCheck = get(handles.Lorentz2GaussCheck,'Value');
 Hyscorean_validationModule(RawData,Defaults)
 
 
