@@ -185,7 +185,9 @@ FullSampling = reportdata.XDimension*reportdata.YDimension;
 reportdata.SamplingDensity = sprintf('%.2f%%',round(100*SampledPoints/FullSampling,2));
 end
 %Store apodization window 
-WindowDecay = str2double(get(handles.Hammingedit,'string'));
+WindowDecay1 = str2double(get(handles.WindowLength1,'string'));
+WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
+
     WindowMenuState = get(handles.WindowType,'value');
   switch WindowMenuState
     case 1
@@ -203,18 +205,26 @@ WindowDecay = str2double(get(handles.Hammingedit,'string'));
     case 7
       WindowType = 'cosine';      
   end
-  [~,Window] = apodizationWin(handles.Processed.Signal,WindowType,WindowDecay);
+  [~,Window1,Window2] = apodizationWin(handles.Processed.Signal,WindowType,WindowDecay1,WindowDecay2);
 TimeAxis1 = handles.Processed.TimeAxis1(1:length(handles.Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
-Window = Window/max(Window);
-Window = Window';
-if WindowDecay>=length(TimeAxis1)
-  Window=Window(1:length(TimeAxis1));
+Window2 = Window2/max(Window2);
+Window2 = Window2';
+Window1 = Window1/max(Window1);
+Window1 = Window1';
+if WindowDecay1>=length(TimeAxis1)
+  Window1=Window1(1:length(TimeAxis1));
+else
+  Window1=[Window1 zeros(1,length(TimeAxis1)-WindowDecay1)];
 end
-if WindowDecay<length(TimeAxis1)
-  Window=[Window zeros(1,length(TimeAxis1)-WindowDecay)];
+if WindowDecay2>=length(TimeAxis2)
+  Window2=Window2(1:length(TimeAxis2));
+else
+  Window2=[Window2 zeros(1,length(TimeAxis2)-WindowDecay2)];
 end
 reportdata.WindowType = WindowType;
-reportdata.ApodizationWindow = Window;
+reportdata.ApodizationWindow1 = Window1;
+reportdata.ApodizationWindow2 = Window2;
+
 %Cosntruct report
 %Format savename so until it is different from the rest in the folder
   ReportName = sprintf('%s_%s_report',Date,Identifier);

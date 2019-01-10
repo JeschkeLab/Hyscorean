@@ -24,7 +24,7 @@ else
   PlotStyle = '-';
 end
 if handles.Data.NUSflag
-  NUSgrid = handles.Data.NUS.SamplingGrid;
+  NUSgrid = handles.Data.NUSgrid;
 else
     NUSgrid = ones(size(Processed.Signal));
 end
@@ -88,7 +88,7 @@ if handles.PlotProcessedSignal
         ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling1,'String')));
       end
   end
-  ProcessedSignalTrace = ProcessedSignalTrace/max(max(Processed.Signal));
+  ProcessedSignalTrace = ProcessedSignalTrace/max(max(abs(Processed.Signal)));
   plot(handles.signal_t1,TimeAxis,ProcessedSignalTrace,'k','Linewidth',1)
 end
 
@@ -198,7 +198,7 @@ if get(handles.PreProcessedTrace,'value')
   
   %Rescale and zero-adjust the trace
   PreProcessedSignalTrace = PreProcessedSignalTrace - mean(real(handles.Data.PreProcessedSignal(end,:)),'omitnan');
-  PreProcessedSignalTrace = PreProcessedSignalTrace/max(max(real(handles.Data.PreProcessedSignal)));
+  PreProcessedSignalTrace = PreProcessedSignalTrace/max(max(abs(handles.Data.PreProcessedSignal)));
   
   %Get axis for plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(PreProcessedSignalTrace));

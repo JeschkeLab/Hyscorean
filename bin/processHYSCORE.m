@@ -107,7 +107,7 @@ if handles.backgroundCorrectionSwitch
   [Dimension1,Dimension2] = size(Data.Integral);
   for i=1:Dimension1
     for j=1:Dimension2
-      if Data.AWG_Parameters.NUS.SamplingGrid(i,j) ==0
+      if Data.NUSgrid(i,j) == 0
         Data.Integral(i,j) = NaN;
       end
     end
@@ -148,7 +148,7 @@ if Data.NUSflag && handles.ReconstructionSwitch
   %Update status display
   set(handles.ProcessingInfo, 'String', 'Status: Reconstructing signal'); drawnow;
   %If yes, then reconstruct the signal
-  [Rows,Columns] = find(Data.AWG_Parameters.NUS.SamplingGrid==1);
+  [Rows,Columns] = find(Data.NUSgrid==1);
   Schedule = [Rows,Columns];
   switch get(handles.ReconstructionAlgorithm,'Value')
     case 1 %Constant-lambda CAMERA Reconstruction
