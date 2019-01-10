@@ -22,7 +22,7 @@ function varargout = Hyscorean_validationModule(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_validationModule
 
-% Last Modified by GUIDE v2.5 13-Dec-2018 11:38:20
+% Last Modified by GUIDE v2.5 10-Jan-2019 17:39:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,12 +58,13 @@ handles.RawData = varargin{1};
 handles.Defaults = varargin{2};
 
 %Prepare the sampling density slider 
-handles.RawData.NUS.SamplingDensity = length(find(handles.RawData.NUS.SamplingGrid ==1))/(handles.RawData.NUS.Dimension1*handles.RawData.NUS.Dimension2);
+if isfield(handles.RawData,'NUS')
+handles.RawData.NUS.SamplingDensity = length(find(handles.RawData.NUSgrid ==1))/(handles.RawData.NUS.Dimension1*handles.RawData.NUS.Dimension2);
 Npoints  = length(1:0.1:100*handles.RawData.NUS.SamplingDensity );
 set(handles.SamplingDensity_Slider,'Min', 1, 'Max',100*handles.RawData.NUS.SamplingDensity  , 'SliderStep', [1/(Npoints - 1) 5/(Npoints - 1)], 'Value', 100*handles.RawData.NUS.SamplingDensity )
 String = sprintf('%.1f%%',100*handles.RawData.NUS.SamplingDensity );
 set(handles.SliderText,'string',String);
-
+end
 % Update handles structure
 guidata(hObject, handles);
 
@@ -203,10 +204,10 @@ return
 function ThresholdParameter_Check_Callback(hObject, eventdata, handles)
  if get(hObject,'value')
   handles.NumberTrialsVector(7) = str2double(get(handles.ThresholdParameter_Trials,'string'));
-      enableDisable_Edits('BackgroundParameter','off',handles)
+      enableDisable_Edits('ThresholdParameter','on',handles)
 else
     handles.NumberTrialsVector(7) = 1;
-        enableDisable_Edits('BackgroundParameter','off',handles)
+        enableDisable_Edits('ThresholdParameter','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
@@ -215,16 +216,42 @@ return
 
 %------------------------------------------------------------------------------
 function SamplingDensity_Check_Callback(hObject, eventdata, handles)
- if get(hObject,'value')
+if get(hObject,'value')
   handles.NumberTrialsVector(8) = str2double(get(handles.SamplingDensity_Trials,'string'));
+  set(handles.SamplingDensity_Slider,'enable','on')
+  set(handles.SamplingDensity_Trials,'enable','on')
+  set(handles.SliderText,'enable','on')
 else
-    handles.NumberTrialsVector(8) = 1;
+  handles.NumberTrialsVector(8) = 1;
+  set(handles.SamplingDensity_Slider,'enable','off')
+  set(handles.SamplingDensity_Trials,'enable','off')
+  set(handles.SliderText,'enable','off')
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
 return
+%------------------------------------------------------------------------------
+
 
 %------------------------------------------------------------------------------
+function NoiseLevel_Check_Callback(hObject, eventdata, handles)
+if get(hObject,'value')
+  handles.NumberTrialsVector(9) = str2double(get(handles.NoiseLevel_Trials,'string'));
+  set(handles.NoiseLevel_Text,'enable','on')
+  set(handles.NoiseAmplification_Edit,'enable','on')
+  set(handles.NoiseLevel_Trials,'enable','on')
+else
+  handles.NumberTrialsVector(9) = 1;
+  set(handles.NoiseLevel_Text,'enable','off')
+  set(handles.NoiseAmplification_Edit,'enable','off')
+  set(handles.NoiseLevel_Trials,'enable','off')
+end
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
+guidata(hObject, handles);
+return
+%------------------------------------------------------------------------------
+
+
 
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
@@ -304,6 +331,7 @@ function BackgroundParameter_Trials_Callback(hObject, eventdata, handles)
 
 handles.NumberTrialsVector(6) = str2double(get(hObject,'string'));
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
+guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
@@ -311,8 +339,18 @@ return
 function SamplingDensity_Trials_Callback(hObject, eventdata, handles)
 handles.NumberTrialsVector(8) = str2double(get(hObject,'string'));
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
+guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------
+function NoiseLevel_Trials_Callback(hObject, eventdata, handles)
+handles.NumberTrialsVector(9) = str2double(get(hObject,'string'));
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
+guidata(hObject, handles);
+return
+%------------------------------------------------------------------------------
+
 
 
 %------------------------------------------------------------------------------
@@ -813,3 +851,41 @@ set(handles.SliderText,'string',String);
 guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
+
+
+
+function NoiseAmplification_Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to NoiseAmplification_Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NoiseAmplification_Edit as text
+%        str2double(get(hObject,'String')) returns contents of NoiseAmplification_Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function NoiseAmplification_Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NoiseAmplification_Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function NoiseLevel_Trials_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NoiseLevel_Trials (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
