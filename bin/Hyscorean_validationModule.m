@@ -22,7 +22,7 @@ function varargout = Hyscorean_validationModule(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_validationModule
 
-% Last Modified by GUIDE v2.5 10-Jan-2019 17:39:25
+% Last Modified by GUIDE v2.5 11-Jan-2019 10:50:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -237,14 +237,10 @@ return
 function NoiseLevel_Check_Callback(hObject, eventdata, handles)
 if get(hObject,'value')
   handles.NumberTrialsVector(9) = str2double(get(handles.NoiseLevel_Trials,'string'));
-  set(handles.NoiseLevel_Text,'enable','on')
-  set(handles.NoiseAmplification_Edit,'enable','on')
-  set(handles.NoiseLevel_Trials,'enable','on')
+  enableDisable_Edits('NoiseLevel','on',handles)
 else
   handles.NumberTrialsVector(9) = 1;
-  set(handles.NoiseLevel_Text,'enable','off')
-  set(handles.NoiseAmplification_Edit,'enable','off')
-  set(handles.NoiseLevel_Trials,'enable','off')
+  enableDisable_Edits('NoiseLevel','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
@@ -367,7 +363,7 @@ set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 
 %------------------------------------------------------------------------------
 function TotalTrials_CreateFcn(hObject, eventdata, handles)
-handles.NumberTrialsVector = ones(7,1);
+handles.NumberTrialsVector = ones(9,1);
 guidata(hObject, handles);
 %------------------------------------------------------------------------------
 
@@ -529,6 +525,15 @@ else
   SamplingDensity_Vector = [handles.RawData.NUS.SamplingDensity 1];
 end
 
+if get(handles.NoiseLevel_Check,'value')
+  NoiseLevel_Min = str2double(get(handles.NoiseLevel_Min,'string'));
+  NoiseLevel_Max = str2double(get(handles.NoiseLevel_Max,'string'));
+  NoiseLevel_Trials = str2double(get(handles.NoiseLevel_Trials,'string'));
+  NoiseLevel_Vector  = linspace(NoiseLevel_Min,NoiseLevel_Max,NoiseLevel_Trials);
+else
+  NoiseLevel_Vector = 0;
+end
+
 %Flip vector so longer cpu times are are the start
 ThresholdParameter_Vector = fliplr(ThresholdParameter_Vector);
 
@@ -540,6 +545,8 @@ ValidationVectors.LagrangeMultiplier_Vector = LagrangeMultiplier_Vector;
 ValidationVectors.BackgroundParameter_Vector = BackgroundParameter_Vector;
 ValidationVectors.ThresholdParameter_Vector = ThresholdParameter_Vector;
 ValidationVectors.SamplingDensity_Vector  = SamplingDensity_Vector;
+ValidationVectors.NoiseLevel_Vector  = NoiseLevel_Vector;
+
 handles.ValidationMainPlot = handles.ValidationMainPlot;
 handles.ValidationInset1 = handles.ValidationInset1;
 handles.ValidationInset2 = handles.ValidationInset2;
@@ -549,12 +556,16 @@ set(handles.ValidationStatus,'string','Validation in progress...'),drawnow;
 [ReconstructedSpectra,ParameterSets] = validateHyscorean(handles.RawData,ValidationVectors,handles.ValidationStatus,Defaults);
 handles.ParameterSets = ParameterSets;
 handles.ReconstructedSpectra = ReconstructedSpectra;
+
+set(handles.DisplayMean_Radio,'Value',1);
+
 updateValidationPlots(handles)
 
 updateParameterSets(1,handles)
 
 set(handles.ZoomOut_Button,'visible','on')
 set(handles.ZoomIn_Button,'visible','on')
+set(handles.DetachPlot_Button,'visible','on')
 set(handles.SetParameterSet_Button,'enable','on')
 set(handles.PreviousParameterSet_Button,'enable','on')
 set(handles.NextParameterSet_Button,'enable','on')
@@ -686,6 +697,9 @@ ParameterSets = handles.ParameterSets;
     set(handles.CurrentBackgroundParameter_Text,'string',ParameterSets(currentParameterSet).BackgroundParameter);
     set(handles.CurrentThresholdParameter_Text,'string',ParameterSets(currentParameterSet).ThresholdParameter);
     set(handles.CurrentSamplingDensity_Text,'string',ParameterSets(currentParameterSet).SamplingDensity);
+    set(handles.CurrentEntropy_Text,'string',sprintf('%.2e',ParameterSets(currentParameterSet).Entropy));
+    set(handles.CurrentRMSD_Text,'string',sprintf('%.5f',ParameterSets(currentParameterSet).RMSD));
+    set(handles.CurrentNoiseLevel_Text,'string',ParameterSets(currentParameterSet).NoiseLevel);
 
 return
 %------------------------------------------------------------------------------
@@ -854,18 +868,18 @@ return
 
 
 
-function NoiseAmplification_Edit_Callback(hObject, eventdata, handles)
-% hObject    handle to NoiseAmplification_Edit (see GCBO)
+function NoiseLevel_Max_Callback(hObject, eventdata, handles)
+% hObject    handle to NoiseLevel_Max (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of NoiseAmplification_Edit as text
-%        str2double(get(hObject,'String')) returns contents of NoiseAmplification_Edit as a double
+% Hints: get(hObject,'String') returns contents of NoiseLevel_Max as text
+%        str2double(get(hObject,'String')) returns contents of NoiseLevel_Max as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function NoiseAmplification_Edit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NoiseAmplification_Edit (see GCBO)
+function NoiseLevel_Max_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NoiseLevel_Max (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -881,6 +895,29 @@ end
 % --- Executes during object creation, after setting all properties.
 function NoiseLevel_Trials_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to NoiseLevel_Trials (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function NoiseLevel_Min_Callback(hObject, eventdata, handles)
+% hObject    handle to NoiseLevel_Min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of NoiseLevel_Min as text
+%        str2double(get(hObject,'String')) returns contents of NoiseLevel_Min as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function NoiseLevel_Min_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to NoiseLevel_Min (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

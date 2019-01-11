@@ -17,13 +17,14 @@ Length5 = length(ValidationVectors.LagrangeMultiplier_Vector);
 Length6 = length(ValidationVectors.BackgroundParameter_Vector);
 Length7 = length(ValidationVectors.ThresholdParameter_Vector);
 Length8 = ValidationVectors.SamplingDensity_Vector(2);
+Length9 = length(ValidationVectors.NoiseLevel_Vector);
 
   FullDensity = 100*RawData.NUS.SamplingDensity;
   SmallestDensity = ValidationVectors.SamplingDensity_Vector(1);
   ReducedDensity = linspace(SmallestDensity,FullDensity,Length8);
 
 %Total number of paramter combinations to evaluate
-TotalTrials = Length1*Length2*Length3*Length4*Length5*Length6*Length7*Length8;
+TotalTrials = Length1*Length2*Length3*Length4*Length5*Length6*Length7*Length8*Length9;
 
 ReconstructedSpectra = zeros(2*Dimension1,2*Dimension1);
 TrialsCompleted = 0;
@@ -36,6 +37,7 @@ for Index6 = 1:Length6 %Loop this one first since this determines time duration
           for Index4 = 1:Length4
             for Index5 = 1:Length5
               for Index8 = 1:Length8
+                for Index9 = 1:Length9
  tic
   
  %Extract NUS grid and get schedule
@@ -121,7 +123,14 @@ ParameterSets(TrialsCompleted+1).BackgroundParameter = ValidationVectors.Backgro
 ParameterSets(TrialsCompleted+1).LagrangeMultiplier = ValidationVectors.LagrangeMultiplier_Vector(Index5);
 ParameterSets(TrialsCompleted+1).ThresholdParameter = ValidationVectors.ThresholdParameter_Vector(Index7);
 ParameterSets(TrialsCompleted+1).SamplingDensity = ReducedDensity(Index8);
+ParameterSets(TrialsCompleted+1).NoiseLevel = ValidationVectors.NoiseLevel_Vector(Index9);
 
+%Add white noise
+rng(2,'twister')
+PowerSpectrum = randn(size(CorrectedSignal));
+WhiteNoise = ifft2(PowerSpectrum);
+WhiteNoise = WhiteNoise/max(max(WhiteNoise));
+CorrectedSignal = CorrectedSignal + ValidationVectors.NoiseLevel_Vector(Index9)*WhiteNoise;
 
 %If NUS then do spectral reconstruction
 if  RawData.NUSflag
@@ -131,9 +140,17 @@ if  RawData.NUSflag
     case 'istd'
       ReconstructedSignal = istd_hyscorean(CorrectedSignal,NUSgrid,ValidationVectors.ThresholdParameter_Vector(Index7),5000);
   end
+  
+  %Get entropy and rmsd of current resconstruction
+  PointsSampled = length(find(NUSgrid > 0));
+  ParameterSets(TrialsCompleted+1).RMSD = norm(NUSgrid.*CorrectedSignal - NUSgrid.*ReconstructedSignal)/sqrt(PointsSampled);
+  ParameterSets(TrialsCompleted+1).Entropy = camera_functional(fft2(ReconstructedSignal),10^ValidationVectors.BackgroundParameter_Vector(Index6));
+  
 else
   ReconstructedSignal = CorrectedSignal;
 end
+
+
 
 %Check if some NaN has appeared (should not)
 ReconstructedSignal(isnan(ReconstructedSignal)) = 0;
@@ -176,7 +193,7 @@ TimeRemaining = CPU_time/60*(TotalTrials - TrialsCompleted);
 Minutes=floor(TimeRemaining);
 Second=round((TimeRemaining-Minutes)*60);
   set(StatusHandle,'string',sprintf('%i min %i sec remaining... (%.1f%% completed)',Minutes,Second,100*TrialsCompleted/TotalTrials)),drawnow
-
+                end
               end
             end
           end
