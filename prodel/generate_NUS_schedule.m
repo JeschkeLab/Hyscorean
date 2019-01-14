@@ -14,11 +14,11 @@ TimeStep1 = 16;
 TimeStep2 = 16;
 
 %Dimensionality
-Dimension1 = 10;
-Dimension2 = 10;
+Dimension1 = 50;
+Dimension2 = 50;
 
 %NUS sampler settings
-SamplingDensity = 0.25;
+SamplingDensity = 0.5;
 Envelope = 'expdiag';
 Decay = [];
 
@@ -39,13 +39,13 @@ PointsSampled = length(find(SamplingGrid>0));
 FullSampling = Dimension1*Dimension2;
 Sampling = PointsSampled/FullSampling*100;
 figure(122),clf
-imagesc(t1_axis/1000,t2_axis/1000,1-SamplingGrid'),colormap('gray'),
+imagesc(t1_axis/1000,t2_axis/1000,1-SamplingGrid'),colormap('gray'),axis('xy')
 try
 title(sprintf('NUS-Schedule @%i%% (%s-matched, Decay=%.2f us)',round(Sampling),Envelope,Decay))
 catch
 end
 xlabel('t_1 [\mus]'),ylabel('t_2 [\mus]')
-% axis off
+
 
 %Save variables to structure and then to file
 NUSgrid = struct();

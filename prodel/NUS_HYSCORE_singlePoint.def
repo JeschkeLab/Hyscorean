@@ -1,0 +1,55 @@
+;-------------------------------------------------------------
+; PulseSPEL Variable Definition for NUS HYSCORE at X/Q-band
+;		  (4-points measurement)
+;-------------------------------------------------------------
+;  		   Luis Fabregas Ibanez, 2018
+;-------------------------------------------------------------
+begin defs;     ECHOlibrary program directory General variables
+;-------------------------------------------------------------
+;   Definitions & Conventions
+;-------------------------------------------------------------
+; Variables:     Comments:
+;-------------------------------------------------------------
+p0   = 16      ; 180 pulse length
+p1   = 24      ; 90 soft pulse length 
+p2   = 32      ;
+p3   = 60      ;
+p7   = 80      ; LeCroy trigger
+p30  = 100     ; Trigger osciloscope
+pg   = 32      ; integration window       
+;-------------------------------------------------------------
+; Delays [ns]
+;-------------------------------------------------------------
+d0   = 216     ; SDI offset time
+d1   = 144     ; Initial delay between the first two pulses
+d2   = 152     ; Initial delay between the second and third pulses
+d3   = 144     ; Initial delay between the third and fourth pulses
+d4   = 60      ; Extra delay for the matched pulse
+d5   = 96      ; Delay between the two pi mixing pulses. Tau2
+d9   = 0       ; Delay After Flash
+d20  = 0       ; Initial value of dx
+d21  = 0       ; Initial value of dy
+;-------------------------------------------------------------
+; DO NOT CHANGE (These are automatically updated)
+;-------------------------------------------------------------
+d10  = 16      ; t1-timing of NUS schedule [0]
+d20  = 16      ; t2-timing of NUS schedule [0]
+d11  = 16      ; t1-timing of NUS schedule [1]
+d21  = 16      ; t2-timing of NUS schedule [1]
+d12  = 16      ; t1-timing of NUS schedule [2]
+d22  = 16      ; t2-timing of NUS schedule [2]
+d13  = 16      ; t1-timing of NUS schedule [3]
+d23  = 16      ; t2-timing of NUS schedule [3]
+y    = 1       ; Second dimension position]
+;-------------------------------------------------------------
+; Others
+;-------------------------------------------------------------
+srt  = 100 * srtu ;Minimum shot repetition time
+h    = 1       ;Number of shots/loop                     ( counter: I )
+n    = 1       ;Number of sweeps to accumulate           ( counter: K )
+t    = 1       ; second time axis sweep length           ( counter: Y )
+w    = 800     ; Split point of sweeps (ns) ,i.e. pulse separation where TWT
+		; gate pulse can be split.
+;
+end defs
+
