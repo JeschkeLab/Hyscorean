@@ -7,18 +7,18 @@
 % Parameters
 %-----------------------------------------------------------------------
 
-FileName = 'NUSgrid_PRODEL_example';
+FileName = 'NUSgrid_PRODEL_10x10_example';
 
 %Grid greatest-common denominator (GCD) [ns]
 TimeStep1 = 16;
 TimeStep2 = 16;
 
 %Dimensionality
-Dimension1 = 200;
-Dimension2 = 200;
+Dimension1 = 10;
+Dimension2 = 10;
 
 %NUS sampler settings
-SamplingDensity = 0.10;
+SamplingDensity = 0.25;
 Envelope = 'expdiag';
 Decay = [];
 
@@ -39,12 +39,13 @@ PointsSampled = length(find(SamplingGrid>0));
 FullSampling = Dimension1*Dimension2;
 Sampling = PointsSampled/FullSampling*100;
 figure(122),clf
-pcolor(t1_axis/1000,t2_axis/1000,SamplingGrid),colormap('gray'),shading flat
+imagesc(t1_axis/1000,t2_axis/1000,1-SamplingGrid'),colormap('gray'),
 try
 title(sprintf('NUS-Schedule @%i%% (%s-matched, Decay=%.2f us)',round(Sampling),Envelope,Decay))
 catch
 end
 xlabel('t_1 [\mus]'),ylabel('t_2 [\mus]')
+% axis off
 
 %Save variables to structure and then to file
 NUSgrid = struct();

@@ -33,17 +33,24 @@ d3   = 144     ; Initial delay between the third and fourth pulses
 
 d4   = 60      ; Extra delay for the matched pulse
 
-d5   = 96      ; Delay between the two pi mixing pulses. Tau2
-
-d9   = 0       ; Delay After Flash
-
-d20  = 0       ; Initial value of dx
-
-d21  = 0       ; Initial value of dy
-
+;-------------------------------------------------------------
+; These are automatically updated by ProDeL(DO NOT EDIT)
+;-------------------------------------------------------------
 d10  = 16      ; t1-timing of NUS schedule 
 
 d20  = 16      ; t2-timing of NUS schedule
+
+d11  = 16      ; t1-timing of NUS schedule 
+
+d21  = 16      ; t2-timing of NUS schedule
+
+d12  = 16      ; t1-timing of NUS schedule 
+
+d22  = 16      ; t2-timing of NUS schedule
+
+d13  = 16      ; t1-timing of NUS schedule 
+
+d23  = 16      ; t2-timing of NUS schedule
 
 y    = 1       ;
 
@@ -60,7 +67,6 @@ n    = 1       ; number of sweeps to accumulate           ( counter: K )
 s    = 0       ; Sweep length (n. of data really taken)   ( counter: X )
 
 t    = 1       ; second time axsis sweep length           ( counter: Y )
-
 
 w    = 800     ; Split point of sweeps (ns) ,i.e. pulse separatrion where TWT
 		       ; gate pulse can be split.
