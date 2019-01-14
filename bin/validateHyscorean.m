@@ -19,9 +19,11 @@ Length7 = length(ValidationVectors.ThresholdParameter_Vector);
 Length8 = ValidationVectors.SamplingDensity_Vector(2);
 Length9 = length(ValidationVectors.NoiseLevel_Vector);
 
+if RawData.NUSflag
   FullDensity = 100*RawData.NUS.SamplingDensity;
   SmallestDensity = ValidationVectors.SamplingDensity_Vector(1);
   ReducedDensity = linspace(SmallestDensity,FullDensity,Length8);
+end
 
 %Total number of paramter combinations to evaluate
 TotalTrials = Length1*Length2*Length3*Length4*Length5*Length6*Length7*Length8*Length9;
@@ -119,12 +121,19 @@ ParameterSets(TrialsCompleted+1).BackgroundDimension1  = ValidationVectors.Backg
 ParameterSets(TrialsCompleted+1).BackgroundDimension2  = ValidationVectors.BackgroundDimension2_Vector(Index4);
 ParameterSets(TrialsCompleted+1).BackgroundStart1 = ValidationVectors.BackgroundStart1_Vector(Index1);
 ParameterSets(TrialsCompleted+1).BackgroundStart2 = ValidationVectors.BackgroundStart2_Vector(Index2);
+if RawData.NUSflag
 ParameterSets(TrialsCompleted+1).BackgroundParameter = ValidationVectors.BackgroundParameter_Vector(Index6);
 ParameterSets(TrialsCompleted+1).LagrangeMultiplier = ValidationVectors.LagrangeMultiplier_Vector(Index5);
 ParameterSets(TrialsCompleted+1).ThresholdParameter = ValidationVectors.ThresholdParameter_Vector(Index7);
 ParameterSets(TrialsCompleted+1).SamplingDensity = ReducedDensity(Index8);
 ParameterSets(TrialsCompleted+1).NoiseLevel = ValidationVectors.NoiseLevel_Vector(Index9);
-
+else
+ ParameterSets(TrialsCompleted+1).BackgroundParameter = NaN;
+ParameterSets(TrialsCompleted+1).LagrangeMultiplier = NaN;
+ParameterSets(TrialsCompleted+1).ThresholdParameter = NaN;
+ParameterSets(TrialsCompleted+1).SamplingDensity = NaN;
+ParameterSets(TrialsCompleted+1).NoiseLevel = NaN;
+end
 %Add white noise
 rng(2,'twister')
 PowerSpectrum = randn(size(CorrectedSignal));
@@ -141,16 +150,20 @@ if  RawData.NUSflag
       ReconstructedSignal = istd_hyscorean(CorrectedSignal,NUSgrid,ValidationVectors.ThresholdParameter_Vector(Index7),5000);
   end
   
-  %Get entropy and rmsd of current resconstruction
-  PointsSampled = length(find(NUSgrid > 0));
-  ParameterSets(TrialsCompleted+1).RMSD = norm(NUSgrid.*CorrectedSignal - NUSgrid.*ReconstructedSignal)/sqrt(PointsSampled);
-  ParameterSets(TrialsCompleted+1).Entropy = camera_functional(fft2(ReconstructedSignal),10^ValidationVectors.BackgroundParameter_Vector(Index6));
-  
+
 else
   ReconstructedSignal = CorrectedSignal;
 end
 
-
+  %Get entropy and rmsd of current resconstruction
+  if RawData.NUSflag
+      PointsSampled = length(find(NUSgrid > 0));
+    ParameterSets(TrialsCompleted+1).RMSD = norm(NUSgrid.*CorrectedSignal - NUSgrid.*ReconstructedSignal)/sqrt(PointsSampled);
+    ParameterSets(TrialsCompleted+1).Entropy = camera_functional(fft2(ReconstructedSignal),10^ValidationVectors.BackgroundParameter_Vector(Index6));
+  else
+      ParameterSets(TrialsCompleted+1).RMSD = NaN;
+      ParameterSets(TrialsCompleted+1).Entropy = NaN;
+  end
 
 %Check if some NaN has appeared (should not)
 ReconstructedSignal(isnan(ReconstructedSignal)) = 0;

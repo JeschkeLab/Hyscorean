@@ -65,6 +65,15 @@ set(handles.SamplingDensity_Slider,'Min', 1, 'Max',100*handles.RawData.NUS.Sampl
 String = sprintf('%.1f%%',100*handles.RawData.NUS.SamplingDensity );
 set(handles.SliderText,'string',String);
 end
+
+switch handles.Defaults.ReconstructionMethod
+  case {'ists','istd'}
+  set(handles.ThresholdParameter_Check,'enable','on')
+  otherwise
+  set(handles.ThresholdParameter_Check,'enable','off')
+end
+  
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -522,7 +531,11 @@ if get(handles.SamplingDensity_Check,'value')
   SamplingDensity_Trials = str2double(get(handles.SamplingDensity_Trials,'string'));
   SamplingDensity_Vector  = [SamplingDensity,SamplingDensity_Trials];
 else
+  if handles.RawData.NUSflag
   SamplingDensity_Vector = [handles.RawData.NUS.SamplingDensity 1];
+  else
+    SamplingDensity_Vector = [1 1];
+  end
 end
 
 if get(handles.NoiseLevel_Check,'value')
@@ -533,6 +546,8 @@ if get(handles.NoiseLevel_Check,'value')
 else
   NoiseLevel_Vector = 0;
 end
+
+
 
 %Flip vector so longer cpu times are are the start
 ThresholdParameter_Vector = fliplr(ThresholdParameter_Vector);
@@ -640,37 +655,59 @@ hold(handles.ValidationMainPlot,'off')
 
   cla(handles.ValidationInset1)
 
-MeanInset = max(MeanReconstruction(Dimension1:end,:));
-Upper = MeanReconstruction(Dimension1:end,:) + Uncertainty(Dimension1:end,:);
-Lower = MeanReconstruction(Dimension1:end,:) - Uncertainty(Dimension1:end,:);
-LowerInset =  max(Lower/max(max(Lower)));
-UpperInset =  max(Upper/max(max(Upper)));
-plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
-hold(handles.ValidationInset1,'on')
-a1 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ LowerInset  fliplr(MeanInset) ], 'r','LineStyle','none');
-a2 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ MeanInset fliplr(UpperInset)  ], 'r','LineStyle','none');
-a1.FaceAlpha = 0.5;
-a2.FaceAlpha = 0.5;
-set(handles.ValidationInset1,'XLim',[-20 20])
-set(handles.ValidationInset1,'YLim',[0 1])
+  MeanInset = max(MeanReconstruction(Dimension1:end,:));
+  plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
+  hold(handles.ValidationInset1,'on')
+  switch handles.DisplayRadioStatus
+    case 'uncertainty'
+      Upper = MeanReconstruction(Dimension1:end,:) + Uncertainty(Dimension1:end,:);
+      Lower = MeanReconstruction(Dimension1:end,:) - Uncertainty(Dimension1:end,:);
+      LowerInset =  max(Lower/max(max(Lower)));
+      UpperInset =  max(Upper/max(max(Upper)));
+      
+      a1 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ LowerInset  fliplr(MeanInset) ], 'r','LineStyle','none');
+      a2 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ MeanInset fliplr(UpperInset)  ], 'r','LineStyle','none');
+      a1.FaceAlpha = 0.5;
+      a2.FaceAlpha = 0.5;
+    case 'upper'
+      Upper = UpperBound(Dimension1:end,:);
+      UpperInset =  max(Upper/max(max(Upper)));
+      plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,'r','LineWidth',1.5)
+    case 'lower'
+      Lower = LowerBound(Dimension1:end,:);
+      LowerInset =  max(Lower/max(max(Lower)));
+      plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,'r','LineWidth',1.5)
+  end
+  set(handles.ValidationInset1,'XLim',[-20 20])
+  set(handles.ValidationInset1,'YLim',[0 1])
   set(handles.ValidationInset1,'XTick',[],'YTick',[])
-hold(handles.ValidationInset2,'off')
-
+  hold(handles.ValidationInset2,'off')
+  
   cla(handles.ValidationInset2)
-MeanInset = max(MeanReconstruction);
-Upper = MeanReconstruction + Uncertainty;
-Lower = MeanReconstruction - Uncertainty;
-LowerInset =  max(Lower/max(max(Lower)));
-UpperInset =  max(Upper/max(max(Upper)));
-plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
-hold(handles.ValidationInset2,'on')
-a1 = fill(handles.ValidationInset2, [LowerInset  fliplr(MeanInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
-a2 = fill(handles.ValidationInset2, [MeanInset fliplr(UpperInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
-a1.FaceAlpha = 0.5;
-a2.FaceAlpha = 0.5;
-
-set(handles.ValidationInset2,'YLim',[0 20])
-set(handles.ValidationInset2,'XLim',[0 1])
+  MeanInset = max(MeanReconstruction);
+  plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
+  hold(handles.ValidationInset2,'on')
+  switch handles.DisplayRadioStatus
+    case 'uncertainty'
+      Upper = MeanReconstruction + Uncertainty;
+      Lower = MeanReconstruction - Uncertainty;
+      LowerInset =  max(Lower/max(max(Lower)));
+      UpperInset =  max(Upper/max(max(Upper)));
+      a1 = fill(handles.ValidationInset2, [LowerInset  fliplr(MeanInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
+      a2 = fill(handles.ValidationInset2, [MeanInset fliplr(UpperInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
+      a1.FaceAlpha = 0.5;
+      a2.FaceAlpha = 0.5;
+    case 'upper'
+      Upper = UpperBound;
+      UpperInset =  max(Upper/max(max(Upper)));
+      plot(handles.ValidationInset2,UpperInset,FrequencyAxis1,'r')
+    case 'lower'
+      Lower = LowerBound;
+      LowerInset =  max(Lower/max(max(Lower)));
+      plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,'r')
+  end
+  set(handles.ValidationInset2,'YLim',[0 20])
+  set(handles.ValidationInset2,'XLim',[0 1])
 
   set(handles.ValidationInset2,'XTick',[],'YTick',[])
 %     camroll(handles.ValidationInset2,-90)
@@ -819,8 +856,13 @@ ExternalHandles.ValidationInset2 = axes('Units','Normalized','Parent',FigureHand
 ExternalHandles.ValidationStatus = uicontrol('Parent',FigureHandle,'Style','text','Visible','off','Position',[0.8 0.12 0.15 0.6]);
 ExternalHandles.ReconstructedSpectra = handles.ReconstructedSpectra;
 ExternalHandles.DisplayRadioStatus = handles.DisplayRadioStatus;
+ExternalHandles.SetParameterSet_Button = handles.SetParameterSet_Button;
 ExternalHandles.RawData = handles.RawData;
+if get(handles.DisplayMean_Radio,'value')
 updateValidationPlots(ExternalHandles)
+else
+  plotParameterSet(ExternalHandles)
+end
 
  return
 %------------------------------------------------------------------------------
