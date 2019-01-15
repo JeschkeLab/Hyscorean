@@ -2335,8 +2335,12 @@ ReportData.FitOpts = FitOpts;
 Date = date;
 formatOut = 'yyyymmdd';
 Date = datestr(Date,formatOut);
-ReportData.SaveName = [Date '_FitReport'];
-ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit reports\');
+% ReportData.SaveName = [Date '_FitReport'];
+% ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit reports\');
+% ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit reports\');
+
+[ReportData.SaveName,ReportData.SavePath] = uiputfile('*.*','Save fitting report as');
+
 if ~exist(ReportData.SavePath,'dir')
   mkdir(ReportData.SavePath)
 end
@@ -2345,6 +2349,9 @@ end
   HyscoreanPath = HyscoreanPath(1:end-11);
 ReportData.FittingReport_logo_Path = [HyscoreanPath 'bin\FitReport_logo.png'];
 
+if length(ReportData.FitData.SimOpt{1}.FileNames{1}) > 15
+  ReportData.FitData.SimOpt{1}.FileNames = {sprintf('%i files',length(ReportData.FitData.SimOpt{1}.FileNames{1}))};
+end
 
 %Send structure to workspace
 assignin('base', 'ReportData', ReportData);
