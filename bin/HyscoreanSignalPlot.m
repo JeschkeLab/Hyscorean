@@ -232,8 +232,19 @@ if get(handles.PlotApodizationWindow,'value')
     case 6
       WindowType = 'connes';
     case 7
-      WindowType = 'cosine';      
+      WindowType = 'cosine';
+    case 8
+      WindowType = 'tukey25';
+    case 9
+      WindowType = 'tukey50';
+    case 10
+      WindowType = 'tukey75';
+    case 11
+      WindowType = 'hann';
+    case 12
+      WindowType = 'none';  
   end
+
   [~,Window1,Window2] = apodizationWin(Processed.Signal,WindowType,WindowDecay1,WindowDecay2);
     if ~get(handles.ChangeSignalPlotDimension,'Value')
       Window = Window1;

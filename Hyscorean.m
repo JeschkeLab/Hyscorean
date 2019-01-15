@@ -1802,12 +1802,20 @@ function WindowType_Callback(hObject, eventdata, handles)
     case 6
       WindowType = 'connes';
     case 7
-      WindowType = 'cosine';   
+      WindowType = 'cosine';
     case 8
+      WindowType = 'tukey25';
+    case 9
+      WindowType = 'tukey50';
+    case 10
+      WindowType = 'tukey75';
+    case 11
+      WindowType = 'hann';
+    case 12
       WindowType = 'none';  
   end
 
-  if WindowMenuState == 8
+  if WindowMenuState == 12
     set(handles.WindowLength1,'enable','off')
     set(handles.WindowLength2,'enable','off')
     set(handles.WindowLengthText1,'enable','off')
