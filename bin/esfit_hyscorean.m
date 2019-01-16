@@ -733,7 +733,11 @@ colormap(hAx,CustomColormap)
     'String','Report',...
     'Tooltip','Generate fitting report','Enable','off',...
     'Callback',@reportButtonCallback);
-  
+   uicontrol('Style','pushbutton','Tag','ORCAbutton',...
+    'Position',[x0+160 y0+150 50 20],...
+    'String','ORCA','Enable','on','Callback',@loadORCACallback,...
+    'HorizontalAl','left',...
+    'Tooltip','Load parameters from ORCA');
   Path = which('Hyscorean');
   Path = Path(1:end-11);
     [Image,~]=imread(fullfile(Path,'bin\zoomin_icon.jpg'));
@@ -1329,13 +1333,13 @@ end
 
 % update GUI
 %-----------------------------------------------------------
-if FitData.GUI && (UserCommand~=99) 
+if FitData.GUI%&& ((UserCommand~=99) )
     FrequencyAxis = linspace(-1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),length(ExpSpec{FitData.CurrentSpectrumDisplay}));
     CurrentExpSpec = ExpSpec{FitData.CurrentSpectrumDisplay};
     CurrentSimSpec = simspec{FitData.CurrentSpectrumDisplay};
     CurrentBestSpec = FitData.bestspec{FitData.CurrentSpectrumDisplay};
 
-if FitOpts.MethodID~=7
+if FitOpts.MethodID<7
   % update contour graph  
   %       set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
   handle = findobj('Tag','currsimdata');
@@ -1383,7 +1387,8 @@ if FitOpts.MethodID~=7
     set(findobj('Tag','dataaxes'),'YLim',YLimits);
   end
   
-else
+elseif FitOpts.MethodID==7
+  
   if FitData.pcolorplotting
     handle = findobj('Tag','currsimdata');
     colormap(handle.Parent,fliplr(FitData.CustomColormap))
@@ -1398,11 +1403,29 @@ else
   Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
   set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset,'Color','b');
   
+else
+  
+  if FitData.pcolorplotting
+    handle = findobj('Tag','currsimdata');
+    ColormapNew = [FitData.CustomColormap(:,2)  FitData.CustomColormap(:,2) FitData.CustomColormap(:,1)];
+    colormap(handle.Parent,ColormapNew)
+    set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentSimSpec));
+  else
+    set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentSimSpec))
+  end
+  Temp = abs(CurrentSimSpec);
+  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  cmp = lines(5);
+  set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color',cmp(3,:));
+  Temp = abs(CurrentSimSpec);
+  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset,'Color',cmp(3,:));
+  
 end
   drawnow
   
   % update numbers parameter table
-  if (UserCommand~=99)
+  if (UserCommand~=99) && FitOpts.MethodID~=8
     
     % current system set
     hParamTable = getParameterTableHandle;
@@ -2403,6 +2426,131 @@ for i=1:length(FitData.SimOpt)
         FitData.SimOpt{i}.ProductRule = 0;
     end
     
+end
+
+return
+%==========================================================================
+
+%==========================================================================
+function loadORCACallback(object,src,event)
+ 
+global FitData FitOpts 
+
+[Filename,Path] = uigetfile('.prop','Load ORCA data');
+
+%-----For simulation----------------------------------
+Sys1 = orca2easyspin(fullfile(Path,Filename));
+
+Commas = strfind(Sys1.Nucs,',');
+Nucs = Sys1.Nucs;
+Pos1 = 1;
+List = cell(length(Commas)+1,1);
+Nuclei = cell(length(Commas)+1,1);
+for i=1:length(Commas)
+  Isotopes = isotopologues(Nucs(Pos1:Commas(i)-1));
+  Nuclei{i} = Isotopes(1).Nucs;
+  if isempty(Nuclei{i})
+    Nuclei{i} = Isotopes(2).Nucs;
+  end
+  Pos1 = Commas(i)+1;
+  
+  List{i} = sprintf('#%i %s',i,Nuclei{i});
+  
+end
+Isotopes = isotopologues(Nucs(Pos1:end));
+Nuclei{i+1} = Isotopes(1).Nucs;
+if isempty(Nuclei{i})
+  Nuclei{i+1} = Isotopes(2).Nucs;
+end
+List{i+1} = sprintf('#%i %s',i+1, Nuclei{i+1});
+
+[Indexes,Answered] = listdlg('Name',' ','PromptString','Select the atoms to be loaded',...
+  'SelectionMode','multiple',...
+  'ListString',List);
+
+
+
+
+if Answered
+  try
+    
+  f = msgbox('Simulating ORCA system...');
+  delete(f.Children(1))
+  drawnow
+  N = Indexes; %Number of searched atom in file !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  Sys = Sys1;
+  Sys.xyz = Sys1.xyz(N,:);
+  string = sprintf('%s',Nuclei{Indexes(1)});
+  if length(Indexes)>1
+    for i=2:length(Indexes)
+      string = sprintf('%s,%s',string,Nuclei{Indexes(i)});
+    end
+  end
+
+Sys.Nucs = string; %Select the type of the chosen nucleus
+Sys.A = Sys1.A(N,:);
+Sys.AFrame = Sys1.AFrame(N,:);
+Sys.Q = Sys1.Q(N,:);
+Sys.QFrame = Sys1.QFrame(N,:);
+
+
+switch FitOpts.Startpoint
+  case 1 % center of range
+    startx = zeros(FitData.nParameters,1);
+  case 2 % random
+    startx = 2*rand(FitData.nParameters,1) - 1;
+    startx(FitData.inactiveParams) = 0;
+  case 3 % selected fit set
+    h = findobj('Tag','SetListBox');
+    s = get(h,'String');
+    if ~isempty(s)
+      s = s{get(h,'Value')};
+      ID = sscanf(s,'%d');
+      startx = FitData.FitSets(ID).bestx;
+    else
+      startx = zeros(FitData.nParameters,1);
+    end
+end
+FitData.startx = startx;
+x0_ = startx;
+x0_(FitData.inactiveParams) = [];
+nParameters_ = numel(x0_);
+
+bestx = startx;
+
+ORCASys = Sys;
+Temp = FitData.Sys0;
+Temp2 = FitData.Vary;
+
+if strcmp(FitOpts.Scaling, 'none')
+  fitspc = FitData.ExpSpec;
+else
+  fitspc = FitData.ExpSpecScaled;
+end
+
+
+FitData.Sys0 = {ORCASys};
+a.A = 1;
+FitData.Vary = {a};
+ID = FitOpts.MethodID;
+FitOpts.MethodID = 8;
+
+funArgs = {fitspc,FitData,FitOpts};  % input args for assess and residuals_
+
+      assess(1,funArgs{:});
+
+FitData.Sys0 = Temp;
+FitData.Vary = Temp2;
+FitOpts.MethodID = ID;
+
+close(f)
+
+  catch
+    close(f)
+  f = msgbox('Simulaton failed due to errors');
+
+  end
+
 end
 
 return
