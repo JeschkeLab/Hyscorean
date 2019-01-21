@@ -86,7 +86,7 @@ if ~isfield(options,'SavitzkyFrameLength')
 end
 
 %Check if data is complex
-isComplex = isreal(Data.Integral);
+isComplex = ~isreal(Data.Integral);
 
 options.BackgroundCorrection2D = false;
 
@@ -100,13 +100,18 @@ end
 
 
 %Determine zero-times and adjust time axis
-[ZeroTime1,ZeroTime2,Integral,~,~,~] = phase_zt(Data.TimeAxis1,Data.TimeAxis2,Data.Integral);
+% [ZeroTime1,ZeroTime2,Integral,~,~,~] = phase_zt(Data.TimeAxis1,Data.TimeAxis2,Data.Integral);
+if isComplex
+Integral = correctPhaseEchoes(Data.Integral);
+else
+  Integral = Data.Integral;
+end
+ZeroTime1 = 0;
+ZeroTime2 = 0;
+% % Integral = Data.Integral;
 ZeroTimeAxis1 = Data.TimeAxis1 - ZeroTime1;
 ZeroTimeAxis2 = Data.TimeAxis2 - ZeroTime2;
-NonCorrectedIntegral = Integral();
-
-% Integral = abs(Integral);
-
+NonCorrectedIntegral = Integral;
 TimeIndex1 = 1;
 TimeIndex2 = 1;
 Data.CorrectedTimeAxis2 = ZeroTimeAxis2(TimeIndex2:end);
