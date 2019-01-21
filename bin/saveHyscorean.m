@@ -59,7 +59,7 @@ FrequencyAxis2 = handles.Processed.axis2;
   if CrushFlag
       SaveName = sprintf('%s_%s_OutputData_%i.mat',Date,Identifier,CopyIndex);
   end
-  save(fullfile(FullPath,SaveName),'Spectrum','ProcessedSignal','RawSignal','TimeAxis1','TimeAxis1','FrequencyAxis1','FrequencyAxis2');
+  save(fullfile(FullPath,SaveName),'Spectrum','ProcessedSignal','RawSignal','TimeAxis1','TimeAxis1','TimeAxis2','FrequencyAxis1','FrequencyAxis2');
 
   set(handles.ProcessingInfo, 'String', 'Status: Saving session 40%'); drawnow;
 
@@ -207,8 +207,9 @@ WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
   end
   [~,Window1,Window2] = apodizationWin(handles.Processed.Signal,WindowType,WindowDecay1,WindowDecay2);
 TimeAxis1 = handles.Processed.TimeAxis1(1:length(handles.Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
+TimeAxis2 = handles.Processed.TimeAxis2(1:length(handles.Processed.TimeAxis2)-str2double(get(handles.ZeroFilling2,'String')));
 Window2 = Window2/max(Window2);
-Window2 = Window2';
+Window2 = Window2;
 Window1 = Window1/max(Window1);
 Window1 = Window1';
 if WindowDecay1>=length(TimeAxis1)
@@ -224,6 +225,10 @@ end
 reportdata.WindowType = WindowType;
 reportdata.ApodizationWindow1 = Window1;
 reportdata.ApodizationWindow2 = Window2;
+reportdata.WindowLength1 = WindowDecay1;
+reportdata.WindowLength2 = WindowDecay2;
+strings = get(handles.Symmetrization_ListBox,'string');
+reportdata.Symmetrization = strings(get(handles.Symmetrization_ListBox,'Value'));
 
 %Cosntruct report
 %Format savename so until it is different from the rest in the folder
@@ -278,7 +283,8 @@ DataForFitting.nPoints = length(handles.Data.PreProcessedSignal);
 DataForFitting.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 DataForFitting.FreqLim = str2double(get(handles.XUpperLimit,'string'));
 DataForFitting.WindowType = handles.WindowTypeString;
-DataForFitting.WindowDecay = str2double(get(handles.Hammingedit,'string'));
+DataForFitting.WindowLength1 = str2double(get(handles.WindowLength1,'string'));
+DataForFitting.WindowLength2 = str2double(get(handles.WindowLength2,'string'));
 DataForFitting.L2GParameters.tauFactor2 = str2double(get(handles.L2G_tau2,'string'));
 DataForFitting.L2GParameters.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
 DataForFitting.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));

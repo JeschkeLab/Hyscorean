@@ -10,7 +10,9 @@ function Settings = getSettings(handles)
 
   Settings.zerofilling1 = str2double(get(handles.ZeroFilling1,'string'));
   Settings.zerofilling2 = str2double(get(handles.ZeroFilling2,'string'));
-  Settings.WindowDecay = str2double(get(handles.Hammingedit,'string'));
+  Settings.WindowDecay1 = str2double(get(handles.WindowLength1,'string'));
+  Settings.WindowDecay2 = str2double(get(handles.WindowLength1,'string'));
+
   %   Settings.FrequencyLimit1 = str2double(get(handles.Limit1,'string'));
   %   Settings.FrequencyLimit2 = str2double(get(handles.Limit2,'string'));
   Settings.WindowType = get(handles.WindowType,'value');
@@ -27,9 +29,9 @@ function Settings = getSettings(handles)
   Settings.BackgroundCorrection2D = 0;
   Settings.ZeroTimeTruncation = get(handles.ZeroTimeTruncation,'Value');
   Settings.InvertCorrection = get(handles.InvertCorrection,'Value');
-  Settings.SavitzkyGolayFrameLength = str2double(get(handles.FrameLength,'string'));
-  Settings.SavitzkyGolayOrder = str2double(get(handles.FilterOrder,'string'));
-  Settings.SavitzkyGolayFilter = get(handles.SavitzkyFilter,'Value');
+%   Settings.SavitzkyGolayFrameLength = str2double(get(handles.FrameLength,'string'));
+%   Settings.SavitzkyGolayOrder = str2double(get(handles.FilterOrder,'string'));
+%   Settings.SavitzkyGolayFilter = get(handles.SavitzkyFilter,'Value');
   Settings.FieldOffset = get(handles.FieldOffset,'string');
 Settings.AutomaticBackgroundStart = get(handles.AutomaticBackgroundStart,'value');
 Settings.BackgroundStart1 = get(handles.BackgroundStart1,'string');
@@ -41,3 +43,7 @@ Settings.XUpperLimit = get(handles.XUpperLimit,'string');
   Settings.ReconstructionAlgorithm = get(handles.ReconstructionAlgorithm,'value');
   Settings.MaxEntBackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
   Settings.MaxEntLagrangianMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
+
+  Settings.Symmetrization = get(handles.Symmetrization_ListBox,'value');
+
+  
