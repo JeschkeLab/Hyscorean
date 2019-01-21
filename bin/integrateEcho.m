@@ -59,14 +59,19 @@ switch Integration
       end
     end
     %Integration of the gaussian fits of the echos
-    Integral = squeeze(sum(AverageEchoFitted,1));
+        RealIntegral = real(AverageEchoFitted);
+    ImagIntegral = imag(AverageEchoFitted);
 
+%     Integral = squeeze(sum(abs(AverageEchoFitted),1));
+    RealIntegral = squeeze(sum(abs(RealIntegral),1));
+    ImagIntegral  = squeeze(sum(abs(ImagIntegral),1));
+    Integral = RealIntegral + 1i*ImagIntegral;
 %--------------------------------------------------------------------------
 % Boxcar Integration
 %--------------------------------------------------------------------------    
   case 'boxcar'
     % Do a boxcar-integration over the (entire) echo
-    Integral = squeeze(sum(AverageEcho(TimeIndex:end-TimeIndex,:,:),1));
+    Integral = squeeze(sum(abs(AverageEcho(TimeIndex:end-TimeIndex,:,:)),1));
 end
 
   figure(125124),set(gcf,'Color','w'),clf
@@ -89,7 +94,7 @@ drawnow;
 %--------------------------------------------------------------------------
 
 %Normalize integral and mount to data-structure
-Data.Integral = real(Integral/max(max(Integral)));
+Data.Integral = (Integral/max(max((Integral))));
 
 % Time axis, no zero time adaption
 % Data.TimeAxis1 = Data.TimeAxis1 - min(Data.TimeAxis1);

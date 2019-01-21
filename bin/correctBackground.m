@@ -85,6 +85,9 @@ if ~isfield(options,'SavitzkyFrameLength')
   options.SavitzkyFrameLength = 11;
 end
 
+%Check if data is complex
+isComplex = isreal(Data.Integral);
+
 options.BackgroundCorrection2D = false;
 
 % Deactivate warnings to avoid the fitting functions to throw too many outputs
@@ -102,6 +105,7 @@ ZeroTimeAxis1 = Data.TimeAxis1 - ZeroTime1;
 ZeroTimeAxis2 = Data.TimeAxis2 - ZeroTime2;
 NonCorrectedIntegral = Integral();
 
+% Integral = abs(Integral);
 
 TimeIndex1 = 1;
 TimeIndex2 = 1;
@@ -123,7 +127,7 @@ if options.BackgroundCorrection2D
   options.zt2= TimeIndex2;
   BackgroundNew = fitBackground2D_new(Integral,options);
   Integral = Integral(TimeIndex1:end,TimeIndex2:end);
-  Integral = real(Integral)-BackgroundNew;
+  Integral = (Integral)-BackgroundNew;
 
 else
   
@@ -136,8 +140,17 @@ else
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
       StartIndex1 = options.BackgroundStart1;
     Parameters.start = StartIndex1;
-    Background1 = fitBackground2D(Integral,Parameters);
-    Integral = real(Integral) - Background1;
+    if isComplex
+      RealBackground1 = fitBackground2D(real(Integral),Parameters);
+      RealIntegral = real(Integral)-RealBackground1;
+      ImagBackground1 = fitBackground2D(imag(Integral),Parameters);
+      ImagIntegral = imag(Integral)-ImagBackground1;
+      Integral = RealIntegral + 1i*ImagIntegral;
+      Background1 = RealBackground1 +  1i*ImagBackground1;
+    else
+      Background1 = fitBackground2D(Integral,Parameters);
+      Integral = (Integral)-Background1;
+    end
   
     Data.FirstBackgroundCorrected = real(Integral);
 
@@ -153,8 +166,17 @@ else
       StartIndex2 = options.BackgroundStart2;
     end
     Parameters.start = StartIndex2;
-    Background2 = fitBackground2D(Integral,Parameters);
-    Integral = real(Integral) - Background2;
+    if isComplex
+      RealBackground2 = fitBackground2D(real(Integral),Parameters);
+      RealIntegral = real(Integral)-RealBackground2;
+      ImagBackground2 = fitBackground2D(imag(Integral),Parameters);
+      ImagIntegral = imag(Integral)-ImagBackground2;
+      Integral = RealIntegral + 1i*ImagIntegral;
+      Background2 = RealBackground2 +  1i*ImagBackground2;
+    else
+      Background2 = fitBackground2D(Integral,Parameters);
+      Integral = (Integral)-Background2;
+    end
     
   else  % Standard Background correction (1st - t1 , 2nd - t2)
     
@@ -169,12 +191,19 @@ else
       StartIndex1 = options.BackgroundStart1;
     end
     Parameters.start = StartIndex1;
-    Background1 = fitBackground2D(Integral,Parameters);
-    Integral = real(Integral) - Background1;
-  
-    Data.FirstBackgroundCorrected = real(Integral);
+    if isComplex
+      RealBackground1 = fitBackground2D(real(Integral),Parameters);
+      RealIntegral = real(Integral)-RealBackground1;
+      ImagBackground1 = fitBackground2D(imag(Integral),Parameters);
+      ImagIntegral = imag(Integral)-ImagBackground1;
+      Integral = RealIntegral + 1i*ImagIntegral;
+      Background1 = RealBackground1 +  1i*ImagBackground1;
+    else
+      Background1 = fitBackground2D(Integral,Parameters);
+      Integral = (Integral)-Background1;
+    end
+    Data.FirstBackgroundCorrected = Integral;
 
-    
     % 2nd Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod2;
@@ -186,16 +215,22 @@ else
       StartIndex2 = options.BackgroundStart2;
     end
     Parameters.start = StartIndex2;
-    Background2 = fitBackground2D(real(Integral),Parameters);
-    Integral = real(Integral)-Background2;
-    
+    if isComplex
+      RealBackground2 = fitBackground2D(real(Integral),Parameters);
+      RealIntegral = real(Integral)-RealBackground2;
+      ImagBackground2 = fitBackground2D(imag(Integral),Parameters);
+      ImagIntegral = imag(Integral)-ImagBackground2;
+      Integral = RealIntegral + 1i*ImagIntegral;
+      Background2 = RealBackground2 +  1i*ImagBackground2;
+    else
+      Background2 = fitBackground2D(Integral,Parameters);
+      Integral = (Integral)-Background2;
+    end
   end
 end
 
-
 % Zero-time truncation of time axis and integral if requested
 if options.ZeroTimeTruncation
-  
   TimeIndex1 = find(ZeroTimeAxis1 == 0);
   TimeIndex2 = find(ZeroTimeAxis2 == 0);
 else
@@ -203,42 +238,23 @@ else
   TimeIndex2 = 1;
 end
 Integral = Integral(TimeIndex1:end,TimeIndex2:end);
+
+% Savitzky-Golay filtering of background-corrected integral
+  if options.SavitzkyGolayFiltering
+    Integral =  sgolayfilt(Integral,options.SavitzkyOrder,options.SavitzkyFrameLength,[],1); % along dimension 1
+    Integral =  sgolayfilt(Integral,options.SavitzkyOrder,options.SavitzkyFrameLength,[],2); % along dimension 2
+  end
+
+%Store final integral (a.k.a the signal) into data structure
+Integral = Integral/max(max(Integral));
+
 Data.NonCorrectedIntegral = NonCorrectedIntegral(TimeIndex1:end,TimeIndex2:end);
 Data.Background1 = Background1;
 Data.Background2 = Background2;
 Data.BackgroundStartIndex1 = StartIndex1;
 Data.BackgroundStartIndex2 = StartIndex2;
-Data.BackgroundCorrected = real(Integral);
-
-% Savitzky-Golay filtering of background-corrected integral
-try
-  if options.SavitzkyGolayFiltering
-    Integral =  sgolayfilt(Integral,options.SavitzkyOrder,options.SavitzkyFrameLength,[],1); % along dimension 1
-    Integral =  sgolayfilt(Integral,options.SavitzkyOrder,options.SavitzkyFrameLength,[],2); % along dimension 2
-  end
-catch
-%If options.SavitzkyGolayFiltering is not given just continue
-end
-
-%Store final integral (a.k.a the signal) into data structure
-Integral = Integral/max(max(Integral));
-
+Data.BackgroundCorrected = Integral;
 Data.PreProcessedSignal = Integral;
-
-% % If requested, display background corrected 2D-trace
-% if options.DisplayCorrected
-%   figure(3000)
-%   set(gcf,'NumberTitle','off','Name','TrierAnalysis: Background corrected','Units','pixels');   
-%   
-%   surf(Data.CorrectedTimeAxis2,Data.CorrectedTimeAxis1,Integral)
-%   colormap default
-%   shading flat
-%   xlabel('t_1'),ylabel('t_2')
-%   az = 135; el = 40.4000; 
-%   view(az,el),drawnow;
-% end
-
-
 
 %Reactivate warnings
 warning ('on','all');

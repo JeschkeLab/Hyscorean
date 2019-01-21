@@ -36,6 +36,12 @@ if ~isfield(handles,'PlotBackground')
 else
   PlotSecondCorrection = get(handles.PlotBackground,'Value');
 end
+if ~isfield(handles,'PlotImaginarySignal')
+  PlotImaginarySignal = false;
+else
+  PlotImaginarySignal = handles.PlotImaginarySignal;
+end
+
 if ~isfield(handles,'PlotWithZeroFilling')
    PlotWithZeroFilling = false;
 else
@@ -73,10 +79,10 @@ SliderPosition = round(get(handles.t1_Slider,'Value'));
 if handles.PlotProcessedSignal
   %Switch to change between t1 and t2 traces
   if get(handles.ChangeSignalPlotDimension,'Value')
-    ProcessedSignalTrace = Processed.Signal(SliderPosition,:);
+      ProcessedSignalTrace = Processed.Signal(SliderPosition,:);
     TimeAxis = TimeAxis2';
   else
-    ProcessedSignalTrace = Processed.Signal(:,SliderPosition);
+      ProcessedSignalTrace = Processed.Signal(:,SliderPosition);
     TimeAxis = TimeAxis1';
   end
   if  PlotWithZeroFilling
@@ -89,7 +95,11 @@ if handles.PlotProcessedSignal
       end
   end
   ProcessedSignalTrace = ProcessedSignalTrace/max(max(abs(Processed.Signal)));
-  plot(handles.signal_t1,TimeAxis,ProcessedSignalTrace,'k','Linewidth',1)
+      if PlotImaginarySignal
+        plot(handles.signal_t1,TimeAxis,imag(ProcessedSignalTrace),'k','Linewidth',1)
+      else
+        plot(handles.signal_t1,TimeAxis,real(ProcessedSignalTrace),'k','Linewidth',1)
+      end
 end
 
 % First background correction 
@@ -99,20 +109,38 @@ if get(handles.NonCorrectedTrace,'value')
   
   %Check if the correction order has been inverted
   if get(handles.InvertCorrection,'Value')
-    SignalTrace = real(handles.Data.NonCorrectedIntegral(SliderPosition,:));
-    Background1Trace = real(handles.Data.Background1(SliderPosition,:));
+    if PlotImaginarySignal
+      SignalTrace = imag(handles.Data.NonCorrectedIntegral(SliderPosition,:));
+      Background1Trace = imag(handles.Data.Background1(SliderPosition,:));
+    else
+      SignalTrace = real(handles.Data.NonCorrectedIntegral(SliderPosition,:));
+      Background1Trace = real(handles.Data.Background1(SliderPosition,:));
+    end
   else
-    SignalTrace = real(handles.Data.NonCorrectedIntegral(:,SliderPosition));
-    Background1Trace = real(handles.Data.Background1(:,SliderPosition));
+    if PlotImaginarySignal
+      SignalTrace = imag(handles.Data.NonCorrectedIntegral(:,SliderPosition));
+      Background1Trace = imag(handles.Data.Background1(:,SliderPosition));
+    else
+      SignalTrace = real(handles.Data.NonCorrectedIntegral(:,SliderPosition));
+      Background1Trace = real(handles.Data.Background1(:,SliderPosition));
+    end
   end
   
   %Rescale and zero-adjust the signal trace
-  Mean = mean(real(handles.Data.NonCorrectedIntegral(:,end)),'omitnan');
+      if PlotImaginarySignal
+        Mean = mean(imag(handles.Data.NonCorrectedIntegral(:,end)),'omitnan');
+      else
+        Mean = mean(real(handles.Data.NonCorrectedIntegral(:,end)),'omitnan');
+      end
   if isnan(Mean)
     Mean = 0;
   end
   SignalTrace = SignalTrace - Mean;
-  SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
+        if PlotImaginarySignal
+          SignalTrace = SignalTrace/max(max(imag(handles.Data.NonCorrectedIntegral)));
+        else
+          SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
+        end
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(SignalTrace));

@@ -35,6 +35,7 @@ end
 drawnow;
 %Enable all graphics-related GUI components
 set(handles.PreProcessedTrace,'visible','on')
+set(handles.ImaginaryTrace,'visible','on')
 set(handles.NonCorrectedTrace,'visible','on')
 set(handles.PlotApodizationWindow,'visible','on')
 set(handles.DetachSignalPlot,'visible','on')
@@ -43,6 +44,7 @@ set(handles.t1_Slider,'enable','on')
 %Set background of all signalPlot GUI components to white to match background
 set(handles.PreProcessedTrace,'BackgroundColor','white')
 set(handles.NonCorrectedTrace,'BackgroundColor','white')
+set(handles.ImaginaryTrace,'BackgroundColor','white')
 set(handles.PlotApodizationWindow,'BackgroundColor','white')
 set(handles.DetachSignalPlot,'BackgroundColor','white')
 

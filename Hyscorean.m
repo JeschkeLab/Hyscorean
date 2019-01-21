@@ -22,7 +22,7 @@ function varargout = Hyscorean(varargin)
 
 % Edit the above text to modify the response to help Hyscorean
 
-% Last Modified by GUIDE v2.5 09-Jan-2019 10:21:04
+% Last Modified by GUIDE v2.5 21-Jan-2019 15:17:08
 
 % Begin initialization code - DO NOT EDIT
 
@@ -188,6 +188,7 @@ if isfield(handles,'Processed')
 end
 %Reset/Disable graphical handles so that no errors appear if called
 set(handles.PreProcessedTrace,'visible','off')
+set(handles.ImaginaryTrace,'visible','off')
 set(handles.NonCorrectedTrace,'visible','off')
 set(handles.PlotApodizationWindow,'visible','off')
 set(handles.DetachSignalPlot,'visible','off')
@@ -2061,3 +2062,19 @@ function WindowLength2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in ImaginaryTrace.
+function ImaginaryTrace_Callback(hObject, eventdata, handles)
+% hObject    handle to ImaginaryTrace (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ImaginaryTrace
+if get(hObject,'value')
+handles.PlotImaginarySignal = true;
+else
+  handles.PlotImaginarySignal = false;
+end
+HyscoreanSignalPlot(handles,handles.Processed)
+guidata(hObject, handles);
