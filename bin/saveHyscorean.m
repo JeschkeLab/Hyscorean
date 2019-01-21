@@ -188,28 +188,11 @@ end
 WindowDecay1 = str2double(get(handles.WindowLength1,'string'));
 WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
 
-    WindowMenuState = get(handles.WindowType,'value');
-  switch WindowMenuState
-    case 1
-     WindowType =  'hamming';
-    case 2
-     WindowType =  'chebyshev';  
-    case 3
-     WindowType =  'welch';
-    case 4
-      WindowType = 'blackman'; 
-    case 5
-      WindowType = 'bartlett';
-    case 6
-      WindowType = 'connes';
-    case 7
-      WindowType = 'cosine';      
-  end
+ WindowType = handles.WindowTypeString;
   [~,Window1,Window2] = apodizationWin(handles.Processed.Signal,WindowType,WindowDecay1,WindowDecay2);
 TimeAxis1 = handles.Processed.TimeAxis1(1:length(handles.Processed.TimeAxis1)-str2double(get(handles.ZeroFilling1,'String')));
 TimeAxis2 = handles.Processed.TimeAxis2(1:length(handles.Processed.TimeAxis2)-str2double(get(handles.ZeroFilling2,'String')));
 Window2 = Window2/max(Window2);
-Window2 = Window2;
 Window1 = Window1/max(Window1);
 Window1 = Window1';
 if WindowDecay1>=length(TimeAxis1)

@@ -19,10 +19,10 @@ plot((handles.Data.ReconstructionConvergence),'b','LineWidth',1.5),axis tight,gr
 xlabel('Iterations'),ylabel('Functional'),title('Reconstruction Functional')
 subplot(245)
 handles.Data.PreProcessedSignal(handles.Data.NUSgrid==0) = NaN;
-pcolor(handles.Data.TimeAxis1,handles.Data.TimeAxis1,handles.Data.PreProcessedSignal),shading flat
+pcolor(handles.Data.TimeAxis1,handles.Data.TimeAxis1,real(handles.Data.PreProcessedSignal)),shading flat
 xlabel('t_1 [ns]'),ylabel('t_2 [ns]'),title('NUS Signal')
 subplot(246)
-pcolor(handles.Data.TimeAxis1,handles.Data.TimeAxis2,handles.Data.ReconstructedSignal),shading flat
+pcolor(handles.Data.TimeAxis1,handles.Data.TimeAxis2,real(handles.Data.ReconstructedSignal)),shading flat
 xlabel('t_1 [ns]'),ylabel('t_2 [ns]'),title('Reconstructed Signal')
 
 subplot(2,4,[3 4])

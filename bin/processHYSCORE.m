@@ -40,7 +40,8 @@ if handles.TauSelectionSwitch %no need to repeate pre-processing if data not cha
   %--------------------------------------------------------------------------
     Data.Integral = zeros(size(Data.TauSignals,2),size(Data.TauSignals,3));
     for TauIndex = 1:length(handles.currentTaus)
-      Data.Integral  = Data.Integral  + squeeze(Data.TauSignals(handles.currentIndexes(TauIndex),:,:));
+      CurrentTauIntegral = squeeze(Data.TauSignals(handles.currentIndexes(TauIndex),:,:));
+      Data.Integral  = Data.Integral  + CurrentTauIntegral/max(max(CurrentTauIntegral));
     end
     Data.TimeAxis1 = linspace(0,Data.TimeStep1*size(Data.Integral,1),size(Data.Integral,1));
     Data.TimeAxis2 = linspace(0,Data.TimeStep2*size(Data.Integral,2),size(Data.Integral,2));
@@ -102,7 +103,7 @@ if handles.backgroundCorrectionSwitch
   options.InvertCorrection = get(handles.InvertCorrection,'Value');
   
   set(handles.ProcessingInfo, 'String', 'Status: Correct background'); drawnow;
-  
+   
   if Data.NUSflag
   [Dimension1,Dimension2] = size(Data.Integral);
   for i=1:Dimension1
@@ -125,6 +126,7 @@ if handles.backgroundCorrectionSwitch
     end
     end
   end
+
   %Set background correction icon to check
   set(handles.BackgroundCorrectionWaiting,'visible','off')
   set(handles.BackgroundCorrectionCheck,'visible','on')

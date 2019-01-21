@@ -62,7 +62,7 @@ switch Integration
         RealIntegral = real(AverageEchoFitted);
     ImagIntegral = imag(AverageEchoFitted);
 
-%     Integral = squeeze(sum(abs(AverageEchoFitted),1));
+%     Integral = squeeze(sum((AverageEchoFitted),1));
     RealIntegral = squeeze(sum(abs(RealIntegral),1));
     ImagIntegral  = squeeze(sum(abs(ImagIntegral),1));
     Integral = RealIntegral + 1i*ImagIntegral;
