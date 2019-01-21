@@ -1425,7 +1425,7 @@ end
   drawnow
   
   % update numbers parameter table
-  if (UserCommand~=99) && FitOpts.MethodID~=8
+  if (UserCommand~=99)
     
     % current system set
     hParamTable = getParameterTableHandle;
@@ -2452,23 +2452,30 @@ for i=1:length(Commas)
   if isempty(Nuclei{i})
     Nuclei{i} = Isotopes(2).Nucs;
   end
+  NucleiName =  Nuclei{i};
+  NucleiShort = Nucs(Pos1:Commas(i)-1);
+  IsotopeNumber = NucleiName(1:strfind(NucleiName,NucleiShort)-1);
+  List{i} = sprintf('<HTML>#%i <SUP> %s </SUP> %s </HTML>',i,IsotopeNumber,NucleiShort);
   Pos1 = Commas(i)+1;
-  
-  List{i} = sprintf('#%i %s',i,Nuclei{i});
-  
+
 end
 Isotopes = isotopologues(Nucs(Pos1:end));
 Nuclei{i+1} = Isotopes(1).Nucs;
 if isempty(Nuclei{i})
   Nuclei{i+1} = Isotopes(2).Nucs;
 end
-List{i+1} = sprintf('#%i %s',i+1, Nuclei{i+1});
+  NucleiName =  Nuclei{i+1};
+  NucleiShort = Nucs(Pos1:end);
+  IsotopeNumber = NucleiName(1:strfind(NucleiName,NucleiShort)-1);
+  List{i+1} = sprintf('<HTML>#%i <SUP> %s </SUP> %s </HTML>',i+1,IsotopeNumber,NucleiShort);
 
-[Indexes,Answered] = listdlg('Name',' ','PromptString','Select the atoms to be loaded',...
+[Indexes,Answered] = listdlg('Name',' ','PromptString','Select the nuclei to simulate',...
   'SelectionMode','multiple',...
   'ListString',List);
 
-
+Temp = FitData.Sys0;
+Temp2 = FitData.Vary;
+ID = FitOpts.MethodID;
 
 
 if Answered
@@ -2519,8 +2526,7 @@ nParameters_ = numel(x0_);
 bestx = startx;
 
 ORCASys = Sys;
-Temp = FitData.Sys0;
-Temp2 = FitData.Vary;
+
 
 if strcmp(FitOpts.Scaling, 'none')
   fitspc = FitData.ExpSpec;
@@ -2532,12 +2538,11 @@ end
 FitData.Sys0 = {ORCASys};
 a.A = 1;
 FitData.Vary = {a};
-ID = FitOpts.MethodID;
 FitOpts.MethodID = 8;
 
 funArgs = {fitspc,FitData,FitOpts};  % input args for assess and residuals_
 
-      assess(1,funArgs{:});
+      assess(0,funArgs{:});
 
 FitData.Sys0 = Temp;
 FitData.Vary = Temp2;
@@ -2545,9 +2550,13 @@ FitOpts.MethodID = ID;
 
 close(f)
 
-  catch
+  catch e
+    
     close(f)
-  f = msgbox('Simulaton failed due to errors');
+    FitData.Sys0 = Temp;
+    FitData.Vary = Temp2;
+    FitOpts.MethodID = ID;
+    f = errordlg(sprintf('Simulaton failed due to errors: \n\n %s \n\n ',getReport(e,'extended','hyperlinks','off')),'Error','modal');
 
   end
 
