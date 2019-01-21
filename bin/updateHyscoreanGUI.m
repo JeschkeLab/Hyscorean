@@ -101,7 +101,7 @@ GraphicalSettings = handles.GraphicalSettings;
 if GraphicalSettings.Absolute
   Spectrum = abs(Spectrum);
 elseif GraphicalSettings.Real
-  Spectrum = abs(Spectrum);
+  Spectrum = real(Spectrum);
 elseif GraphicalSettings.Imaginary
   Spectrum = imag(Spectrum);
 end
@@ -133,10 +133,17 @@ end
 %Compute contour levels according to minimal contour level given by user
 Levels=GraphicalSettings.Levels;
 MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
+if MinimalContourLevel~=0
 MaximalContourLevel = max(max(abs(Processed.spectrum)));
 MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
 ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
 ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
+else
+  MaximalContourLevel = max(max(Spectrum));
+  MinimalContourLevel = min(min(Spectrum));
+  ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
+  ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel; 
+end
 
 %If blindspots are to be plotted, superimpose them to the spectrum
 if get(handles.ImposeBlindSpots,'Value')

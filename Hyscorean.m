@@ -1582,8 +1582,8 @@ function MinimalContourLevel_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of MinimalContourLevel as text
 %        str2double(get(hObject,'String')) returns contents of MinimalContourLevel as a double
-if str2double(get(hObject,'String')) <= 0
-  set(hObject,'String',1)
+if str2double(get(hObject,'String')) < 0
+  set(hObject,'String',0)
 end
 if str2double(get(hObject,'String')) >= 100
   set(hObject,'String',90)
