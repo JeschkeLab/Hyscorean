@@ -1151,7 +1151,13 @@ function detachMainContour_Callback(hObject, eventdata, handles)
 % hObject    handle to detachMainContour (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Figure = figure(51002);
+Figure = findobj('Tag','mainContourDetached');
+  if isempty(Figure)
+    Figure = figure('Tag','mainContourDetached','WindowStyle','normal');
+  else
+    figure(Figure);
+    clf(Figure);
+  end
 AxesHandles = copyobj(handles.mainPlot,Figure);
 set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE Spectrum','Units','pixels','Position',[100 100 790 450]);
 set(AxesHandles,'Position',[0.07 0.11 0.9 0.85]);

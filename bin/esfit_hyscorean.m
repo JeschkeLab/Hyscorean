@@ -164,7 +164,7 @@ if ~isempty(Sys0) || ~isempty(Vary)
     
 else
 
-%Load system
+% Load system
 %--------------------------------------------------------------------
 % load([Path2Hyscorean 'bin\DefaultSystemEasySpin'])
 DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
@@ -467,6 +467,14 @@ if FitData.GUI
     close(hObj)
   end
   
+  FitOpts.GraphicalSettings.LineWidth = 1;
+  FitOpts.GraphicalSettings.ContourLevels = 40;
+  FitOpts.GraphicalSettings.ExperimentalSpectrumType = 1;
+  FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'contour';
+  FitOpts.GraphicalSettings.FitSpectraType = 1;
+  FitOpts.GraphicalSettings.FitSpectraTypeString = 'colormap';
+
+
   % main figure
   %------------------------------------------------------------------
   hFig = findobj('Tag','esfitFigure');
@@ -499,7 +507,8 @@ if FitData.GUI
     'Position',[50 480 900 100],'FontSize',8,'Layer','top');
   hsubAx2 = axes('Parent',hFig,'Units','pixels',...
     'Position',[960 50 100 420],'FontSize',8,'Layer','top');
-  
+
+
   %Get experimental data to display
   
   dispData = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
@@ -525,39 +534,67 @@ if FitData.GUI
   plot(hAx,ones(length(FrequencyAxis),1)*0,linspace(0,max(FrequencyAxis),length(FrequencyAxis)),'k-')
   plot(hAx,FrequencyAxis,abs(FrequencyAxis),'k-.')  
   
-ax1 = axes('Parent',hFig,'Units','pixels',...
+  ax1 = axes('Parent',hFig,'Tag','dataaxes_exp','Units','pixels',...
     'Position',[50 50 900 420],'FontSize',8,'Layer','bottom');
-  [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,40),'LineStyle','-');
-%   hold(ax1,'on')
+  
+  switch   FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
+    case 'contour'
+      [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,100,...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+    case 'colormap'
+      [h] = pcolor(ax1,FrequencyAxis,FrequencyAxis,NaNdata);
+    case 'filledcontour'
+      [~,h] = contourf(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none',...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels))
+  end
+  
 
-  %Construct all contour handles
-%   [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
-    [h2] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
-%                 [~,h2] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none','LevelList',linspace(-1,0,50))
-CustomColormap = [0 0.5 0.2; 0 0.45 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2;  0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0.2 0.1 0.2; 0 0.4 0.2; 0 0.5 0.2; 0 0.6 0.2;  0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
-          1 1 1; 
-          1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5; 1 0.45 0.45; 1 0.4 0.4;  1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.1 0.1;   1 0 0;    0.95 0 0;      0.9 0 0; 0.85 0 0;    0.8 0 0;   0.7 0 0;   0.7 0 0;   0.65 0 0;  0.6 0 0];
-      FitData.CustomColormap = CustomColormap;
-      FitData.pcolorplotting = 1;
-%   [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','r','LevelList',linspace(0,1,40));
+%   [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,40),'LineStyle','-');
+  %   hold(ax1,'on')
+  
+  %   [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
+%   [h2] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
+  switch   FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'contour'
+      [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+    case 'colormap'
+      [h2] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
+    case 'filledcontour'
+      [~,h2] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none',...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels))
+  end
+  
+  CustomColormap = [0 0.5 0.2; 0 0.45 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2;  0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0.2 0.1 0.2; 0 0.4 0.2; 0 0.5 0.2; 0 0.6 0.2;  0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
+    1 1 1;
+    1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5; 1 0.45 0.45; 1 0.4 0.4;  1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.1 0.1;   1 0 0;    0.95 0 0;      0.9 0 0; 0.85 0 0;    0.8 0 0;   0.7 0 0;   0.7 0 0;   0.65 0 0;  0.6 0 0];
+  FitData.CustomColormap = CustomColormap;
+  FitData.pcolorplotting = 0;
+  
+  switch   FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'contour'
+      [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+    case 'colormap'
       [h3] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
-%             [~,h3] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none','LevelList',linspace(0,1,50))
-
-% FitData.pcolorplotting = 0;
-shading(hAx,'interp');
-% alphamap(hAx,'vdown')
-set(h2,'FaceAlpha',1)
-set(h3,'FaceAlpha',1)
-
+    case 'filledcontour'
+      [~,h3] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none',...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels))
+  end
+  
+  shading(hAx,'interp');
   linkaxes([ax1,hAx])
   uistack(hAx)
   uistack(ax1,'down')
-colormap(ax1,'gray');
-ax1.Visible = 'off';
-colormap(hAx,CustomColormap)
-
-    set(hAx,'CLim',[-1 1])
-
+  colormap(ax1,'gray');
+  ax1.Visible = 'off';
+  colormap(hAx,CustomColormap)
+  
+  set(hAx,'CLim',[-1 1])
+  
   %Construct all projection inset handles
   NaNdata = ones(1,length(dispData))*NaN;
   hold(hsubAx1,'on')
@@ -571,7 +608,12 @@ colormap(hAx,CustomColormap)
   warning('on','all')
   
   %Set data and tags to contours
-  set(h,'Tag','expdata','XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',dispData);
+    switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
+    case 'colormap'
+      set(h,'Tag','expdata','XData',FrequencyAxis,'YData',FrequencyAxis,'CData',dispData);
+      case 'contour'
+        set(h,'Tag','expdata','XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',dispData);
+    end
   set(h2,'Tag','bestsimdata');
   set(h3,'Tag','currsimdata');
   
@@ -612,12 +654,17 @@ colormap(hAx,CustomColormap)
   %-----------------------------------------------------------------
     x0 = 960; y0 = 380; dx = 80;
     uicontrol('Style','text',...
-    'Position',[x0 y0+145 230 20],...
+    'Position',[x0 y0+125 230 20],...
     'BackgroundColor',get(gcf,'Color'),...
     'FontWeight','bold','String','Display @ field',...
     'HorizontalAl','left');
+    uicontrol('Style','pushbutton',...
+    'Position',[x0 y0+155 100 25],...
+    'BackgroundColor',get(gcf,'Color'),...
+    'String','Graphics',...
+    'HorizontalAl','left','Callback',@SetGraphicsSettings);  
    uicontrol(hFig,'Style','popupmenu',...
-     'Position',[x0 y0+120 100 25],...
+     'Position',[x0 y0+100 100 25],...
     'Tag','ChangeDisplay',...
     'String',AvailableFields,...
     'Value',FitData.CurrentSpectrumDisplay,...
@@ -848,6 +895,11 @@ colormap(hAx,CustomColormap)
     'HorizontalAlignment','right',...
     'BackgroundColor',get(gcf,'Color'),...
     'HorizontalAl','left');
+  IconData = imread(fullfile(Path2Hyscorean,'bin\detach_icon.png'));
+   uicontrol('Style','pushbutton','Tag','detachButton',...
+    'Position',[927 446 22 22],'CData',IconData,...
+    'String','','Enable','on','Callback',@detachButtonCallback,...
+    'Tooltip','Detach current display to new window');
   %-----------------------------------------------------------------
   % Fitset list
   %-----------------------------------------------------------------
@@ -1055,12 +1107,23 @@ if FitData.GUI
   set(hTable,'Data',Data);
   
   if FitOpts.MethodID~=7
-  % Hide current sim plot in data axes
-  set(findobj('Tag','currsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
-  set(findobj('Tag','currsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
-  set(findobj('Tag','currsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    % Hide current sim plot in data axes
+    switch FitOpts.GraphicalSettings.FitSpectraTypeString
+      case 'colormap'
+        set(findobj('Tag','currsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+      case 'contour'
+        set(findobj('Tag','currsimdata'),'ZData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    end
+    
+    set(findobj('Tag','currsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    set(findobj('Tag','currsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   else
-    set(findobj('Tag','bestsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    switch FitOpts.GraphicalSettings.FitSpectraTypeString
+      case 'colormap'
+        set(findobj('Tag','bestsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+      case 'contour'
+        set(findobj('Tag','bestsimdata'),'ZData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    end
     set(findobj('Tag','bestsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
     set(findobj('Tag','bestsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   end
@@ -1345,17 +1408,18 @@ if FitOpts.MethodID<7
   handle = findobj('Tag','currsimdata');
   colormap(handle.Parent,(FitData.CustomColormap))
   
-  if FitData.pcolorplotting
-    if isequal(abs(CurrentBestSpec),abs(CurrentSimSpec))
-      set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
-          set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',NaN*abs(CurrentSimSpec));
-        else
-          set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
-          set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',abs(CurrentSimSpec));
-        end
-  else
-    set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentBestSpec));
-    set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec))
+  switch FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'colormap'
+      if isequal(abs(CurrentBestSpec),abs(CurrentSimSpec))
+        set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
+        set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',NaN*abs(CurrentSimSpec));
+      else
+        set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentBestSpec));
+        set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',abs(CurrentSimSpec));
+      end
+    case 'contour'
+      set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentBestSpec));
+      set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec))
   end
   % update upper projection graph
   Inset = max(CurrentExpSpec,[],1);
@@ -1388,12 +1452,12 @@ if FitOpts.MethodID<7
   end
   
 elseif FitOpts.MethodID==7
-  
-  if FitData.pcolorplotting
-    handle = findobj('Tag','currsimdata');
+      handle = findobj('Tag','currsimdata');
     colormap(handle.Parent,fliplr(FitData.CustomColormap))
-    set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',abs(CurrentSimSpec));
-  else
+  switch FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'colormap'
+      set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',abs(CurrentSimSpec));
+    case 'contour' 
     set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec))
   end
   Temp = abs(CurrentSimSpec);
@@ -1405,12 +1469,13 @@ elseif FitOpts.MethodID==7
   
 else
   
-  if FitData.pcolorplotting
-    handle = findobj('Tag','currsimdata');
+  switch FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'colormap'
+      handle = findobj('Tag','currsimdata');
     ColormapNew = [FitData.CustomColormap(:,2)  FitData.CustomColormap(:,2) FitData.CustomColormap(:,1)];
     colormap(handle.Parent,ColormapNew)
     set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-abs(CurrentSimSpec));
-  else
+    case 'contour' 
     set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentSimSpec))
   end
   Temp = abs(CurrentSimSpec);
@@ -1833,9 +1898,10 @@ if ~isempty(str)
     CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
     CurrentFitSpec = abs(CurrentFitSpec);
     h = findobj('Tag','bestsimdata');
-      if FitData.pcolorplotting
-        set(h,'CData',-abs(CurrentFitSpec));
-      else
+  switch FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'colormap'
+      set(h,'CData',-abs(CurrentFitSpec));
+    case 'contour' 
         set(h,'ZData',-abs(CurrentFitSpec));
       end
     h = findobj('Tag','bestsimdata_projection1');
@@ -1850,9 +1916,10 @@ if ~isempty(str)
   end
 else
   h = findobj('Tag','bestsimdata');
-  if FitData.pcolorplotting
-  set(h,'CData',get(h,'CData')*NaN);
-  else
+  switch FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'colormap'
+      set(h,'CData',get(h,'CData')*NaN);
+    case 'contour'
     set(h,'ZData',get(h,'ZData')*NaN);
   end
   h = findobj('Tag','bestsimdata_projection1');
@@ -2404,6 +2471,44 @@ set(HObj.Parent,'YLim',[0 FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim
 return
 %==========================================================================
 
+
+%==========================================================================
+function detachButtonCallback(object,src,event)
+
+  hFig = findobj('Tag','esfitDetached');
+  if isempty(hFig)
+    hFig = figure('Tag','esfitDetached','WindowStyle','normal');
+  else
+    figure(hFig);
+    clf(hFig);
+  end
+  
+  sz = [1080 600]; % figure size
+  screensize = get(0,'ScreenSize');
+  xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
+  ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
+  set(hFig,'position',[xpos, ypos, sz(1), sz(2)],'units','pixels');
+
+  
+  experimentalHandle = findobj('Tag','expdata');
+  experimentalHandle = experimentalHandle.Parent;
+  mainHandle = findobj('Tag','bestsimdata');
+  mainHandle = mainHandle.Parent;
+  inset1Handle = findobj('Tag','expdata_projection1');
+  inset1Handle = inset1Handle.Parent;
+  inset2Handle = findobj('Tag','bestsimdata_projection2');
+  inset2Handle = inset2Handle.Parent;
+
+  copyobj(mainHandle,hFig);
+      copyobj(experimentalHandle,hFig);
+  copyobj(inset1Handle,hFig);
+  copyobj(inset2Handle,hFig);
+
+set(hFig,'NumberTitle','off','Name','Hyscorean: HYSCORE Fit');
+
+return
+%==========================================================================
+
 %==========================================================================
 function ProductRuleCallback(object,src,event)
 
@@ -2562,5 +2667,106 @@ close(f)
 
 end
 
+return
+%==========================================================================
+
+%==========================================================================
+function SetGraphicsSettings(object,src,event)
+
+global FitOpts FitData
+
+warning('off','all')
+
+  FitOpts.GraphicalSettings = Hyscorean_esfit_GraphicalSettings(FitOpts.GraphicalSettings);
+  switch FitOpts.GraphicalSettings.ExperimentalSpectrumType
+    case 1
+      FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'contour';
+    case 2 
+      FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'colormap';
+    case 3
+      FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'filledcontour';
+  end
+  switch FitOpts.GraphicalSettings.FitSpectraType
+    case 1
+      FitOpts.GraphicalSettings.FitSpectraTypeString = 'colormap';
+    case 2 
+      FitOpts.GraphicalSettings.FitSpectraTypeString = 'contour';
+    case 3
+      FitOpts.GraphicalSettings.FitSpectraTypeString = 'filledcontour';
+  end
+
+  
+  h = findobj('Tag','expdata');
+ 
+    Parent = findobj('Tag','dataaxes');
+
+  
+  h3 = Parent.Children(1);
+  h2 = Parent.Children(2);
+
+  xlims = h.Parent.XLim;
+  ylims = h.Parent.YLim;
+  ParentExp = h.Parent;
+  FrequencyAxis = h.XData;
+  delete(h)
+  switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
+    case 'colormap'
+      [~,h] = contourf(ParentExp,FrequencyAxis,FrequencyAxis,abs(-FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}),...
+        'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineStyle','none');
+      
+    case 'contour'
+      [~,h] = contour(ParentExp,FrequencyAxis,FrequencyAxis,abs(FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}),...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+  end
+  set(ParentExp,'XLim',xlims,'YLim',ylims);
+  set(h,'Tag','expdata');
+  linkaxes([Parent,ParentExp])
+  ParentExp.Visible = 'off';
+  if isprop(h3,'CData')
+    ColorData = h3.CData;
+  else
+    ColorData = h3.ZData;
+  end
+  delete(h3)
+  
+  switch   FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'contour'
+      [~,h3] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
+        'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+    case 'colormap'
+      [h3] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
+    case 'filledcontour'
+      [~,h3] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData,'LineStyle','none',...
+        'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels));
+  end
+  set(Parent,'XLim',xlims,'YLim',ylims);
+  set(h3,'Tag','bestsimdata');
+  
+  if isprop(h2,'CData')
+    ColorData = h2.CData; 
+  else
+    ColorData = h2.ZData;
+  end
+    delete(h2)
+  switch   FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'contour'
+      [~,h2] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+    case 'colormap'
+      [h2] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
+    case 'filledcontour'
+      [~,h2] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData,'LineStyle','none',...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels));
+  end
+    shading(Parent,'interp')
+  set(h2,'Tag','currsimdata');
+  
+  warning('on','all')
+
+  
 return
 %==========================================================================
