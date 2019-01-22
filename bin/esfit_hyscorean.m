@@ -2711,10 +2711,8 @@ warning('off','all')
   delete(h)
   switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
     case 'colormap'
-      [~,h] = contourf(ParentExp,FrequencyAxis,FrequencyAxis,abs(-FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}),...
-        'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels),...
-        'LineStyle','none');
-      
+      h = pcolor(ParentExp,FrequencyAxis,FrequencyAxis,-abs(FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}));
+shading(ParentExp,'interp')
     case 'contour'
       [~,h] = contour(ParentExp,FrequencyAxis,FrequencyAxis,abs(FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}),...
         'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
@@ -2733,9 +2731,15 @@ warning('off','all')
   
   switch   FitOpts.GraphicalSettings.FitSpectraTypeString
     case 'contour'
-      [~,h3] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
+      if isempty(find(ColorData<0))
+        [~,h3] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
+        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+      else
+        [~,h3] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
         'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels),...
         'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+      end
     case 'colormap'
       [h3] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
     case 'filledcontour'
