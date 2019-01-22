@@ -1400,6 +1400,7 @@ if FitData.GUI%&& ((UserCommand~=99) )
     FrequencyAxis = linspace(-1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),length(ExpSpec{FitData.CurrentSpectrumDisplay}));
     CurrentExpSpec = ExpSpec{FitData.CurrentSpectrumDisplay};
     CurrentSimSpec = simspec{FitData.CurrentSpectrumDisplay};
+    FitData.CurrentSimSpec = simspec;
     CurrentBestSpec = FitData.bestspec{FitData.CurrentSpectrumDisplay};
 
 if FitOpts.MethodID<7
@@ -1978,24 +1979,45 @@ while true
     end
   end
 %   StringForEval = char(strjoin(string(SpinSystemInput{1})'));
-  StringForEval = SpinSystemInput{1};
+StringForEval = SpinSystemInput{1};
+try
   for i=1:size(StringForEval,1)
-    eval(StringForEval(i,:))
+    eval(StringForEval(i,:));
   end
-%   eval(StringForEval)
-  
-  %If Vary not defined then warn and repeat input
-  if ~exist('Vary','var')
-    w  = warndlg('The Vary structure needs to have at least one valid field.','Vary structure not found','modal');
-    waitfor(w)
-  end
-  %If Sys not defined then warn and repeat input
-  if ~exist('Sys','var')
-    w  = warndlg('The Sys structure needs to be defined properly.','Sys structure not found','modal');
-    waitfor(w)
-  end
+  CompilerFailed = false;
+catch CompilerError
+  CompilerFailed = true;
+end
+if CompilerFailed
+  w = errordlg(sprintf('Error found in the definition: \n\n %s \n\n Please check your input. ',CompilerError.message),'Error','modal');
+  waitfor(w)
+else
+    %If Vary not defined then warn and repeat input
+    if ~exist('Vary','var')
+      w  = errordlg('The Vary structure needs to have at least one valid field.','Vary structure not found','modal');
+      waitfor(w)
+    end
+    %If Sys not defined then warn and repeat input
+    if ~exist('Sys','var')
+      w  = errordlg('The Sys structure needs to be defined properly.','Sys structure not found','modal');
+      waitfor(w)
+    end
+    CurrentPath = cd;
+    EasySpinPath = which('easyspin');
+    EasySpinPath = EasySpinPath(1:end-10);
+    cd(fullfile(EasySpinPath,'private'))
+    [~,SpinSystemError] = validatespinsys(Sys);
+    cd(CurrentPath)
+    
+    if ~isempty(SpinSystemError)
+      w  = errordlg(sprintf('EasySpin has found an error in the definition: \n\n %s \n\n Please check your input.',SpinSystemError),'Spin system error','modal');
+      waitfor(w)
+    end
+    
+end
+
   %If the two critical variables are given, then proceed
-  if exist('Sys','var') && exist('Vary','var')
+  if exist('Sys','var') && exist('Vary','var') && isempty(SpinSystemError) && ~CompilerFailed
     break
   end  
 end
@@ -2146,15 +2168,18 @@ set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
 % update lower projection graph
   Inset = max(CurrentExpSpec,[],2);
 set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
-if isfield(FitData,'bestspec')
   CurrentBestSpec = abs(FitData.bestspec{FitData.CurrentSpectrumDisplay});
   
   if FitOpts.MethodID >= 7
     
-     CurrentFitSpec = FitData.currFitSet.fitSpec{FitData.CurrentSpectrumDisplay};
+     CurrentFitSpec = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
      CurrentFitSpec = abs(CurrentFitSpec);
-  h = findobj('Tag','currsimdata');
-  set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',abs(CurrentFitSpec)/max(max(abs(CurrentFitSpec))));
+       h = findobj('Tag','currsimdata');
+     if FitOpts.MethodID==7
+       set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
+     else
+       set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
+     end
   h = findobj('Tag','currsimdata_projection1');
   Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
   set(h,'YData',Inset);
@@ -2173,7 +2198,7 @@ if isfield(FitData,'bestspec')
   end
   
 
-end
+
 if isfield(FitData,'FitSets')
   h = findobj('Tag','SetListBox');
   idx = get(h,'Value');
@@ -2668,7 +2693,7 @@ funArgs = {fitspc,FitData,FitOpts};  % input args for assess and residuals_
 
 FitData.Sys0 = Temp;
 FitData.Vary = Temp2;
-FitOpts.MethodID = ID;
+% FitOpts.MethodID = ID;
 
 close(f)
 
@@ -2677,7 +2702,7 @@ close(f)
     close(f)
     FitData.Sys0 = Temp;
     FitData.Vary = Temp2;
-    FitOpts.MethodID = ID;
+%     FitOpts.MethodID = ID;
     f = errordlg(sprintf('Simulaton failed due to errors: \n\n %s \n\n ',getReport(e,'extended','hyperlinks','off')),'Error','modal');
 
   end
@@ -2711,6 +2736,8 @@ warning('off','all')
     case 3
       FitOpts.GraphicalSettings.FitSpectraTypeString = 'filledcontour';
   end
+
+    f = msgbox('Rendering new graphical settings...');
 
   
   h = findobj('Tag','expdata');
@@ -2787,7 +2814,9 @@ shading(ParentExp,'interp')
   set(h2,'Tag','currsimdata');
   
   warning('on','all')
+drawnow
 
+  close(f)
   
 return
 %==========================================================================
