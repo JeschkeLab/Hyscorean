@@ -65,8 +65,8 @@ for Index = 1:numSpec
     Opt{Index}.WindowDecay1 = DataForFitting.WindowDecay;
     Opt{Index}.WindowDecay2 = DataForFitting.WindowDecay;
   else
-    Opt{Index}.WindowDecay1 = DataForFitting.WindowDecay1;
-    Opt{Index}.WindowDecay2 = DataForFitting.WindowDecay2;
+    Opt{Index}.WindowDecay1 = DataForFitting.WindowLength1;
+    Opt{Index}.WindowDecay2 = DataForFitting.WindowLength2;
   end
   Opt{Index}.L2GParameters = DataForFitting.L2GParameters;
   Opt{Index}.Lorentz2GaussCheck = DataForFitting.Lorentz2GaussCheck;

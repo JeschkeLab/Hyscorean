@@ -6,7 +6,11 @@ function HyscoreanSignalPlot(handles,Processed)
 % processed throughout Hyscorean via GUI slider.  
 % This function is responsible for the update and functionality of the
 % signal plot in the Hyscorean main-GUI, as well as for the detached signal
-% plot sub-GUI.
+% plot GUI.
+%
+% Allows the user to switch between signal at different stages of
+% processing as well as its real and imaginary parts and the apodization
+% window.
 %
 % Luis Fabregas, Hyscorean 2018
 
@@ -136,11 +140,8 @@ if get(handles.NonCorrectedTrace,'value')
     Mean = 0;
   end
   SignalTrace = SignalTrace - Mean;
-        if PlotImaginarySignal
-          SignalTrace = SignalTrace/max(max(imag(handles.Data.NonCorrectedIntegral)));
-        else
-          SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
-        end
+          SignalTrace = SignalTrace/max(max(abs(handles.Data.NonCorrectedIntegral)));
+
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(SignalTrace));
@@ -149,8 +150,8 @@ if get(handles.NonCorrectedTrace,'value')
   
   %Rescale and zero-adjust the background trace
   Background1Trace = Background1Trace - Mean;
-  Background1Trace = Background1Trace/max(max(real(handles.Data.NonCorrectedIntegral)));
-  
+    Background1Trace = Background1Trace/max(max(abs(handles.Data.NonCorrectedIntegral)));
+
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(Background1Trace));
   plot(handles.signal_t1,Axis,Background1Trace,'Color',[0.2 0.2 0.9],'LineStyle','--')
@@ -171,21 +172,34 @@ if PlotSecondCorrection
   
   %Check if the correction order has been inverted
   if get(handles.InvertCorrection,'Value')
-    SignalTrace = real(handles.Data.FirstBackgroundCorrected(SliderPosition,:));
-    Background2Trace = real(handles.Data.Background2(:,SliderPosition));
+    if PlotImaginarySignal
+      SignalTrace = imag(handles.Data.FirstBackgroundCorrected(SliderPosition,:));
+      Background2Trace = imag(handles.Data.Background2(:,SliderPosition));
+    else
+      SignalTrace = real(handles.Data.FirstBackgroundCorrected(SliderPosition,:));
+      Background2Trace = real(handles.Data.Background2(:,SliderPosition));
+    end
   else
-    SignalTrace = real(handles.Data.FirstBackgroundCorrected(:,SliderPosition));
-    Background2Trace = real(handles.Data.Background2(SliderPosition,:));
+    if PlotImaginarySignal
+      SignalTrace = imag(handles.Data.FirstBackgroundCorrected(:,SliderPosition));
+      Background2Trace = imag(handles.Data.Background2(SliderPosition,:));
+    else
+      SignalTrace = real(handles.Data.FirstBackgroundCorrected(:,SliderPosition));
+      Background2Trace = real(handles.Data.Background2(SliderPosition,:));
+    end
   end
-  
-  Mean = mean(real(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
+  if PlotImaginarySignal
+    Mean = mean(imag(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
+  else
+    Mean = mean(real(handles.Data.FirstBackgroundCorrected(end,:)),'omitnan');
+  end
   if isnan(Mean)
     Mean = 0;
   end
   
   %Rescale and zero-adjust the signal trace
   SignalTrace = SignalTrace - Mean;
-  SignalTrace = SignalTrace/max(max(real(handles.Data.FirstBackgroundCorrected)));
+  SignalTrace = SignalTrace/max(max(abs(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(SignalTrace));
@@ -194,7 +208,7 @@ if PlotSecondCorrection
   
   %Rescale and zero-adjust the background trace
   Background2Trace = Background2Trace - Mean;
-  Background2Trace = Background2Trace/max(max(real(handles.Data.FirstBackgroundCorrected)));
+  Background2Trace = Background2Trace/max(max(abs(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(Background2Trace));
@@ -217,15 +231,29 @@ if get(handles.PreProcessedTrace,'value')
   
   %Switch to change between t1 and t2 traces
   if get(handles.ChangeSignalPlotDimension,'Value')
-    PreProcessedSignalTrace = real(handles.Data.PreProcessedSignal(SliderPosition,:));
+    if PlotImaginarySignal
+      PreProcessedSignalTrace = imag(handles.Data.PreProcessedSignal(SliderPosition,:));
+    else
+      PreProcessedSignalTrace = real(handles.Data.PreProcessedSignal(SliderPosition,:));
+    end
     PreProcessedSignalTrace(NUSgrid(SliderPosition,:)==0) = NaN;
   else
-    PreProcessedSignalTrace = real(handles.Data.PreProcessedSignal(:,SliderPosition));
+    if PlotImaginarySignal
+      PreProcessedSignalTrace = imag(handles.Data.PreProcessedSignal(:,SliderPosition));
+    else
+      PreProcessedSignalTrace = real(handles.Data.PreProcessedSignal(:,SliderPosition));
+    end
     PreProcessedSignalTrace(NUSgrid(:,SliderPosition)==0) = NaN;
   end
   
+      if PlotImaginarySignal
+        Mean = mean(imag(handles.Data.PreProcessedSignal(end,:)),'omitnan');
+      else
+        Mean = mean(real(handles.Data.PreProcessedSignal(end,:)),'omitnan');
+      end
+  
   %Rescale and zero-adjust the trace
-  PreProcessedSignalTrace = PreProcessedSignalTrace - mean(real(handles.Data.PreProcessedSignal(end,:)),'omitnan');
+  PreProcessedSignalTrace = PreProcessedSignalTrace - Mean;
   PreProcessedSignalTrace = PreProcessedSignalTrace/max(max(abs(handles.Data.PreProcessedSignal)));
   
   %Get axis for plot

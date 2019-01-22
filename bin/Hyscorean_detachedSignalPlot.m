@@ -22,7 +22,7 @@ function varargout = Hyscorean_detachedSignalPlot(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_detachedSignalPlot
 
-% Last Modified by GUIDE v2.5 09-Jan-2019 11:06:28
+% Last Modified by GUIDE v2.5 22-Jan-2019 08:29:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -370,3 +370,44 @@ function WindowLength2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in ImaginaryButton.
+function ImaginaryButton_Callback(hObject, eventdata, handles)
+% hObject    handle to ImaginaryButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ImaginaryButton
+if get(handles.RealButton,'value')
+  set(handles.RealButton,'Value',0)
+else
+  set(handles.RealButton,'Value',1)
+end
+if get(hObject,'value')
+  handles.PlotImaginarySignal = true;
+else
+  handles.PlotImaginarySignal = false;
+end
+HyscoreanSignalPlot(handles,handles.Processed)
+guidata(hObject, handles);
+
+% --- Executes on button press in RealButton.
+function RealButton_Callback(hObject, eventdata, handles)
+% hObject    handle to RealButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RealButton
+if get(handles.ImaginaryButton,'value')
+  set(handles.ImaginaryButton,'Value',0)
+else
+  set(handles.ImaginaryButton,'Value',1)
+end
+if get(hObject,'value')
+  handles.PlotImaginarySignal = false;
+else
+  handles.PlotImaginarySignal = true;
+end
+HyscoreanSignalPlot(handles,handles.Processed)
+guidata(hObject, handles);

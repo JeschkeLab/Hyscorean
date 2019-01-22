@@ -95,7 +95,7 @@ YupperLimit = XupperLimit;
 YlowerLimit = 0;
 
 %Load current graphical settings
-GraphicalSettings = handles.GraphicalSettings;
+GraphicalSettings = getpref('hyscorean','graphicalsettings');
 
 %Type of spectrum
 if GraphicalSettings.Absolute
@@ -135,7 +135,12 @@ Levels=GraphicalSettings.Levels;
 MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
 if MinimalContourLevel~=0
 MaximalContourLevel = max(max(abs(Processed.spectrum)));
+if GraphicalSettings.Absolute
 MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
+else
+  MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
+
+end
 ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
 ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
 else
