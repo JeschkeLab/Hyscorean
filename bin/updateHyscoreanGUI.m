@@ -188,8 +188,9 @@ grid(handles.mainPlot,'on')
 set(handles.mainPlot,'ylim',[YlowerLimit YupperLimit],'xlim',[XlowerLimit XupperLimit])
 xlabel(handles.mainPlot,'\nu_1 [MHz]');
 ylabel(handles.mainPlot,'\nu_2 [MHz]');
-curerntXTicks = xticks(handles.mainPlot);
-yticks(handles.mainPlot,curerntXTicks(curerntXTicks>=0))
+currentXTicks = xticks(handles.mainPlot);
+yticks(handles.mainPlot,currentXTicks(currentXTicks>=0))
+set(handles.mainPlot,'yticklabel',currentXTicks(currentXTicks>=0),'xticklabel',currentXTicks)
 
 %If auxiliare lines have been added (and not cleared) add them again
 if isfield(handles,'AddedLines')
