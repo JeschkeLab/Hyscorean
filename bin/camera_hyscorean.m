@@ -149,6 +149,10 @@ for OuterIteration = 1 : MaxOutIter
     [CurrentFunctionalValue, SpectralGradient] = camera_functional(ReconstructedSpectrum, CurrentBackgroundParameter);
     FunctionalValues = [FunctionalValues; CurrentFunctionalValue];
     
+    % Should some point become NaN, set it to zero otherwise ifft2 will set
+    % everything to NaN leadin to a crash later
+    SpectralGradient(isnan(SpectralGradient)) = 0;
+    
     % Compute and store the time-domain gradient.
     Gradient = OutputDimension .* ifft2(SpectralGradient);
     NumberOfOperations(end) =  NumberOfOperations +1;
