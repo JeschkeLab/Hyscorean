@@ -1868,6 +1868,21 @@ function EasyspinFitButton_Callback(hObject, eventdata, handles)
 %Fill known experimental parameters
 Exp.Sequence = 'HYSCORE';
 if isfield(handles.Data,'BrukerParameters')
+    BrukerParameters = handles.Data.BrukerParameters;
+  %Extract pulse lengths
+  PulseSpelText = BrukerParameters.PlsSPELGlbTxt;
+  Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
+  Pulse180DefinitionIndex = strfind(PulseSpelText,'p1   = ');
+  Shift = 7;
+  while ~isspace(PulseSpelText(Pulse90DefinitionIndex + Shift))
+    Pulse90String(Shift - 2) =  PulseSpelText(Pulse90DefinitionIndex + Shift);
+    Shift = Shift + 1;
+  end
+  Shift = 7;
+  while ~isspace(PulseSpelText(Pulse180DefinitionIndex + Shift))
+    Pulse180String(Shift - 2) =  PulseSpelText(Pulse180DefinitionIndex + Shift);
+    Shift = Shift + 1;
+  end
   Exp.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6)); %mT
   Exp.mwFreq = handles.Data.BrukerParameters.MWFQ/1e9;
   FirstPulseLength = str2double(Pulse90String)/1000;
