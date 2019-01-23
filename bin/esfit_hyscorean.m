@@ -1211,8 +1211,17 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   %Use same apodization window as experimental data
   tdx = apodizationWin(tdx,FitData.SimOpt{Index}.WindowType,FitData.SimOpt{Index}.WindowDecay1,FitData.SimOpt{Index}.WindowDecay2);
   %Fourier transform with same zerofilling as experimental data
-  BestSpec{Index} = fftshift(fft2(tdx,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints));
-  
+  Spectrum = fftshift(fft2(tdx,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints));
+  switch FitData.SimOpt{Index}.Symmetrization
+    case 'Diagonal'
+      Spectrum = (Spectrum.*Spectrum').^0.5;
+    case 'Anti-Diagonal'
+      Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
+    case 'Both'
+      Spectrum = (Spectrum.*Spectrum').^0.5;
+      Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
+  end
+   BestSpec{Index} = Spectrum;
   % (SimSystems{s}.weight is taken into account in the simulation function)
   % BestSpec = out{FitData.OutArgument}; % pick last output argument
   BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
@@ -1335,7 +1344,7 @@ rmsd = 0;
 simspec = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
 nOutArguments = FitData.nOutArguments;
-SImFcnHandel = FitData.SimFcn;
+SimFcnHandel = FitData.SimFcn;
 ScalingOption = FitOpt.Scaling;
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
@@ -1365,8 +1374,17 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   %Use same apodization window as experimental data
   tdx = apodizationWin(tdx,SimOpt{Index}.WindowType,SimOpt{Index}.WindowDecay1,SimOpt{Index}.WindowDecay2);
   %Fourier transform with same zerofilling as experimental data
-  simspec{Index} = fftshift(fft2(tdx,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints));
-  
+  Spectrum = fftshift(fft2(tdx,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints));
+  switch SimOpt{Index}.Symmetrization
+    case 'Diagonal'
+      Spectrum = (Spectrum.*Spectrum').^0.5;
+    case 'Anti-Diagonal'
+      Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
+    case 'Both'
+      Spectrum = (Spectrum.*Spectrum').^0.5;
+      Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
+  end
+   simspec{Index} = Spectrum;
   
   % (SimSystems{s}.weight is taken into account in the simulation function)
   % simspec = out{FitData.OutArgument}; % pick last output argument
@@ -2545,6 +2563,13 @@ function detachButtonCallback(object,src,event)
       copyobj(experimentalHandle,hFig);
   copyobj(inset1Handle,hFig);
   copyobj(inset2Handle,hFig);
+  
+  for i=1:length(hFig.Children)
+    for j=1:length(hFig.Children(i).Children)
+      hFig.Children(i).Children(j).Tag = '';
+    end
+  end
+
 
 set(hFig,'NumberTitle','off','Name','Hyscorean: HYSCORE Fit');
 
