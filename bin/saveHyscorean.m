@@ -258,10 +258,17 @@ DataForFitting.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'Value');
 DataForFitting.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
 DataForFitting.BackgroundStart2 =round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex2),0);
 if isfield(handles.Data,'BrukerParameters')
-  DataForFitting.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6)); %mT
+  DataForFitting.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6));
+  DataForFitting.mwFreq = handles.Data.BrukerParameters.MWFQ/1e9;
+  FirstPulseLength = str2double(Pulse90String)/1000;
 elseif isfield(handles.Data,'AWG_Parameters')
   DataForFitting.Field =  0.1*handles.Data.AWG_Parameters.B;%mT
+  DataForFitting.mwFreq = handles.Data.AWG_Parameters.LO + handles.Data.AWG_Parameters.nu_obs;
+  FirstPulseLength = handles.Data.AWG_Parameters.events{1}.pulsedef.tp/1000;
 end
+DataForFitting.ExciteWidth = 1/FirstPulseLength;
+
+
 DataForFitting.nPoints = length(handles.Data.PreProcessedSignal);
 DataForFitting.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 DataForFitting.FreqLim = str2double(get(handles.XUpperLimit,'string'));
@@ -272,7 +279,7 @@ DataForFitting.L2GParameters.tauFactor2 = str2double(get(handles.L2G_tau2,'strin
 DataForFitting.L2GParameters.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
 DataForFitting.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
 DataForFitting.L2GParameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
-
+DataForFitting.Symmetrization = handles.SymmetrizationString;
 
 %Send settings structure to base workspace
 assignin('base', 'DataForFitting', DataForFitting);

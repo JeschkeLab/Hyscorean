@@ -54,7 +54,12 @@ for Index = 1:numSpec
   Exp{Index}.tau = DataForFitting.TauValues;
   Exp{Index}.dt = DataForFitting.TimeStep1;
   Exp{Index}.nPoints = DataForFitting.nPoints;
-  
+  if isfield(DataForFitting,'ExciteWidth')
+    Exp{Index}.ExciteWidth = DataForFitting.ExciteWidth;
+  end
+  if isfield(DataForFitting,'mwFreq')
+    Exp{Index}.mwFreq = DataForFitting.mwFreq;
+  end
   %Fill known optional parameters
   Opt{Index}.nKnots = 181;
   Opt{Index}.ZeroFillFactor = DataForFitting.ZeroFillFactor;

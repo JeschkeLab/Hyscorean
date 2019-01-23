@@ -1869,9 +1869,16 @@ function EasyspinFitButton_Callback(hObject, eventdata, handles)
 Exp.Sequence = 'HYSCORE';
 if isfield(handles.Data,'BrukerParameters')
   Exp.Field = 0.1*str2double(handles.Data.BrukerParameters.CenterField(1:6)); %mT
+  Exp.mwFreq = handles.Data.BrukerParameters.MWFQ/1e9;
+  FirstPulseLength = str2double(Pulse90String)/1000;
 elseif isfield(handles.Data,'AWG_Parameters')
   Exp.Field =  0.1*handles.Data.AWG_Parameters.B;
+  Exp.mwFreq = handles.Data.AWG_Parameters.LO + handles.Data.AWG_Parameters.nu_obs;
+  FirstPulseLength = handles.Data.AWG_Parameters.events{1}.pulsedef.tp/1000;
 end
+% Exp.ExciteWidth = 1e6; %lage value to avoid orientation selection
+Exp.ExciteWidth = 1/FirstPulseLength;
+
 Offset = str2double(get(handles.FieldOffset,'string'));
 Exp.Field = Exp.Field + 0.1*Offset;
 Exp.tau = handles.Data.TauValues/1000;
@@ -1900,6 +1907,7 @@ Opt.L2GParameters.sigmaFactor2 = str2double(get(handles.L2G_sigma2,'string'));
 Opt.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
 Opt.L2GParameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
 Opt.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'value');
+Opt.Symmetrization = handles.SymmetrizationString;
 
 esfit_hyscorean('saffron',abs(handles.Processed.spectrum),[],[],Exp,Opt)
 
