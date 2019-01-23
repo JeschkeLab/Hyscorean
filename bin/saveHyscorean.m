@@ -132,8 +132,13 @@ if isfield(handles.Data,'BrukerParameters')
   reportdata.ShotsPerLoop = BrukerParameters.ShotsPLoop;
   reportdata.NbScansDone = BrukerParameters.NbScansDone;
   reportdata.CenterField = str2double(BrukerParameters.CenterField(1:strfind(BrukerParameters.CenterField,' ')));
-  reportdata.XDimension = BrukerParameters.XPTS;
-  reportdata.YDimension = BrukerParameters.YPTS;
+  if handles.Data.NUSflag
+    reportdata.XDimension = handles.Data.NUS.Dimension1;
+    reportdata.YDimension = handles.Data.NUS.Dimension2;
+  else
+    reportdata.XDimension = BrukerParameters.XPTS;
+    reportdata.YDimension = BrukerParameters.YPTS;
+  end
   reportdata.VideoGain = str2double(BrukerParameters.VideoGain(1:strfind(BrukerParameters.VideoGain,' ')));
   reportdata.VideoBandwidth = str2double(BrukerParameters.VideoBW(1:strfind(BrukerParameters.VideoBW,' ')));
   reportdata.NUSflag = false;
