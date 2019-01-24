@@ -21,10 +21,13 @@ set(handles.ZeroFilling1,'string',Settings.zerofilling1)
 set(handles.MaxEntBackgroundParameter,'string',Settings.MaxEntBackgroundParameter)
 set(handles.MaxEntLagrangianMultiplier,'string',Settings.MaxEntLagrangianMultiplier)
 set(handles.WindowType,'value',Settings.WindowType)
+try
 set(handles.WindowLength1,'string',Settings.WindowDecay1);
 set(handles.WindowLength2,'string',Settings.WindowDecay2);
-set(handles.WindowType,'value',Settings.WindowType)
 set(handles.Symmetrization_ListBox,'value',Settings.Symmetrization);
+catch
+end
+set(handles.WindowType,'value',Settings.WindowType)
 set(handles.BackgroundParameter1,'string',Settings.BackgroundParameter1);
 set(handles.BackgroundParameter2,'string',Settings.BackgroundParameter2);
 set(handles.Lorentz2GaussCheck,'value',Settings.Lorentz2GaussCheck);
@@ -32,7 +35,7 @@ set(handles.BackgroundStart1,'string',Settings.BackgroundStart1);
 set(handles.BackgroundStart2,'string',Settings.BackgroundStart2);
 set(handles.MinimalContourLevel,'string',Settings.MinimalContourLevel);
 set(handles.XUpperLimit,'string',Settings.XUpperLimit);
-get(handles.FieldOffset,'string',Settings.FieldOffset);
+set(handles.FieldOffset,'string',Settings.FieldOffset);
 
 try %Try because if not the exact same file is loaded, value of list may exceed current one
 set(handles.MultiTauDimensions,'value',Settings.MultiTauDimension);
