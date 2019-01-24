@@ -46,7 +46,6 @@ set(handles.ZeroTimeTruncation,'Value',Settings.ZeroTimeTruncation)
 set(handles.BackgroundMethod2,'Value',Settings.BackgroundMethod2);
 set(handles.BackgroundMethod1,'Value',Settings.BackgroundMethod1);
 set(handles.InvertCorrection,'Value',Settings.InvertCorrection)
-set(handles.SavitzkyFilter,'Value',Settings.SavitzkyGolayFilter)
 set(handles.ReconstructionAlgorithm,'Value',Settings.ReconstructionAlgorithm)
   
 end
