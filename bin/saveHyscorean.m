@@ -296,7 +296,6 @@ while true
     break
   end
   CopyIndex = CopyIndex + 1;
-  CrushFlag = true;
   SaveName = sprintf('%s_%s_DataForFitting_%i.mat',Date,Identifier,CopyIndex);
 end
 save(fullfile(FullPath,SaveName),'DataForFitting');
