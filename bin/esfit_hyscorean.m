@@ -1,45 +1,55 @@
-% esfit   least-squares fitting for EPR spectral simulations
-%
-%   esfit(simfunc,expspc,Sys0,Vary,Exp)
-%   esfit(simfunc,expspc,Sys0,Vary,Exp,SimOpt)
-%   esfit(simfunc,expspc,Sys0,Vary,Exp,SimOpt,FitOpt)
-%   bestsys = esfit(...)
-%   [bestsys,bestspc] = esfit(...)
-%
-%     simfunc     simulation function name ('pepper', 'garlic', 'salt', ...
-%                   'chili', or custom function), or function handle
-%     expspc      experimental spectrum, a vector of data points
-%     Sys0        starting values for spin system parameters
-%     Vary        allowed variation of parameters
-%     Exp         experimental parameter, for simulation function
-%     SimOpt      options for the simulation algorithms
-%     FitOpt      options for the fitting algorithms
-%        Method   string containing kewords for
-%          -algorithm: 'simplex','levmar','montecarlo','genetic','grid',
-%                      'swarm'
-%          -target function: 'fcn', 'int', 'dint', 'diff', 'fft'
-%        Scaling  string with scaling method keyword
-%          'maxabs' (default), 'minmax', 'lsq', 'lsq0','lsq1','lsq2','none'
-%        OutArg   two numbers [nOut iOut], where nOut is the number of
-%                 outputs of the simulation function and iOut is the index
-%                 of the output argument to use for fitting
-
 function varargout = esfit_hyscorean(SimFunctionName,ExpSpec,Sys0,Vary,Exp,SimOpt,FitOpt)
+%------------------------------------------------------------------------
+% Hyscorean Fitting Module
+%------------------------------------------------------------------------
+% This function is responsible for the generation and execution of the
+% fitting module of Hyscorean. This module employs EasySpin for fitting the
+% spectra processed via Hyscorean. This function allows the fitting of
+% several HYSCORE spectra at the same time e.g. at different field
+% positions. The spectra are simulated via the saffron function and then
+% processed by the same functions employed by Hyscorean during the
+% processing. 
+% (See the Hyscorean manual for further details) 
+%------------------------------------------------------------------------
+% This module can only be executed if a valid EasySpin installation is
+% present. 
+%------------------------------------------------------------------------
+% Adapted from esfit(EasySpin) by Stoll et al.
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%------------------------------------------------------------------------
 
-Path2Hyscorean = which('Hyscorean');
-Path2Hyscorean = Path2Hyscorean(1:end-11);
+%Check that the free software license has been accepted
+if ispref('hyscorean','LGPL_license')
+    if ~getpref('hyscorean','LGPL_license')
+        w  = warndlg('Hyscorean''s GNU LGPL 3.0 license agreement not accepted. Please run setup_hyscorean again and accept the license agreemen.','Warning','modal');
+        waitfor(w)
+        return
+    end
+else
+    w  = warndlg('Hyscorean''s GNU LGPL 3.0 license agreement not found. Please run setup_hyscorean again and accept the license agreemen.','Warning','modal');
+    waitfor(w)
+    return
+end
 
-if (nargin==0), help(mfilename); return; end
+%Check that EasySpin is installed
+if ispref('hyscorean','easyspin_installed')
+    if ~getpref('hyscorean','easyspin_installed')
+        w  = warndlg('EasySpin installation has not been validated. Please run setup_hyscorean again with a valid EasySpin installation.','Warning','modal');
+        waitfor(w)
+        return
+    end
+else
+    w  = warndlg('EasySpin installation has not been validated. Please run setup_hyscorean again with a valid EasySpin installation.','Warning','modal');
+    waitfor(w)
+    return
+end
 
-%Close all parpools
-delete(gcp('nocreate'))
-
-
-% --------License ------------------------------------------------
-LicErr = 'Could not determine license.';
-Link = 'epr@eth'; eschecker; error(LicErr); clear Link LicErr
-% --------License ------------------------------------------------
-
+%Check input
 if (nargin<5), error('Not enough inputs.'); end
 if (nargin<6), SimOpt = struct('unused',NaN); end
 if (nargin<7), FitOpt = struct('unused',NaN); end
@@ -49,26 +59,39 @@ if ~isstruct(FitOpt)
   error('FitOpt (7th input argument of esfit) must be a structure.');
 end
 
-global FitData FitOpts
-FitData = [];
-FitOpts = [];
-FitData.currFitSet = [];
-
-FitData.CurrentSpectrumDisplay = 1;
-FitData.CurrentCoreUsage = 0;
-
 if ~iscell(Exp)
   Exp = {Exp};
 end
 if ~iscell(SimOpt)
   SimOpt = {SimOpt};
 end
+if ~iscell(ExpSpec)
+  ExpSpec = {ExpSpec};
+end
+
+%Get the path to Hyscorean source code
+Path2Hyscorean = which('Hyscorean');
+Path2Hyscorean = Path2Hyscorean(1:end-11);
+
+%Close all parpools
+delete(gcp('nocreate'))
+
+%Initialize global variables
+global FitData FitOpts
+
+%Empty the global variables to reset them
+FitData = [];
+FitOpts = [];
+
+%Initialize default fields
+FitData.currFitSet = [];
+FitData.CurrentSpectrumDisplay = 1;
+FitData.CurrentCoreUsage = 0;
 FitData.DefaultExp = Exp;
 FitData.DefaultSimOpt = SimOpt;
 FitData.numSpec = length(Exp);
 
-% Simulation function
-%--------------------------------------------------------------------
+%Check that the given simulation function exists
 switch class(SimFunctionName)
   case 'char'
     % Simulation function is given as a character array
@@ -92,95 +115,108 @@ switch class(SimFunctionName)
 end
 FitData.lastSetID = 0;
 
+%--------------------------------------------------------------------------
+% Spin System Definition (Start-up)
+%--------------------------------------------------------------------------
+
+%Check whether the Sys and Vary structures have been given as input
 if ~isempty(Sys0) || ~isempty(Vary)
-    FieldNames = fieldnames(Sys0);
-    for i = 1:length(FieldNames)
-        String = sprintf('Sys.%s  = ',FieldNames{i});
-        switch class(getfield(Sys0,FieldNames{i}))
-            case 'char'
-                String = [String '''' getfield(Sys0,FieldNames{i}) ''''];
-            case 'double'
-                FieldSize = size(getfield(Sys0,FieldNames{i}));
-                String = [String '['];
-                Temp = getfield(Sys0,FieldNames{i});
-                for ii = 1:FieldSize(1)
-                    String = [String sprintf('%.2f ',Temp(ii,1))];
-                    for jj=2:FieldSize(2)
-                        String = [String sprintf(', %.2f',Temp(ii,jj))];
-                    end
-                    if ii ~= FieldSize(1)
-                    String = [String '; '];
-                    end
-                end
-                String = [String ']'];
+  
+  %If YES then construct the string to be printed in the system definition window
+  
+  %First for the Sys structure...
+  FieldNames = fieldnames(Sys0);
+  for i = 1:length(FieldNames)
+    String = sprintf('Sys.%s  = ',FieldNames{i});
+    switch class(getfield(Sys0,FieldNames{i}))
+      case 'char'
+        String = [String '''' getfield(Sys0,FieldNames{i}) ''''];
+      case 'double'
+        FieldSize = size(getfield(Sys0,FieldNames{i}));
+        String = [String '['];
+        Temp = getfield(Sys0,FieldNames{i});
+        for ii = 1:FieldSize(1)
+          String = [String sprintf('%.2f ',Temp(ii,1))];
+          for jj=2:FieldSize(2)
+            String = [String sprintf(', %.2f',Temp(ii,jj))];
+          end
+          if ii ~= FieldSize(1)
+            String = [String '; '];
+          end
         end
-        String = [String ';'];
-        SysDefString{i} = String;
+        String = [String ']'];
     end
-    
-        FieldNames = fieldnames(Vary);
-    for i = 1:length(FieldNames)
-        String = sprintf('Vary.%s  = ',FieldNames{i});
-        switch class(getfield(Vary,FieldNames{i}))
-            case 'char'
-                String = [String '''' getfield(Sys0,FieldNames{i}) ''''];
-            case 'double'
-                FieldSize = size(getfield(Vary,FieldNames{i}));
-                String = [String '['];
-                Temp = getfield(Vary,FieldNames{i});
-                for ii = 1:FieldSize(1)
-                    String = [String sprintf('%.2f ',Temp(ii,1))];
-                    for jj=2:FieldSize(2)
-                        String = [String sprintf(', %.2f',Temp(ii,jj))];
-                    end
-                    if ii ~= FieldSize(1)
-                    String = [String '; '];
-                    end
-                end
-                String = [String ']'];
+    String = [String ';'];
+    SysDefString{i} = String;
+  end
+  
+  %... then for the Vary structure...
+  FieldNames = fieldnames(Vary);
+  for i = 1:length(FieldNames)
+    String = sprintf('Vary.%s  = ',FieldNames{i});
+    switch class(getfield(Vary,FieldNames{i}))
+      case 'char'
+        String = [String '''' getfield(Sys0,FieldNames{i}) ''''];
+      case 'double'
+        FieldSize = size(getfield(Vary,FieldNames{i}));
+        String = [String '['];
+        Temp = getfield(Vary,FieldNames{i});
+        for ii = 1:FieldSize(1)
+          String = [String sprintf('%.2f ',Temp(ii,1))];
+          for jj=2:FieldSize(2)
+            String = [String sprintf(', %.2f',Temp(ii,jj))];
+          end
+          if ii ~= FieldSize(1)
+            String = [String '; '];
+          end
         end
-        String = [String ';'];
-        VaryDefString{i} = String;
+        String = [String ']'];
     end
-    
-    DefaultInput{1} = '%---------------------------------------------';
-    DefaultInput{2} = '% EasySpin Input                              ';
-    DefaultInput{3} = '%---------------------------------------------';
-    DefaultInput{4} = '                                              ';
-    DefaultInput{5} = '% Spin System definition                      ';
-    DefaultInput{6} = '%---------------------------------------------';
-    for i = 1:length(SysDefString)
-        DefaultInput{length(DefaultInput)+1} = SysDefString{i};
-    end
-    DefaultInput{length(DefaultInput) + 1} = '                                              ';
-    DefaultInput{length(DefaultInput) + 1} = '% Fit variables definition                    ';
-    DefaultInput{length(DefaultInput) + 1} = '%---------------------------------------------';
-    for i = 1:length(VaryDefString)
-        DefaultInput{length(DefaultInput)+1} = VaryDefString{i};
-    end
-    DefaultInput = char(DefaultInput);
-    setpref('hyscorean','defaultsystemEasyspin',DefaultInput)
+    String = [String ';'];
+    VaryDefString{i} = String;
+  end
+  
+  %... and finally print it nicely
+  DefaultInput{1} = '%---------------------------------------------';
+  DefaultInput{2} = '% EasySpin Input                              ';
+  DefaultInput{3} = '%---------------------------------------------';
+  DefaultInput{4} = '                                              ';
+  DefaultInput{5} = '% Spin System definition                      ';
+  DefaultInput{6} = '%---------------------------------------------';
+  for i = 1:length(SysDefString)
+    DefaultInput{length(DefaultInput)+1} = SysDefString{i};
+  end
+  DefaultInput{length(DefaultInput) + 1} = '                                              ';
+  DefaultInput{length(DefaultInput) + 1} = '% Fit variables definition                    ';
+  DefaultInput{length(DefaultInput) + 1} = '%---------------------------------------------';
+  for i = 1:length(VaryDefString)
+    DefaultInput{length(DefaultInput)+1} = VaryDefString{i};
+  end
+  DefaultInput = char(DefaultInput);
+  %Set this as the new spin system definition in the corresponding preference
+  setpref('hyscorean','defaultsystemEasyspin',DefaultInput)
 
     
 else
-
-% Load system
-%--------------------------------------------------------------------
-% load([Path2Hyscorean 'bin\DefaultSystemEasySpin'])
-DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
-
+  
+  %If NO then load the spin system definition from the preference
+  DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
+  
 end
 
+%Prepare for reading the spin system input
 SpinSystemInput = {DefaultInput};
 FitData.SpinSystemInput = SpinSystemInput{1};
-%Remove comments on the input
 Size = size(SpinSystemInput{1},1);
+
+%Remove comments in the input
 for i=1:Size
   if SpinSystemInput{1}(i,1) == '%'
     SpinSystemInput{1}(i,:) = ' ';
   end
 end
-% StringForEval = char((string(SpinSystemInput{1})'));
+
+%Evaluate the spin system definition to get the Sys and Vary variables
 StringForEval = SpinSystemInput{1};
 try
   for i=1:size(StringForEval,1)
@@ -191,42 +227,43 @@ end
 
 %Check if any changes/additions to the Opt structure are requested
 if exist('Opt','var')
-    if ~iscell(Opt)
-      %Get Opt fields
-      OptFields = fields(Opt);
-      for i=1:length(OptFields)
-        for j=1:length(SimOpt)
-          %Set these fields on the existing SimOpt structure
-          SimOpt{j} = setfield(SimOpt{j},OptFields{i},getfield(Opt,OptFields{i}));
-        end
+  if ~iscell(Opt)
+    %Get Opt fields
+    OptFields = fields(Opt);
+    for i=1:length(OptFields)
+      for j=1:length(SimOpt)
+        %Set these fields on the existing SimOpt structure
+        SimOpt{j} = setfield(SimOpt{j},OptFields{i},getfield(Opt,OptFields{i}));
       end
     end
+  end
 else
-    SimOpt = FitData.DefaultSimOpt;
+  SimOpt = FitData.DefaultSimOpt;
 end
+
 %Check if any changes/additions to the Exp structure are requested
 if exist('Exp','var')
-    if ~iscell(Exp)
-      %Get Opt fields
-      ExpFields = fields(Exp);
-      for i=1:length(ExpFields)
-        for j=1:length(Exp)
-          %Set these fields on the existing Exp structure
-          Exp{j} = setfield(Exp{j},ExpFields{i},getfield(Exp,ExpFields{i}));
-        end
+  if ~iscell(Exp)
+    %Get Opt fields
+    ExpFields = fields(Exp);
+    for i=1:length(ExpFields)
+      for j=1:length(Exp)
+        %Set these fields on the existing Exp structure
+        Exp{j} = setfield(Exp{j},ExpFields{i},getfield(Exp,ExpFields{i}));
       end
     end
+  end
 else
   Exp = FitData.DefaultExp;
 end
 
+%Change the Sys variable name to match the rest of the code
 Sys0 = Sys;
-
-% System structure
-%--------------------------------------------------------------------
 if ~iscell(Sys0)
   Sys0 = {Sys0}; 
 end
+
+%Get the number of systems (i.e. number of spectra) to be fitted
 nSystems = numel(Sys0);
 for s = 1:nSystems
   if ~isfield(Sys0{s},'weight')
@@ -235,28 +272,17 @@ for s = 1:nSystems
 end
 FitData.nSystems = nSystems;
 
-% Experimental spectrum
-%--------------------------------------------------------------------
-if ~iscell(ExpSpec)
-  ExpSpec = {ExpSpec};
-end
-if ~iscell(Exp)
-  Exp = {Exp};
-end
-if ~iscell(SimOpt)
-  SimOpt = {SimOpt};
-end
-FitData.DefaultExp;
-FitData.nSpectra = 1;
+
+%Save experimental spectrum to global variable...
 FitData.ExpSpec = ExpSpec;
+%... and rescale it to its absolute maximum 
 for i=1:length(ExpSpec)
   FitData.ExpSpecScaled{i} = rescale_mod(ExpSpec{i},'maxabs');
   if length(FitData.ExpSpec{i})~=length(FitData.ExpSpecScaled{i})
     FitData.ExpSpecScaled{i} = reshape(FitData.ExpSpecScaled{i},length(FitData.ExpSpec{i}),length(FitData.ExpSpec{i}));
   end
 end
-% Vary structure
-%--------------------------------------------------------------------
+
 % Make sure user provides one Vary structure for each Sys
 if ~iscell(Vary)
   Vary = {Vary}; 
@@ -268,7 +294,7 @@ for iSys = 1:nSystems
   if ~isstruct(Vary{iSys}), Vary{iSys} = struct; end
 end
 
-% Make sure users are fitting with the logarithm of Diff or tcorr
+%Make sure users are fitting with the logarithm of Diff or tcorr
 for s = 1:nSystems
   if (isfield(Vary{s},'tcorr') && ~isfield(Vary{s},'logtcorr')) ||...
       (~isfield(Sys0{s},'logtcorr') && isfield(Vary{s},'logtcorr'))
@@ -280,7 +306,7 @@ for s = 1:nSystems
   end
 end
   
-% Assert consistency between System0 and Vary structures
+%Assert consistency between Sys0 and Vary structures
 for s = 1:nSystems
   Fields = fieldnames(Vary{s});
   for k = 1:numel(Fields)
@@ -293,43 +319,21 @@ for s = 1:nSystems
   clear Fields
 end
 
-% count parameters and save indices into parameter vector for each system
+%Count parameters and save indices into parameter vector for each system
 for iSys = 1:nSystems
-  [dummy,dummy,v_] = getParameters(Vary{iSys});
+  [~,~,v_] = getParameters(Vary{iSys});
   VaryVals(iSys) = numel(v_);
 end
 FitData.xidx = cumsum([1 VaryVals]);
 FitData.nParameters = sum(VaryVals);
 
-if (FitData.nParameters==0)
-%   error('No variable parameters to fit.');
-end
-
-FitData.Vary = Vary;
-
-% Experimental parameters
-%--------------------------------------------------------------------
-% if isfield(Exp,'nPoints')
-%   if Exp.nPoints~=length(ExpSpec)
-%     error('Exp.nPoints is %d, but the spectral data vector is %d long.',...
-%       Exp.nPoints,numel(ExpSpec));
-%   end
-% else
-%   Exp.nPoints = numel(ExpSpec);
-% end
-
-% For field sweeps, require manual field range
-%if strcmp(SimFunctionName,'pepper') || strcmp(SimFunctionName,'garlic')
-%  if ~isfield(Exp,'Range') && ~isfield(Exp,'CenterSweep')
-%    error('Please specify field range, either in Exp.Range or in Exp.CenterSweep.');
-%  end
-%end
-
-FitData.Exp = Exp;
 
 
+%--------------------------------------------------------------------------
 % Fitting options
-%======================================================================
+%--------------------------------------------------------------------------
+
+%Check function input
 if ~isfield(FitOpt,'OutArg')
   FitData.nOutArguments = abs(nargout(FitData.SimFcn));
   FitData.OutArgument = FitData.nOutArguments;
@@ -341,12 +345,9 @@ else
     error('FitOpt.OutArg: second number cannot be larger than first one.');
   end
   FitData.nOutArguments = FitOpt.OutArg(1);
-  FitData.OutArgument = FitOpt.OutArg(2);
-  
+  FitData.OutArgument = FitOpt.OutArg(2); 
 end
-
 if ~isfield(FitOpt,'Scaling'), FitOpt.Scaling = 'minmax'; end
-
 if ~isfield(FitOpt,'Method'), FitOpt.Method = ''; end
 FitOpt.MethodID = 1; % simplex
 FitOpt.TargetID = 1; % function as is
@@ -358,6 +359,7 @@ else
   end
 end
 
+%Definte fitting methods and their IDs
 keywords = strread(FitOpt.Method,'%s');
 for k = 1:numel(keywords)
   switch keywords{k}
@@ -374,11 +376,13 @@ for k = 1:numel(keywords)
   end
 end
 
+%Make a list of the fields at which the spectra have been measured
 AvailableFields = cell(1,length(Exp));
 for i = 1:length(AvailableFields)
   AvailableFields{i} = strcat(string(Exp{i}.Field), ' mT');
 end
 
+%Get the number of CPU cores available for parallel processing
 AvailableCores = cell(1,length(Exp));
 AvailableCores{1} = 'off';
 numcores = feature('numcores');
@@ -387,6 +391,8 @@ if numcores>1
         AvailableCores{i} =sprintf('%i cores',i);
     end
 end
+
+%Set method names for display in the UI element
 MethodNames{1} = 'Nelder/Mead simplex';
 MethodNames{2} = 'Levenberg/Marquardt';
 MethodNames{3} = 'Monte Carlo';
@@ -396,6 +402,7 @@ MethodNames{6} = 'particle swarm';
 MethodNames{7} = 'Manual single run';
 FitData.MethodNames = MethodNames;
 
+%Set scaling names for display in the UI element
 ScalingNames{1} = 'scale & shift (min/max)';
 ScalingNames{2} = 'scale only (max abs)';
 ScalingNames{3} = 'scale only (lsq)';
@@ -405,6 +412,7 @@ ScalingNames{6} = 'scale & quad. baseline (lsq2)';
 ScalingNames{7} = 'no scaling';
 FitData.ScalingNames = ScalingNames;
 
+%Set scaling names for the program
 ScalingString{1} = 'minmax';
 ScalingString{2} = 'maxabs';
 ScalingString{3} = 'lsq';
@@ -414,6 +422,7 @@ ScalingString{6} = 'lsq2';
 ScalingString{7} = 'none';
 FitData.ScalingString = ScalingString;
 
+%Set startpoint names for display in the UI element
 StartpointNames{1} = 'center of range';
 StartpointNames{2} = 'random within range';
 StartpointNames{3} = 'selected parameter set';
@@ -425,21 +434,16 @@ if isempty(FitOpt.ScalingID)
   error('Unknown ''%s'' in FitOpt.Scaling.',FitOpt.Scaling);
 end
 
-%------------------------------------------------------
+%Check if user has defined any of these fit options otherwise set defaults
 if ~isfield(FitOpt,'Plot'), FitOpt.Plot = 1; end
 if (nargout>0), FitData.GUI = 0; else, FitData.GUI = 1; end
-
 if ~isfield(FitOpt,'PrintLevel'), FitOpt.PrintLevel = 1; end
-
 if ~isfield(FitOpt,'nTrials'), FitOpt.nTrials = 20000; end
-
 if ~isfield(FitOpt,'TolFun'), FitOpt.TolFun = 1e-4; end
 if ~isfield(FitOpt,'TolStep'), FitOpt.TolStep = 1e-6; end
 if ~isfield(FitOpt,'maxTime'), FitOpt.maxTime = inf; end
 if ~isfield(FitOpt,'RandomStart'), FitOpt.Startpoint = 1; else, FitOpt.Startpoint = 0; end
 if ~isfield(FitOpt,'GridSize'), FitOpt.GridSize = 7; end
-
-% Internal parameters
 if ~isfield(FitOpt,'PlotStretchFactor'), FitOpt.PlotStretchFactor = 0.05; end
 if ~isfield(FitOpt,'maxGridPoints'), FitOpt.maxGridPoints = 1e5; end
 if ~isfield(FitOpt,'maxParameters'), FitOpt.maxParameters = 30; end
@@ -448,25 +452,27 @@ if (FitData.nParameters>FitOpt.maxParameters)
     FitOpt.maxParameters);
 end
 FitData.inactiveParams = logical(zeros(1,FitData.nParameters));
+FitOpt.IterationPrintFunction = @iterationprint;
 
+%Save the EasySpin structures to the global variable
+FitData.Vary = Vary;
+FitData.Exp = Exp;
 FitData.Sys0 = Sys0;
 FitData.SimOpt = SimOpt;
-FitOpt.IterationPrintFunction = @iterationprint;
 FitOpts = FitOpt;
 
-%=====================================================================
-% Setup UI
-%=====================================================================
+%--------------------------------------------------------------------------
+% Construction of the GUI
+%--------------------------------------------------------------------------
 if FitData.GUI
-  clc
   
-  %Close the rmsd detached plot if open
+  %Close the RMSD detached plot if still open
     hObj = findobj('Tag','detachedRMSD');
-
   if ~isempty(hObj)
     close(hObj)
   end
   
+  %Define default graphical settings
   FitOpts.GraphicalSettings.LineWidth = 1;
   FitOpts.GraphicalSettings.ContourLevels = 40;
   FitOpts.GraphicalSettings.ExperimentalSpectrumType = 1;
@@ -475,46 +481,52 @@ if FitData.GUI
   FitOpts.GraphicalSettings.FitSpectraTypeString = 'colormap';
 
 
-  % main figure
-  %------------------------------------------------------------------
-  hFig = findobj('Tag','esfitFigure');
+  % Construction of main figure
+  %------------------------------------------------------------------------
+  
+  %Check if another instance is open, close it and create new one
+  hFig = findobj('Tag','esfitFigure_hyscorean');
   if isempty(hFig)
-    hFig = figure('Tag','esfitFigure','WindowStyle','normal');
+    hFig = figure('Tag','esfitFigure_hyscorean','WindowStyle','normal');
   else
     figure(hFig);
     clf(hFig);
   end
   
-  sz = [1410 600]; % figure size
-  screensize = get(0,'ScreenSize');
-  xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
-  ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
+  %Set main window properties
+  sz = [1410 600]; %Figure size
+  screensize = get(0,'ScreenSize'); %Get screensize
+  xpos = ceil((screensize(3)-sz(1))/2); %Center the figure on the screen horizontally
+  ypos = ceil((screensize(4)-sz(2))/2); %Center the figure on the screen vertically
   set(hFig,'position',[xpos, ypos, sz(1), sz(2)],'units','pixels');
   set(hFig,'WindowStyle','normal','DockControls','off','MenuBar','none');
   set(hFig,'Resize','off');
   set(hFig,'Name','Hyscorean: EasySpin - Least-Squares Fitting','NumberTitle','off');
-  set(hFig,'CloseRequestFcn',...
-    'global UserCommand; UserCommand = 99; drawnow; delete(gcf);');
+  set(hFig,'CloseRequestFcn','global UserCommand; UserCommand = 99; drawnow; delete(gcf);');
   
-  %-----------------------------------------------------------------
-  % axes
-  %-----------------------------------------------------------------
+  %Construct the axes in the figure
   excludedRegions = [];
-  %Construct main axes
+  %Axis for main display
   hAx = axes('Parent',hFig,'Units','pixels',...
     'Position',[50 50 900 420],'FontSize',8,'Layer','top');
+  %Axis for inset1
   hsubAx1 = axes('Parent',hFig,'Units','pixels',...
     'Position',[50 480 900 100],'FontSize',8,'Layer','top');
+  %Axis for inset 2
   hsubAx2 = axes('Parent',hFig,'Units','pixels',...
     'Position',[960 50 100 420],'FontSize',8,'Layer','top');
 
 
-  %Get experimental data to display
-  
+  %Get experimental dataset to display
   dispData = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
-  %Set rest of data to NaN to not display it
+  
+  %Construct a NaN dataset to use when not wanting to display
   NaNdata = ones(length(dispData))*NaN;
-  maxy = max(max(dispData)); miny = min(min(dispData));
+  
+  %Get data limits
+  maxy = max(max(dispData)); 
+  miny = min(min(dispData));
+  
   %Not sure if this is still needed
   YLimits = [miny maxy] + [-1 1]*FitOpt.PlotStretchFactor*(maxy-miny);
   for r = 1:size(excludedRegions,1)
@@ -522,11 +534,14 @@ if FitData.GUI
     set(h,'EdgeColor','none');
   end
   
-  %Get frequency axis
+  %Construct frequency axis
   FrequencyAxis = linspace(-1/(2*Exp{1}.dt),1/(2*Exp{1}.dt),length(dispData));
   
   %Remove all warnings to avoid contour w/ NaN warning at initialization
   warning('off','all')
+  
+  % Construction of main display
+  %------------------------------------------------------------------------
   grid(hAx,'on')
   hold(hAx,'on')
   
@@ -534,9 +549,11 @@ if FitData.GUI
   plot(hAx,ones(length(FrequencyAxis),1)*0,linspace(0,max(FrequencyAxis),length(FrequencyAxis)),'k-')
   plot(hAx,FrequencyAxis,abs(FrequencyAxis),'k-.')  
   
+  %Define an auxiliary axis to contain the experimental spectrum
   ax1 = axes('Parent',hFig,'Tag','dataaxes_exp','Units','pixels',...
     'Position',[50 50 900 420],'FontSize',8,'Layer','bottom');
   
+  %Create the EXPERIMENTAL spectrum plot
   switch   FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
     case 'contour'
       [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,100,...
@@ -546,15 +563,10 @@ if FitData.GUI
       [h] = pcolor(ax1,FrequencyAxis,FrequencyAxis,NaNdata);
     case 'filledcontour'
       [~,h] = contourf(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none',...
-        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels))
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels));
   end
-  
-
-%   [~,h] = contour(ax1,FrequencyAxis,FrequencyAxis,NaNdata,'LevelList',linspace(0,1,40),'LineStyle','-');
-  %   hold(ax1,'on')
-  
-  %   [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,'Color','g','LevelList',linspace(0,1,40));
-%   [h2] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
+ 
+  %Create the BEST FIT spectrum plot
   switch   FitOpts.GraphicalSettings.FitSpectraTypeString
     case 'contour'
       [~,h2] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,...
@@ -564,15 +576,23 @@ if FitData.GUI
       [h2] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
     case 'filledcontour'
       [~,h2] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none',...
-        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels))
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels));
   end
   
-  CustomColormap = [0 0.5 0.2; 0 0.45 0.2; 0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2;  0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0.2 0.1 0.2; 0 0.4 0.2; 0 0.5 0.2; 0 0.6 0.2;  0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
-    1 1 1;
-    1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5; 1 0.45 0.45; 1 0.4 0.4;  1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.1 0.1;   1 0 0;    0.95 0 0;      0.9 0 0; 0.85 0 0;    0.8 0 0;   0.7 0 0;   0.7 0 0;   0.65 0 0;  0.6 0 0];
+  %Use a custom made colormap for the fitted spectra
+  % Normal  ->  Green-Red with white transition
+  % Fliplr  ->  Blue-Orange with white transition
+  CustomColormap = ...
+  [0.0 0.5 0.2; 0.0 0.45 0.2; 0.0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2;  0.2 0.35 0.2;  
+   0.2 0.3 0.2; 0.2 0.20 0.2; 0.2 0.1 0.2; 0.0 0.4 0.2; 0.0 0.5 0.2; 0.0 0.60 0.2;  0.1 0.7 0.2; 
+   0.2 0.8 0.2; 0.1 0.80 0.0; 0.2 0.8 0.0; 0.6 1.0 0.6; 0.7 1.0 0.7; 0.8 1.00 0.8;   
+   1 1 1;
+   1.00 0.7 0.7; 1.0 0.65 0.65; 1.0 0.6 0.6; 1.0 0.55 0.55; 1.00 0.5 0.5; 1.0 0.45 0.45; 1.0 0.4 0.4; 
+   1.00 0.4 0.4; 1.0 0.30 0.30; 1.0 0.2 0.2; 1.0 0.10 0.10; 1.00 0.0 0.0; 0.95 0.0 0.00; 0.9 0.0 0.0; 
+   0.85 0.0 0.0; 0.8 0.00 0.00; 0.7 0.0 0.0; 0.7 0.00 0.00; 0.65 0.0 0.0; 0.60 0.0 0.00];
   FitData.CustomColormap = CustomColormap;
-  FitData.pcolorplotting = 0;
   
+  %Create the CURRENT FIT spectrum plot
   switch   FitOpts.GraphicalSettings.FitSpectraTypeString
     case 'contour'
       [~,h3] = contour(hAx,FrequencyAxis,FrequencyAxis,NaNdata,100,...
@@ -582,375 +602,428 @@ if FitData.GUI
       [h3] = pcolor(hAx,FrequencyAxis,FrequencyAxis,NaNdata);
     case 'filledcontour'
       [~,h3] = contourf(hAx,FrequencyAxis,FrequencyAxis,NaNdata,'LineStyle','none',...
-        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels))
+        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels));
   end
   
+  %Set the shading to interp for the fitted spectra to be able to see something
   shading(hAx,'interp');
+  %Link the main display and auxiliary axis together
   linkaxes([ax1,hAx])
-  uistack(hAx)
-  uistack(ax1,'down')
+  %Now that they are linked give the experimental spectrum its own colormap...
   colormap(ax1,'gray');
+  %And make the auxiliary axis invisible
   ax1.Visible = 'off';
+  %For the other plots use the custom colormap
   colormap(hAx,CustomColormap)
   
+  %Set the limits so that later the different colors of the colormap can be used
   set(hAx,'CLim',[-1 1])
   
-  %Construct all projection inset handles
+  %Generate a NaN vector to use in the insets
   NaNdata = ones(1,length(dispData))*NaN;
+
+  %Create inset 1 plots
   hold(hsubAx1,'on')
   hsub1 = plot(hsubAx1,FrequencyAxis,NaNdata,'Color','k');
   hsub1_2 = plot(hsubAx1,FrequencyAxis,NaNdata,'Color','g');
   hsub1_3 = plot(hsubAx1,FrequencyAxis,NaNdata,'Color','r');
+  
+  %Create inset 2 plots
   hold(hsubAx2,'on')
   hsub2 = plot(hsubAx2,FrequencyAxis,NaNdata,'Color','k');
   hsub2_2 = plot(hsubAx2,FrequencyAxis,NaNdata,'Color','g');
   hsub2_3 = plot(hsubAx2,FrequencyAxis,NaNdata,'Color','r');
+  
+  %Now that everything is plotted enable warnings again
   warning('on','all')
   
-  %Set data and tags to contours
-    switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
+  %Insert the experimental spectrum data in the main display
+  switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
     case 'colormap'
-      set(h,'Tag','expdata','XData',FrequencyAxis,'YData',FrequencyAxis,'CData',dispData);
-      case 'contour'
-        set(h,'Tag','expdata','XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',dispData);
-    end
+      set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',dispData);
+    case 'contour'
+      set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',dispData);
+  end
+  
+  %Set the tags of the different plots to access them later
+  set(h,'Tag','expdata')
   set(h2,'Tag','bestsimdata');
   set(h3,'Tag','currsimdata');
   
-  %Set data and tags to insets
+  %Insert the experimental spectrum data in inset 1
   Inset = max(dispData(round(length(dispData)/2,0):end,:));
-%   Inset = abs(Inset - Inset(end));
   set(hsub1,'Tag','expdata_projection1','XData',FrequencyAxis,'YData',Inset);
   set(hsub1_2,'Tag','bestsimdata_projection1');
   set(hsub1_3,'Tag','currsimdata_projection1');
+  
+  %Insert the experimental spectrum data in inset 2
   Inset = max(dispData,[],2);
-%   Inset = abs(Inset - Inset(end));
   set(hsub2,'Tag','expdata_projection2','YData',FrequencyAxis,'XData',Inset);
   set(hsub2_2,'Tag','bestsimdata_projection2');
   set(hsub2_3,'Tag','currsimdata_projection2');
   
-  %Set properties of axes
+  %Set limits of all axes
   set(hAx,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
   set(hAx,'YLim',[0 SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
   set(hsubAx1,'XLim',[-SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim SimOpt{FitData.CurrentSpectrumDisplay }.FreqLim]);
   set(hsubAx2,'YLim',[0 SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim]);
   set(hsubAx1,'YLim',[0 1]);
   set(hsubAx2,'XLim',[0 1]);
+  
+  %Set labels of main axis
   xlabel(hAx,'\omega_1 [MHz]');
   ylabel(hAx,'\omega_2 [MHz]');
-  set(hAx,'Tag', 'dataaxes');
+  
+  %Remove all ticks in the insets
   set(hsubAx1,'XTickLabel',[],'YTickLabel',[]);
   set(hsubAx2,'XTickLabel',[],'YTickLabel',[]);
+  
+  %Give tags to the axes
+  set(hAx,'Tag', 'dataaxes');
   set(hsubAx1,'Tag', 'projectiondataaxes1');
   set(hsubAx2,'Tag', 'projectiondataaxes2');
+  
+  %Add boxes for nicer display
   box(hAx,'on')
   box(hsubAx1,'on')
   box(hsubAx2,'on')
+  
+  %Link the axes of the main display to the insets (to zoom at the same time)
   linkaxes([hAx,hsubAx1],'x')
   linkaxes([hAx,hsubAx2],'y')
 
-  %-----------------------------------------------------------------
-  %Current spectrum display
-  %-----------------------------------------------------------------
-    x0 = 960; y0 = 380; dx = 80;
-    uicontrol('Style','text',...
-    'Position',[x0 y0+125 230 20],...
-    'BackgroundColor',get(gcf,'Color'),...
-    'FontWeight','bold','String','Display @ field',...
-    'HorizontalAl','left');
-    uicontrol('Style','pushbutton',...
-    'Position',[x0 y0+155 100 25],...
-    'BackgroundColor',get(gcf,'Color'),...
-    'String','Graphics',...
-    'HorizontalAl','left','Callback',@SetGraphicsSettings);  
-   uicontrol(hFig,'Style','popupmenu',...
-     'Position',[x0 y0+100 100 25],...
-    'Tag','ChangeDisplay',...
-    'String',AvailableFields,...
-    'Value',FitData.CurrentSpectrumDisplay,...
-    'BackgroundColor','w',...
-    'Tooltip','Change displayed spectrum',...
-    'Callback',@ChangeCurrentDisplay);  
-  
-  %-----------------------------------------------------------------
-  % iteration and rms error displays
-  %-----------------------------------------------------------------
-  x0 = 1070; y0 = 175;
-  hAx = axes('Parent',hFig,'Units','pixels','Position',[x0 y0-25 270 110],'Layer','top');
-  h = plot(hAx,1,NaN,'.');
-  set(h,'Tag','errorline','MarkerSize',6,'Color',[0.2 0.2 0.8]);
-  set(gca,'FontSize',7,'YScale','lin','XTick',[],'YAxisLoc','right','Layer','top');
-  title('log10(rmsd)','Color','k','FontSize',7,'FontWeight','normal');
-    
-  h = uicontrol('Style','text','Position',[x0 y0+119 270 16]);
-  set(h,'FontSize',8,'String',' RMSD: -','ForegroundColor',[0 0 1],'Tooltip','Current best RMSD');
-  set(h,'Tag','RmsText','HorizontalAl','left');
+%--------------------------------------------------------------------------
+% Construction of the UI elements
+%--------------------------------------------------------------------------
 
-  h = uicontrol('Style','text','Position',[x0 y0+100 270 16]);
-  set(h,'FontSize',7,'Tag','logLine','Tooltip','Information from fitting algorithm');
-  set(h,'Horizontal','left');
+% Field position selection
+%-----------------------------------------------------------------------
+x0 = 960; y0 = 380; dx = 80;
+uicontrol('Style','text',...
+  'Position',[x0 y0+125 230 20],...
+  'BackgroundColor',get(gcf,'Color'),...
+  'FontWeight','bold','String','Display @ field',...
+  'HorizontalAl','left');
+
+uicontrol('Style','pushbutton',...
+  'Position',[x0 y0+155 100 25],...
+  'Tag','GraphicsButton',...
+  'BackgroundColor',get(gcf,'Color'),...
+  'String','Graphics',...
+  'HorizontalAl','left','Callback',@SetGraphicsSettings);
+
+uicontrol(hFig,'Style','popupmenu',...
+  'Position',[x0 y0+100 100 25],...
+  'Tag','ChangeDisplay',...
+  'String',AvailableFields,...
+  'Value',FitData.CurrentSpectrumDisplay,...
+  'BackgroundColor','w',...
+  'Tooltip','Change displayed spectrum',...
+  'Callback',@ChangeCurrentDisplay);
   
-   h = uicontrol('Style','pushbutton','Position',[x0 y0-25 22 22]);
-   load([Path2Hyscorean 'bin\detach_icon'])
-  set(h,'FontSize',7,'Tag',...
-    'ExpandRMSD',...
-    'Tooltip','Show individual fits RMSD',...
-    'CData',CData,...
-    'Tooltip','Change displayed spectrum',...
-    'Callback',@DetachRMSD);
-  set(h,'Horizontal','left');
-  
-  %-----------------------------------------------------------------
-  % Parameter table
-  %-----------------------------------------------------------------
-  columnname = {'','Name','best','current','center','vary'};
-  columnformat = {'logical','char','char','char','char','char'};
-  colEditable = [true false false true true true];
-  if ~isempty(fieldnames(Vary{1}))
+% Iteration and RMSD error displays
+%-----------------------------------------------------------------------
+x0 = 1070; y0 = 175;
+hAx = axes('Parent',hFig,'Units','pixels','Position',[x0 y0-25 270 110],'Layer','top');
+h = plot(hAx,1,NaN,'.');
+set(h,'Tag','errorline','MarkerSize',6,'Color',[0.2 0.2 0.8]);
+set(gca,'FontSize',7,'YScale','lin','XTick',[],'YAxisLoc','right','Layer','top');
+title('log10(rmsd)','Color','k','FontSize',7,'FontWeight','normal');
+
+h = uicontrol('Style','text','Position',[x0 y0+119 270 16]);
+set(h,'FontSize',8,'String',' RMSD: -','ForegroundColor',[0 0 1],'Tooltip','Current best RMSD');
+set(h,'Tag','RmsText','HorizontalAl','left');
+
+h = uicontrol('Style','text','Position',[x0 y0+100 270 16]);
+set(h,'FontSize',7,'Tag','logLine','Tooltip','Information from fitting algorithm');
+set(h,'Horizontal','left');
+
+h = uicontrol('Style','pushbutton','Position',[x0 y0-25 22 22]);
+load([Path2Hyscorean 'bin\detach_icon'])
+set(h,'FontSize',7,'Tag','ExpandRMSD',...
+  'Tooltip','Show individual fits RMSD',...
+  'CData',CData,...
+  'Tooltip','Change displayed spectrum',...
+  'Callback',@DetachRMSD);
+set(h,'Horizontal','left');
+
+ 
+% Parameter table
+%-----------------------------------------------------------------------
+columnname = {'','Name','best','current','center','vary'};
+columnformat = {'logical','char','char','char','char','char'};
+colEditable = [true false false true true true];
+if ~isempty(fieldnames(Vary{1}))
   [FitData.parNames,FitData.CenterVals,FitData.VaryVals] = getParamList(Sys0,Vary);
-    for p = 1:numel(FitData.parNames)
+  for p = 1:numel(FitData.parNames)
     data{p,1} = true;
     data{p,2} = FitData.parNames{p};
     data{p,3} = '-';
     data{p,4} = '-';
     data{p,5} = sprintf('%0.6g',FitData.CenterVals(p));
     data{p,6} = sprintf('%0.6g',FitData.VaryVals(p));
-    end
-  else 
-    data{1,1} = false;
-    data{1,2} = '-';
-    data{1,3} = '-';
-    data{1,4} = '-';
-    data{1,5} = '-';
-    data{1,6} = '-';
   end
+else
+  data{1,1} = false;
+  data{1,2} = '-';
+  data{1,3} = '-';
+  data{1,4} = '-';
+  data{1,5} = '-';
+  data{1,6} = '-';
+end
+
+x0 = 1070; y0 = 400; dx = 80;
+uitable('Tag','ParameterTable',...
+  'FontSize',8,...
+  'Position',[x0 y0 330 150],...
+  'ColumnFormat',columnformat,...
+  'ColumnName',columnname,...
+  'ColumnEditable',colEditable,...
+  'CellEditCallback',@tableEditCallback,...
+  'ColumnWidth',{20,62,62,62,62,60},...
+  'RowName',[],...
+  'Data',data);
+
+uicontrol('Style','text',...
+  'Position',[x0 y0+170 230 20],...
+  'BackgroundColor',get(gcf,'Color'),...
+  'FontWeight','bold','String','System',...
+  'HorizontalAl','left');
+
+uicontrol('Style','text',...
+  'Position',[x0+115 y0+169 230 20],...
+  'BackgroundColor',get(gcf,'Color'),'ForegroundColor',[0 0 1],...
+  'FontWeight','normal','String',FitData.Sys0{1}.Nucs,...
+  'Tag','SystemName',...
+  'HorizontalAl','left');
+
+uicontrol('Style','text',...
+  'Position',[x0 y0+150 230 20],...
+  'BackgroundColor',get(gcf,'Color'),...
+  'FontWeight','bold','String','Parameters',...
+  'HorizontalAl','left');
+
+uicontrol('Style','pushbutton','Tag','selectInvButton',...
+  'Position',[x0+70 y0+172 40 20],...
+  'String','...','Enable','on','Callback',@systemButtonCallback,...
+  'HorizontalAl','left',...
+  'Tooltip','Invert selection of parameters');
+
+uicontrol('Style','pushbutton','Tag','selectInvButton',...
+  'Position',[x0+210 y0+150 50 20],...
+  'String','invert','Enable','on','Callback',@selectInvButtonCallback,...
+  'HorizontalAl','left',...
+  'Tooltip','Invert selection of parameters');
+
+uicontrol('Style','pushbutton','Tag','selectAllButton',...
+  'Position',[x0+260 y0+150 30 20],...
+  'String','all','Enable','on','Callback',@selectAllButtonCallback,...
+  'HorizontalAl','left',...
+  'Tooltip','Select all parameters');
+
+uicontrol('Style','pushbutton','Tag','selectNoneButton',...
+  'Position',[x0+290 y0+150 40 20],...
+  'String','none','Enable','on','Callback',@selectNoneButtonCallback,...
+  'HorizontalAl','left',...
+  'Tooltip','Unselect all parameters');
+
+uicontrol(hFig,'Style','pushbutton','Tag','reportButton',...
+  'Position',[x0+270 y0+171 60 25],...
+  'String','Report',...
+  'Tooltip','Generate fitting report','Enable','off',...
+  'Callback',@reportButtonCallback);
+
+uicontrol('Style','pushbutton','Tag','ORCAbutton',...
+  'Position',[x0+160 y0+150 50 20],...
+  'String','ORCA','Enable','on','Callback',@loadORCACallback,...
+  'HorizontalAl','left',...
+  'Tooltip','Load parameters from ORCA');
 
 
-  x0 = 1070; y0 = 400; dx = 80;
-  % uitable was introduced in R2008a, undocumented in
-  % R2007b, where property 'Tag' doesn't work
-  uitable('Tag','ParameterTable',...
-    'FontSize',8,...
-    'Position',[x0 y0 330 150],...
-    'ColumnFormat',columnformat,...
-    'ColumnName',columnname,...
-    'ColumnEditable',colEditable,...
-    'CellEditCallback',@tableEditCallback,...
-    'ColumnWidth',{20,62,62,62,62,60},...
-    'RowName',[],...
-    'Data',data);
-    uicontrol('Style','text',...
-    'Position',[x0 y0+170 230 20],...
-    'BackgroundColor',get(gcf,'Color'),...
-    'FontWeight','bold','String','System',...
-    'HorizontalAl','left');
-  uicontrol('Style','text',...
-    'Position',[x0+115 y0+169 230 20],...
-    'BackgroundColor',get(gcf,'Color'),'ForegroundColor',[0 0 1],...
-    'FontWeight','normal','String',FitData.Sys0{1}.Nucs,...
-    'Tag','SystemName',...
-    'HorizontalAl','left');
-  uicontrol('Style','text',...
-    'Position',[x0 y0+150 230 20],...
-    'BackgroundColor',get(gcf,'Color'),...
-    'FontWeight','bold','String','Parameters',...
-    'HorizontalAl','left');
-  uicontrol('Style','pushbutton','Tag','selectInvButton',...
-    'Position',[x0+70 y0+172 40 20],...
-    'String','...','Enable','on','Callback',@systemButtonCallback,...
-    'HorizontalAl','left',...
-    'Tooltip','Invert selection of parameters');
-  uicontrol('Style','pushbutton','Tag','selectInvButton',...
-    'Position',[x0+210 y0+150 50 20],...
-    'String','invert','Enable','on','Callback',@selectInvButtonCallback,...
-    'HorizontalAl','left',...
-    'Tooltip','Invert selection of parameters');
-  uicontrol('Style','pushbutton','Tag','selectAllButton',...
-    'Position',[x0+260 y0+150 30 20],...
-    'String','all','Enable','on','Callback',@selectAllButtonCallback,...
-    'HorizontalAl','left',...
-    'Tooltip','Select all parameters');
-  uicontrol('Style','pushbutton','Tag','selectNoneButton',...
-    'Position',[x0+290 y0+150 40 20],...
-    'String','none','Enable','on','Callback',@selectNoneButtonCallback,...
-    'HorizontalAl','left',...
-    'Tooltip','Unselect all parameters');
-    uicontrol(hFig,'Style','pushbutton','Tag','reportButton',...
-    'Position',[x0+270 y0+171 60 25],...
-    'String','Report',...
-    'Tooltip','Generate fitting report','Enable','off',...
-    'Callback',@reportButtonCallback);
-   uicontrol('Style','pushbutton','Tag','ORCAbutton',...
-    'Position',[x0+160 y0+150 50 20],...
-    'String','ORCA','Enable','on','Callback',@loadORCACallback,...
-    'HorizontalAl','left',...
-    'Tooltip','Load parameters from ORCA');
-  Path = which('Hyscorean');
-  Path = Path(1:end-11);
-    [Image,~]=imread(fullfile(Path,'bin\zoomin_icon.jpg'));
-    CData=imresize(Image, [30 30]);
-   uicontrol('Style','pushbutton','Tag','ZoomInButton',...
-    'Position',[52 438 30 30],'CData',CData,...
-    'String','','Enable','on','Callback',@zoomInButtonCallback,...
-    'HorizontalAl','left',...
-    'Tooltip','Zoom spectra');
-    [Image,~]=imread(fullfile(Path,'bin\zoomout_icon.jpg'));
-    CData=imresize(Image, [30 30]);
-    uicontrol('Style','pushbutton','Tag','ZoomOutButton',...
-    'Position',[52 406 30 30],'CData',CData,...
-    'String','','Enable','on','Callback',@zoomOutButtonCallback,...
-    'HorizontalAl','left',...
-    'Tooltip','Reset zoom');
-  %-----------------------------------------------------------------
-  % popup menus
-  %-----------------------------------------------------------------
-  x0 = 1070; dx = 60; y0 = 299; dy = 24;
-  uicontrol(hFig,'Style','text',...
-    'String','Method',...
-    'FontWeight','bold',...
-    'HorizontalAlign','left',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0 y0+3*dy-4 dx 20]);
-  uicontrol(hFig,'Style','popupmenu',...
-    'Tag','MethodMenu',...
-    'String',MethodNames,...
-    'Value',FitOpt.MethodID,...
-    'BackgroundColor','w',...
-    'Tooltip','Fitting algorithm',...
-    'Position',[x0+dx y0+3*dy 150 20]);
-  uicontrol(hFig,'Style','text',...
-    'String','Scaling',...
-    'FontWeight','bold',...
-    'HorizontalAlign','left',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0 y0+2*dy-4 dx 20]);
-  uicontrol(hFig,'Style','popupmenu',...
-    'Tag','ScalingMenu',...
-    'String',ScalingNames,...
-    'Value',FitOpt.ScalingID,...
-    'BackgroundColor','w',...
-    'Tooltip','Scaling mode',...
-    'Position',[x0+dx y0+2*dy 150 20]);
-  uicontrol(hFig,'Style','text',...
-    'String','Startpoint',...
-    'FontWeight','bold',...
-    'HorizontalAlign','left',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'Position',[x0 y0+dy-4 dx 20]);
-  h = uicontrol(hFig,'Style','popupmenu',...
-    'Tag','StartpointMenu',...
-    'String',StartpointNames,...
-    'Callback',@StartpointNamesCallback,...
-    'Value',1,...
-    'BackgroundColor','w',...
-    'Tooltip','Starting point for fit',...
-    'Position',[x0+dx y0+dy 150 20]);
-  if (FitOpts.Startpoint==2), set(h,'Value',2); end
+% Zoom in/out
+%-----------------------------------------------------------------
+Path = which('Hyscorean');
+Path = Path(1:end-11);
+[Image,~]=imread(fullfile(Path,'bin\zoomin_icon.jpg'));
+CData=imresize(Image, [30 30]);
+uicontrol('Style','pushbutton','Tag','ZoomInButton',...
+  'Position',[52 438 30 30],'CData',CData,...
+  'String','','Enable','on','Callback',@zoomInButtonCallback,...
+  'HorizontalAl','left',...
+  'Tooltip','Zoom spectra');
+
+[Image,~]=imread(fullfile(Path,'bin\zoomout_icon.jpg'));
+CData=imresize(Image, [30 30]);
+uicontrol('Style','pushbutton','Tag','ZoomOutButton',...
+  'Position',[52 406 30 30],'CData',CData,...
+  'String','','Enable','on','Callback',@zoomOutButtonCallback,...
+  'HorizontalAl','left',...
+  'Tooltip','Reset zoom');
+
+% ListBoxes
+%-----------------------------------------------------------------
+x0 = 1070; dx = 60; y0 = 299; dy = 24;
+uicontrol(hFig,'Style','text',...
+  'String','Method',...
+  'FontWeight','bold',...
+  'HorizontalAlign','left',...
+  'BackgroundColor',get(gcf,'Color'),...
+  'Position',[x0 y0+3*dy-4 dx 20]);
+
+uicontrol(hFig,'Style','popupmenu',...
+  'Tag','MethodMenu',...
+  'String',MethodNames,...
+  'Value',FitOpt.MethodID,...
+  'BackgroundColor','w',...
+  'Tooltip','Fitting algorithm',...
+  'Position',[x0+dx y0+3*dy 150 20]);
+
+uicontrol(hFig,'Style','text',...
+  'String','Scaling',...
+  'FontWeight','bold',...
+  'HorizontalAlign','left',...
+  'BackgroundColor',get(gcf,'Color'),...
+  'Position',[x0 y0+2*dy-4 dx 20]);
+
+uicontrol(hFig,'Style','popupmenu',...
+  'Tag','ScalingMenu',...
+  'String',ScalingNames,...
+  'Value',FitOpt.ScalingID,...
+  'BackgroundColor','w',...
+  'Tooltip','Scaling mode',...
+  'Position',[x0+dx y0+2*dy 150 20]);
+
+uicontrol(hFig,'Style','text',...
+  'String','Startpoint',...
+  'FontWeight','bold',...
+  'HorizontalAlign','left',...
+  'BackgroundColor',get(gcf,'Color'),...
+  'Position',[x0 y0+dy-4 dx 20]);
+
+h = uicontrol(hFig,'Style','popupmenu',...
+  'Tag','StartpointMenu',...
+  'String',StartpointNames,...
+  'Callback',@StartpointNamesCallback,...
+  'Value',1,...
+  'BackgroundColor','w',...
+  'Tooltip','Starting point for fit',...
+  'Position',[x0+dx y0+dy 150 20]);
+
+if (FitOpts.Startpoint==2), set(h,'Value',2); end
   
-  %-----------------------------------------------------------------
-  % Start/Stop buttons
-  %-----------------------------------------------------------------
-  pos =  [x0+220 y0-3+50 110 45];
-  pos1 = [x0+220 y0-3+25 110 25];
-  uicontrol(hFig,'Style','pushbutton',...
-    'Tag','StartButton',...
-    'String','Start',...
-    'Callback',@runFitting,...
-    'Visible','on',...
-    'Tooltip','Start fitting',...
-    'Position',pos);
-  uicontrol(hFig,'Style','pushbutton',...
-    'Tag','StopButton',...
-    'String','Stop',...
-    'Visible','off',...
-    'Tooltip','Stop fitting',...
-    'Callback','global UserCommand; UserCommand = 1;',...
-    'Position',pos);
-  uicontrol(hFig,'Style','pushbutton',...
-    'Tag','SaveButton',...
-    'String','Save parameter set',...
-    'Callback',@saveFitsetCallback,...
-    'Enable','off',...
-    'Tooltip','Save latest fitting result',...
-    'Position',pos1);
-  uicontrol(hFig,'Style','checkbox',...
-    'Tag','ProductRule',...
-    'String','Product Rule',...
-    'Value',0,...
-    'Callback',@ProductRuleCallback,...
-    'Enable','on',...
-    'Tooltip','Use product rule for simulations',...
-    'Position',[x0+250 y0-3 80 25]);
-  uicontrol(hFig,'Style','popupmenu',...
-    'Tag','SpeedUp',...
-    'String',AvailableCores,...
-    'Value',FitData.CurrentCoreUsage+1,...
-    'Callback',@speedUpCallback,...
-    'Enable','on',...
-    'Tooltip','Parallel computing options',...
-    'Position',[x0+185 y0-5 60 25]);
-    uicontrol('Style','text',...
-      'String','Speed-up',...
-    'Position',[x0+133 y0-8 50 25],...
-    'HorizontalAlignment','right',...
-    'BackgroundColor',get(gcf,'Color'),...
-    'HorizontalAl','left');
-  IconData = imread(fullfile(Path2Hyscorean,'bin\detach_icon.png'));
-   uicontrol('Style','pushbutton','Tag','detachButton',...
-    'Position',[927 446 22 22],'CData',IconData,...
-    'String','','Enable','on','Callback',@detachButtonCallback,...
-    'Tooltip','Detach current display to new window');
-  %-----------------------------------------------------------------
-  % Fitset list
-  %-----------------------------------------------------------------
-  x0 = 1070; y0 = 10;
-  uicontrol('Style','text','Tag','SetListTitle',...
-    'Position',[x0 y0+100 230 20],...
-    'BackgroundColor',get(gcf,'Color'),...
-    'FontWeight','bold','String','Parameter sets',...
-    'Tooltip','List of stored fit parameter sets',...
-    'HorizontalAl','left');
-  uicontrol(hFig,'Style','listbox','Tag','SetListBox',...
-    'Position',[x0 y0 330 100],...
-    'String','','Tooltip','',...
-    'BackgroundColor',[1 1 0.9],...
-    'KeyPressFcn',@deleteSetListKeyPressFcn,...
-    'Callback',@setListCallback);
-  uicontrol(hFig,'Style','pushbutton','Tag','deleteSetButton',...
-    'Position',[x0+280 y0+100 50 20],...
-    'String','delete',...
-    'Tooltip','Delete fit set','Enable','off',...
-    'Callback',@deleteSetButtonCallback);
-  uicontrol(hFig,'Style','pushbutton','Tag','exportSetButton',...
-    'Position',[x0+230 y0+100 50 20],...
-    'String','export',...
-    'Tooltip','Export fit set to workspace','Enable','off',...
-    'Callback',@exportSetButtonCallback);
-  uicontrol(hFig,'Style','pushbutton','Tag','sortIDSetButton',...
-    'Position',[x0+210 y0+100 20 20],...
-    'String','id',...
-    'Tooltip','Sort parameter sets by ID','Enable','off',...
-    'Callback',@sortIDSetButtonCallback);
-  uicontrol(hFig,'Style','pushbutton','Tag','sortRMSDSetButton',...
-    'Position',[x0+180 y0+100 30 20],...
-    'String','rmsd',...
-    'Tooltip','Sort parameter sets by rmsd','Enable','off',...
-    'Callback',@sortRMSDSetButtonCallback);
-  drawnow
-  
-  set(hFig,'NextPlot','new');
-  
+% Start/Stop and Speed-ups
+%-----------------------------------------------------------------
+pos =  [x0+220 y0-3+50 110 45];
+pos1 = [x0+220 y0-3+25 110 25];
+uicontrol(hFig,'Style','pushbutton',...
+  'Tag','StartButton',...
+  'String','Start',...
+  'Callback',@runFitting,...
+  'Visible','on',...
+  'Tooltip','Start fitting',...
+  'Position',pos);
+
+uicontrol(hFig,'Style','pushbutton',...
+  'Tag','StopButton',...
+  'String','Stop',...
+  'Visible','off',...
+  'Tooltip','Stop fitting',...
+  'Callback','global UserCommand; UserCommand = 1;',...
+  'Position',pos);
+
+uicontrol(hFig,'Style','pushbutton',...
+  'Tag','SaveButton',...
+  'String','Save parameter set',...
+  'Callback',@saveFitsetCallback,...
+  'Enable','off',...
+  'Tooltip','Save latest fitting result',...
+  'Position',pos1);
+
+uicontrol(hFig,'Style','checkbox',...
+  'Tag','ProductRule',...
+  'String','Product Rule',...
+  'Value',0,...
+  'Callback',@ProductRuleCallback,...
+  'Enable','on',...
+  'Tooltip','Use product rule for simulations',...
+  'Position',[x0+250 y0-3 80 25]);
+
+uicontrol(hFig,'Style','popupmenu',...
+  'Tag','SpeedUp',...
+  'String',AvailableCores,...
+  'Value',FitData.CurrentCoreUsage+1,...
+  'Callback',@speedUpCallback,...
+  'Enable','on',...
+  'Tooltip','Parallel computing options',...
+  'Position',[x0+185 y0-5 60 25]);
+
+uicontrol('Style','text',...
+  'String','Speed-up',...
+  'Position',[x0+133 y0-8 50 25],...
+  'HorizontalAlignment','right',...
+  'BackgroundColor',get(gcf,'Color'),...
+  'HorizontalAl','left');
+
+IconData = imread(fullfile(Path2Hyscorean,'bin\detach_icon.png'));
+uicontrol('Style','pushbutton','Tag','detachButton',...
+  'Position',[927 446 22 22],'CData',IconData,...
+  'String','','Enable','on','Callback',@detachButtonCallback,...
+  'Tooltip','Detach current display to new window');
+
+% Fitset list
+%-----------------------------------------------------------------
+x0 = 1070; y0 = 10;
+uicontrol('Style','text','Tag','SetListTitle',...
+  'Position',[x0 y0+100 230 20],...
+  'BackgroundColor',get(gcf,'Color'),...
+  'FontWeight','bold','String','Parameter sets',...
+  'Tooltip','List of stored fit parameter sets',...
+  'HorizontalAl','left');
+
+uicontrol(hFig,'Style','listbox','Tag','SetListBox',...
+  'Position',[x0 y0 330 100],...
+  'String','','Tooltip','',...
+  'BackgroundColor',[1 1 0.9],...
+  'KeyPressFcn',@deleteSetListKeyPressFcn,...
+  'Callback',@setListCallback);
+
+uicontrol(hFig,'Style','pushbutton','Tag','deleteSetButton',...
+  'Position',[x0+280 y0+100 50 20],...
+  'String','delete',...
+  'Tooltip','Delete fit set','Enable','off',...
+  'Callback',@deleteSetButtonCallback);
+
+uicontrol(hFig,'Style','pushbutton','Tag','exportSetButton',...
+  'Position',[x0+230 y0+100 50 20],...
+  'String','export',...
+  'Tooltip','Export fit set to workspace','Enable','off',...
+  'Callback',@exportSetButtonCallback);
+
+uicontrol(hFig,'Style','pushbutton','Tag','sortIDSetButton',...
+  'Position',[x0+210 y0+100 20 20],...
+  'String','id',...
+  'Tooltip','Sort parameter sets by ID','Enable','off',...
+  'Callback',@sortIDSetButtonCallback);
+
+uicontrol(hFig,'Style','pushbutton','Tag','sortRMSDSetButton',...
+  'Position',[x0+180 y0+100 30 20],...
+  'String','rmsd',...
+  'Tooltip','Sort parameter sets by rmsd','Enable','off',...
+  'Callback',@sortRMSDSetButtonCallback);
+
+drawnow
+
+set(hFig,'NextPlot','new');
+
 end
 
 
-% Run fitting routine
-%------------------------------------------------------------
+% Run fitting routine if not GUI
 if (~FitData.GUI)
   [BestSys,BestSpec,Residuals] = runFitting;
 end
 
-% Arrange outputs
-%------------------------------------------------------------
+% Arrange outputs if not GUI
 if ~FitData.GUI
   if (nSystems==1), BestSys = BestSys{1}; end
   switch (nargout)
@@ -965,11 +1038,11 @@ end
 
 clear global UserCommand
 
-%===================================================================
-%===================================================================
-%===================================================================
-
 function [FinalSys,BestSpec,Residuals] = runFitting(object,src,event)
+
+%===================================================================
+% Main fitting function
+%===================================================================
 
 global FitOpts FitData UserCommand
 
@@ -998,10 +1071,14 @@ if FitData.GUI
   set(findobj('Tag','selectNoneButton'),'Enable','off');
   set(findobj('Tag','selectInvButton'),'Enable','off');
   set(getParameterTableHandle,'Enable','off');
-  
+  set(findobj('Tag','ORCAbutton'),'Enable','off');
+  set(findobj('Tag','GraphicsButton'),'Enable','off');
+  set(findobj('Tag','detachButton'),'Enable','off');
+
+  % Disable speedups and report
+  set(findobj('Tag','ProductRule'),'Enable','off');
   set(findobj('Tag','SpeedUp'),'Enable','off');
   set(findobj('Tag','reportButton'),'Enable','off');
-
 
   % Disable fitset list controls
   set(findobj('Tag','deleteSetButton'),'Enable','off');
@@ -1034,8 +1111,6 @@ if ~FitData.GUI
     disp('---------------------------------------------------------');
   end
 end
-
-%FitData.bestspec = ones(1,numel(FitData.ExpSpec))*NaN;
 
 if FitData.GUI
   data = get(getParameterTableHandle,'Data');
@@ -1076,6 +1151,7 @@ end
 
 funArgs = {fitspc,FitData,FitOpts};  % input args for assess and residuals_
 
+% Depending on the method chosen launch the assess function with a different esfit function
 if (nParameters_>0)
   switch FitOpts.MethodID
     case 1 % Nelder/Mead simplex
@@ -1107,7 +1183,8 @@ if FitData.GUI
   set(hTable,'Data',Data);
   
   if FitOpts.MethodID~=7
-    % Hide current sim plot in data axes
+    
+    %If using AUTOMATIC FITTING
     switch FitOpts.GraphicalSettings.FitSpectraTypeString
       case 'colormap'
         set(findobj('Tag','currsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
@@ -1117,7 +1194,10 @@ if FitData.GUI
     
     set(findobj('Tag','currsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
     set(findobj('Tag','currsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
+    
   else
+    
+    %If using MANUAL FITTING (colormap  has been already flipped during assess)
     switch FitOpts.GraphicalSettings.FitSpectraTypeString
       case 'colormap'
         set(findobj('Tag','bestsimdata'),'CData',NaN*ones(length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
@@ -1127,15 +1207,11 @@ if FitData.GUI
     set(findobj('Tag','bestsimdata_projection2'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
     set(findobj('Tag','bestsimdata_projection1'),'YData',NaN*ones(1,length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay})));
   end
-%   hErrorLine = findobj('Tag','errorline');
-%   set(hErrorLine,'XData',1,'YData',NaN);
-%   axis(get(hErrorLine,'Parent'),'tight');
   drawnow
   set(findobj('Tag','logLine'),'String','');
 
   % Reactivate UI components
-  set(findobj('Tag','SaveButton'),'Enable','on');
-  
+  set(findobj('Tag','SaveButton'),'Enable','on'); 
   if isfield(FitData,'FitSets') && numel(FitData.FitSets)>0
     set(findobj('Tag','deleteSetButton'),'Enable','on');
     set(findobj('Tag','exportSetButton'),'Enable','on');
@@ -1148,7 +1224,11 @@ if FitData.GUI
   set(findobj('Tag','StartButton'),'Visible','on');
   set(findobj('Tag','reportButton'),'Enable','on');
   set(findobj('Tag','SpeedUp'),'Enable','on');
-
+  set(findobj('Tag','ProductRule'),'Enable','on');
+  set(findobj('Tag','ORCAbutton'),'Enable','on');
+  set(findobj('Tag','GraphicsButton'),'Enable','on');
+  set(findobj('Tag','detachButton'),'Enable','on');
+  
   % Re-enable listboxes
   set(findobj('Tag','MethodMenu'),'Enable','on');
   set(findobj('Tag','TargetMenu'),'Enable','on');
@@ -1164,13 +1244,13 @@ if FitData.GUI
 end
 
 %===================================================================
-% Final stage: finish
+% Final stage: simulate the best spectrum again
 %===================================================================
 
-% compile best-fit system structures
+%Compile best-fit system structures
 [FinalSys,bestvalues] = getSystems(FitData.Sys0,FitData.Vary,bestx);
 
-% Simulate best-fit spectrum
+%Simulate best-fit spectrum
 if numel(FinalSys)==1
   fs = FinalSys{1};
 else
@@ -1212,6 +1292,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   tdx = apodizationWin(tdx,FitData.SimOpt{Index}.WindowType,FitData.SimOpt{Index}.WindowDecay1,FitData.SimOpt{Index}.WindowDecay2);
   %Fourier transform with same zerofilling as experimental data
   Spectrum = fftshift(fft2(tdx,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints));
+  %Symmetrize the spectrum if needed
   switch FitData.SimOpt{Index}.Symmetrization
     case 'Diagonal'
       Spectrum = (Spectrum.*Spectrum').^0.5;
@@ -1223,7 +1304,6 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   end
    BestSpec{Index} = Spectrum;
   % (SimSystems{s}.weight is taken into account in the simulation function)
-  % BestSpec = out{FitData.OutArgument}; % pick last output argument
   BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
   if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
     BestSpecScaled{Index} = reshape(BestSpecScaled{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
@@ -1233,15 +1313,14 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     BestSpec{Index} = reshape(BestSpec{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
   end
   
+  %Compute the residual
   Residuals{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index});
-  
+  %Compute the individual and total RMSD
   rmsd_individual{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index})/sqrt(numel(FitData.ExpSpec{Index}));
   rmsd = rmsd + rmsd_individual{Index};
   
 end
 
-% Output
-%===============================================================================
 if ~FitData.GUI
   
   if FitOpts.PrintLevel && (UserCommand~=99)
@@ -1280,8 +1359,12 @@ end
 
 
 
-catch e
-  w = errordlg(sprintf('The fit protocol stopped due to an error : \n\n %s \n\n Please check your input. If this error persists restart the program.',getReport(e,'extended','hyperlinks','off')),'Error','modal');
+catch Error
+  
+    %In case some error occurs catch it, display it and then reactivate the
+  %whole GUI to avoid getting stuck in a crash
+  
+  w = errordlg(sprintf('The fit protocol stopped due to an error : \n\n %s \n\n Please check your input. If this error persists restart the program.',getReport(Error,'extended','hyperlinks','off')),'Error','modal');
   waitfor(w);
   % If fails hide Stop button, show Start button
   set(findobj('Tag','StopButton'),'Visible','off');
@@ -1292,27 +1375,34 @@ catch e
   set(findobj('Tag','TargetMenu'),'Enable','on');
   set(findobj('Tag','ScalingMenu'),'Enable','on');
   set(findobj('Tag','StartpointMenu'),'Enable','on');
-  
   % Re-enable parameter table and its selection controls
   set(findobj('Tag','selectAllButton'),'Enable','on');
   set(findobj('Tag','selectNoneButton'),'Enable','on');
   set(findobj('Tag','selectInvButton'),'Enable','on');
   set(findobj('Tag','reportButton'),'Enable','off');
   set(findobj('Tag','SpeedUp'),'Enable','on');
+  set(findobj('Tag','ProductRule'),'Enable','on');
+  set(findobj('Tag','ORCAbutton'),'Enable','on');
+  set(findobj('Tag','GraphicsButton'),'Enable','on');
+  set(findobj('Tag','detachButton'),'Enable','on');
   set(getParameterTableHandle,'Enable','on');
 
 end
 
 return
-%===============================================================================
-%===============================================================================
-%===============================================================================
+%===================================================================
 
+
+%===================================================================
 function resi = residuals_(x,ExpSpec,FitDat,FitOpt)
 [rms,resi] = assess(x,ExpSpec,FitDat,FitOpt);
+%===================================================================
 
-%===============================================================================
+%===================================================================
+% Assess the current parameter set by simulating and getting rmsd                                                               
+%===================================================================
 function varargout = assess(x,ExpSpec,FitDat,FitOpt)
+
 
 global UserCommand FitData FitOpts
 persistent BestSys;
@@ -1776,6 +1866,7 @@ end
 return
 %==========================================================================
 
+
 %==========================================================================
 function iterationprint(str)
 hLogLine = findobj('Tag','logLine');
@@ -1917,12 +2008,12 @@ if ~isempty(str)
     CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
     CurrentFitSpec = abs(CurrentFitSpec);
     h = findobj('Tag','bestsimdata');
-  switch FitOpts.GraphicalSettings.FitSpectraTypeString
-    case 'colormap'
-      set(h,'CData',-abs(CurrentFitSpec));
-    case 'contour' 
+    switch FitOpts.GraphicalSettings.FitSpectraTypeString
+      case 'colormap'
+        set(h,'CData',-abs(CurrentFitSpec));
+      case 'contour'
         set(h,'ZData',-abs(CurrentFitSpec));
-      end
+    end
     h = findobj('Tag','bestsimdata_projection1');
     Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
 %     Inset = abs(Inset - Inset(end));
@@ -1975,20 +2066,27 @@ return
 %==========================================================================
 function systemButtonCallback(object,src,event)
 global FitData
-Path2Hyscorean = which('Hyscorean');
-Path2Hyscorean = Path2Hyscorean(1:end-11);
+
+%Reset the local Sys and Vary variables
 clear Sys Vary
 while true
-%   load([Path2Hyscorean 'bin\DefaultSystemEasySpin']);
+  
+  %Get the current spin system definition from the Hyscorean preferences
   DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
+  
+  %And prompt the spin system definition window for the user to edit
   SpinSystemInput = inputdlg_mod('Input','Spin System & Variables', [20 80],{DefaultInput});
-  if isempty(SpinSystemInput) %if canceled
+  
+  %If canceled just return without any changes
+  if isempty(SpinSystemInput) 
     return
   end
+  
+  %Get the user edited string and store as new preference
   FitData.SpinSystemInput = SpinSystemInput{1};
   DefaultInput = SpinSystemInput{1};
-%   save([Path2Hyscorean 'bin\DefaultSystemEasySpin'],'DefaultInput')
   setpref('hyscorean','defaultsystemEasyspin',DefaultInput)
+  
   %Remove comments on the input
   Size = size(SpinSystemInput{1},1);
   for i=1:Size
@@ -1996,20 +2094,26 @@ while true
       SpinSystemInput{1}(i,:) = ' ';
     end
   end
-%   StringForEval = char(strjoin(string(SpinSystemInput{1})'));
-StringForEval = SpinSystemInput{1};
-try
-  for i=1:size(StringForEval,1)
-    eval(StringForEval(i,:));
+  StringForEval = SpinSystemInput{1};
+  
+  %Compile the user input
+  try
+    for i=1:size(StringForEval,1)
+      eval(StringForEval(i,:));
+    end
+    CompilerFailed = false;
+  catch CompilerError
+    CompilerFailed = true;
   end
-  CompilerFailed = false;
-catch CompilerError
-  CompilerFailed = true;
-end
-if CompilerFailed
-  w = errordlg(sprintf('Error found in the definition: \n\n %s \n\n Please check your input. ',CompilerError.message),'Error','modal');
-  waitfor(w)
-else
+  
+  %If some MATLAB-based error occurs during compilation catch it display it to the user and repeat input
+  if CompilerFailed
+    w = errordlg(sprintf('Error found in the definition: \n\n %s \n\n Please check your input. ',CompilerError.message),'Error','modal');
+    waitfor(w)
+  else
+    
+    %If no MATLAB-based error is found check for other error sources
+    
     %If Vary not defined then warn and repeat input
     if ~exist('Vary','var')
       w  = errordlg('The Vary structure needs to have at least one valid field.','Vary structure not found','modal');
@@ -2020,72 +2124,80 @@ else
       w  = errordlg('The Sys structure needs to be defined properly.','Sys structure not found','modal');
       waitfor(w)
     end
+    
+    %Check for EasySpin-based errors but validatespinsys is a private EasySpin function
     CurrentPath = cd;
     EasySpinPath = which('easyspin');
     EasySpinPath = EasySpinPath(1:end-10);
+    %Change to the location of the file to be able to call it... 
     cd(fullfile(EasySpinPath,'private'))
     [~,SpinSystemError] = validatespinsys(Sys);
+    %... and return to the location without the user noticing it
     cd(CurrentPath)
     
+    %If some error was found, notify the user and repeat input
     if ~isempty(SpinSystemError)
       w  = errordlg(sprintf('EasySpin has found an error in the definition: \n\n %s \n\n Please check your input.',SpinSystemError),'Spin system error','modal');
       waitfor(w)
     end
     
-end
+  end
 
-  %If the two critical variables are given, then proceed
+  %If no error of any type are found then break the loop and continue
   if exist('Sys','var') && exist('Vary','var') && isempty(SpinSystemError) && ~CompilerFailed
     break
   end  
+  %Otherwise repeat endlessly until the user gives a correct input
 end
 
 %Check if any changes/additions to the Opt structure are requested
 if exist('Opt','var')
-    if ~iscell(Opt)
-      %Get Opt fields
-      OptFields = fields(Opt);
-      for i=1:length(OptFields)
-        for j=1:length(FitData.SimOpt)
-          %Set these fields on the existing SimOpt structure
-          FitData.SimOpt{j} = setfield(FitData.SimOpt{j},OptFields{i},getfield(Opt,OptFields{i}));
-        end
+  if ~iscell(Opt)
+    %Get Opt fields
+    OptFields = fields(Opt);
+    for i=1:length(OptFields)
+      for j=1:length(FitData.SimOpt)
+        %Set these fields on the existing SimOpt structure
+        FitData.SimOpt{j} = setfield(FitData.SimOpt{j},OptFields{i},getfield(Opt,OptFields{i}));
       end
     end
+  end
 else
   FitData.SimOpt = FitData.DefaultSimOpt;
 end
 %Check if any changes/additions to the Exp structure are requested
 if exist('Exp','var')
-    if ~iscell(Exp)
-      %Get Opt fields
-      ExpFields = fields(Exp);
-      for i=1:length(ExpFields)
-        for j=1:length(FitData.Exp)
-          %Set these fields on the existing Exp structure
-          FitData.Exp{j} = setfield(FitData.Exp{j},ExpFields{i},getfield(Exp,ExpFields{i}));
-        end
+  if ~iscell(Exp)
+    %Get Opt fields
+    ExpFields = fields(Exp);
+    for i=1:length(ExpFields)
+      for j=1:length(FitData.Exp)
+        %Set these fields on the existing Exp structure
+        FitData.Exp{j} = setfield(FitData.Exp{j},ExpFields{i},getfield(Exp,ExpFields{i}));
       end
     end
+  end
 else
   FitData.Exp = FitData.DefaultExp;
 end
 
+%Update the system name given in blue next to the button
 set(findobj('Tag','SystemName'),'string',Sys.Nucs)
 
+%Now go through the same protols as in the startup
 if ~iscell(Sys)
 Sys = {Sys};
 end
 if ~iscell(Vary)
 Vary = {Vary};
 end
-
 nSystems = numel(Sys);
 for s = 1:nSystems
   if ~isfield(Sys{s},'weight'), Sys{s}.weight = 1; end
 end
 FitData.nSystems = nSystems;
 FitData.Sys0 = Sys;
+
 % Make sure user provides one Vary structure for each Sys
 if numel(Vary)~=nSystems
   error(sprintf('%d spin systems given, but %d vary structure.\n Give %d vary structures.',nSystems,numel(Vary),nSystems));
@@ -2144,9 +2256,9 @@ FitData.Vary = Vary;
     data{p,6} = sprintf('%0.6g',FitData.VaryVals(p));
     end
 
-
 h = getParameterTableHandle;
 set(h,'Data',data);
+
 return
 %==========================================================================
 
@@ -2173,48 +2285,81 @@ return
 function ChangeCurrentDisplay(hObject,event)
 
 global FitData FitOpts
+
+%Get the current field selected in the UI element
 FitData.CurrentSpectrumDisplay = get(hObject,'value');
 
+%Construct the frequency axis again
 FrequencyAxis = linspace(-1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
+
+%Get the corresponding experimental spectrum
 CurrentExpSpec = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
 CurrentExpSpec = CurrentExpSpec/max(max(CurrentExpSpec));
-% update contour graph
-  set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
-% update upper projection graph
+
+%Update the experimental main display plot
+switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
+  case 'colormap'
+    set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-CurrentExpSpec);
+  case 'contour'
+    set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
+end
+
+% Update the inset experimental plots
 Inset = max(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),[],2);
 set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
-% update lower projection graph
-  Inset = max(CurrentExpSpec,[],2);
+Inset = max(CurrentExpSpec,[],2);
 set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
-  CurrentBestSpec = abs(FitData.bestspec{FitData.CurrentSpectrumDisplay});
+CurrentBestSpec = abs(FitData.bestspec{FitData.CurrentSpectrumDisplay});
+
+if FitOpts.MethodID >= 7
   
-  if FitOpts.MethodID >= 7
-    
-     CurrentFitSpec = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
-     CurrentFitSpec = abs(CurrentFitSpec);
-       h = findobj('Tag','currsimdata');
-     if FitOpts.MethodID==7
-       set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
-     else
-       set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
-     end
+  %Get the manual fit or ORCA fit saved in the currentFitSpec variable
+  CurrentFitSpec = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+  CurrentFitSpec = abs(CurrentFitSpec);
+  %Get handle to plot
+  h = findobj('Tag','currsimdata');
+  if FitOpts.MethodID==7
+    %If MANUAL FITTED spectrum
+    switch FitOpts.GraphicalSettings.FitSpectraTypeString
+      case 'colormap'
+        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
+      case 'contour'
+        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
+    end    
+  else    
+    %If ORCA SIMULATED spectrum
+    switch FitOpts.GraphicalSettings.FitSpectraTypeString
+      case 'colormap'
+        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
+      case 'contour'
+        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
+    end
+  end
+  
+  %Update the inset plots
   h = findobj('Tag','currsimdata_projection1');
   Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
   set(h,'YData',Inset);
   h = findobj('Tag','currsimdata_projection2');
   Inset = max(CurrentFitSpec,[],2);
   set(h,'XData',Inset);
-%   set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',CurrentFitSpec);
-  else
-    set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-CurrentBestSpec);
-    % update upper projection graph
-    Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],2);
-    set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
-    % update lower projection graph
-    Inset = max(CurrentBestSpec,[],2);
-    set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
+  
+else
+  %If AUTOMATIC FITTING spectrum
+  switch FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'colormap'
+      set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-CurrentBestSpec);
+    case 'contour'
+      set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentBestSpec));
   end
   
+  %Update the inset plots
+  Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],2);
+  set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+  Inset = max(CurrentBestSpec,[],2);
+  set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
+  
+end
 
 
 if isfield(FitData,'FitSets')
@@ -2231,16 +2376,16 @@ if isfield(FitData,'FitSets')
   set(h,'Data',data);
   
   CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
-%   CurrentFitSpec = abs(CurrentFitSpec - CurrentFitSpec(end,end));
+  %   CurrentFitSpec = abs(CurrentFitSpec - CurrentFitSpec(end,end));
   h = findobj('Tag','currsimdata');
   set(h,'CData',abs(CurrentFitSpec)/max(max(abs(CurrentFitSpec))));
   h = findobj('Tag','currsimdata_projection1');
   Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
-%   Inset = abs(Inset - Inset(end));
+  %   Inset = abs(Inset - Inset(end));
   set(h,'YData',Inset);
   h = findobj('Tag','currsimdata_projection2');
   Inset = max(CurrentFitSpec,[],2);
-%   Inset = abs(Inset - Inset(end));
+  %   Inset = abs(Inset - Inset(end));
   set(h,'XData',Inset);
   drawnow
 end
@@ -2333,7 +2478,7 @@ function hTable = getParameterTableHandle
 %h = findobj('Tag','ParameterTable'); % works only for R2008a and later
 
 % for R2007b compatibility
-hFig = findobj('Tag','esfitFigure');
+hFig = findobj('Tag','esfitFigure_hyscorean');
 if ishandle(hFig)
   hTable = findobj(hFig,'Type','uitable');
 else
@@ -2345,26 +2490,30 @@ return
 
 %==========================================================================
 function speedUpCallback(object,src,event)
-  global FitData
-  FitData.CurrentCoreUsage = get(object,'value');
-  
-  if FitData.CurrentCoreUsage > length(FitData.Exp)
-    w  = warndlg(sprintf('%i cores accesed. This exceeds the number of spectra loaded (%i). No speed-up will be obtained from exceeding %i cores. Consider reducing the number of cores.' ...
-                          ,FitData.CurrentCoreUsage,length(FitData.Exp),length(FitData.Exp)),'Warning','modal');
-    waitfor(w)
-  end
-  
-  delete(gcp('nocreate'))
 
-  if FitData.CurrentCoreUsage>1
-% h = figure('units','pixels','position',[500 500 200 50],'windowstyle','modal');
-            w  = warndlg('Connecting workers to parallel computing pool...','Warning','modal');
- delete(w.Children(1))
-% uicontrol(h,'style','text','string','Connecting workers to pool...','units','pixels','position',[75 10 100 30]);
-% drawnow
-FitData.PoolData =  parpool(FitData.CurrentCoreUsage);
+global FitData
+
+%Get number of cores requested by the user
+FitData.CurrentCoreUsage = get(object,'value');
+
+%Check if too many are requested and inform the user
+if FitData.CurrentCoreUsage > length(FitData.Exp)
+  w  = warndlg(sprintf('%i cores accesed. This exceeds the number of spectra loaded (%i). No speed-up will be obtained from exceeding %i cores. Consider reducing the number of cores.' ...
+    ,FitData.CurrentCoreUsage,length(FitData.Exp),length(FitData.Exp)),'Warning','modal');
+  waitfor(w)
+end
+
+%Deletes the current parpool without creating one
+delete(gcp('nocreate'))
+
+%If more than one core is requested then open the parpool informing the user 
+if FitData.CurrentCoreUsage>1
+  w  = warndlg('Connecting workers to parallel computing pool...','Warning','modal');
+  delete(w.Children(1))
+  FitData.PoolData =  parpool(FitData.CurrentCoreUsage);
   close(w);
-  end
+end
+
 return
 %==========================================================================
 
@@ -2419,34 +2568,47 @@ function DetachRMSD(object,src,event)
 
 global FitData
 
-  
+%Get number of spectra being fitted
 numSpec = FitData.numSpec;
 
+%Find the figure, close it and reopen it
 FitData.DetachedRMSD_Fig = findobj('Tag','detachedRMSD');
-  if isempty(FitData.DetachedRMSD_Fig)
-    FitData.DetachedRMSD_Fig = figure('Tag','detachedRMSD','WindowStyle','normal');
-  else
-    figure(FitData.DetachedRMSD_Fig);
-    clf(FitData.DetachedRMSD_Fig);
-  end 
-    set(FitData.DetachedRMSD_Fig,'WindowStyle','normal','DockControls','off','MenuBar','none');
-  set(FitData.DetachedRMSD_Fig,'Resize','off');
-  set(FitData.DetachedRMSD_Fig,'Name','Hyscorean: EasySpin - Individual Fit RMSD','NumberTitle','off');
-    numPlots = numSpec+1;
-    Tags{1} = 'DetachedRmsdPlot_Total';
-    for i=2:numPlots
-          Tags{i} = sprintf('DetachedRmsdPlot%i', i);
-    end
-  sz = [600 numPlots*200]; % figure size
-  screensize = get(0,'ScreenSize');
-  xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
-  ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
-  set(FitData.DetachedRMSD_Fig,'Position',[xpos ypos sz(1) sz(2)])
-  cmp = lines(numPlots);
+if isempty(FitData.DetachedRMSD_Fig)
+  FitData.DetachedRMSD_Fig = figure('Tag','detachedRMSD','WindowStyle','normal');
+else
+  figure(FitData.DetachedRMSD_Fig);
+  clf(FitData.DetachedRMSD_Fig);
+end
+
+%Set figure properties
+set(FitData.DetachedRMSD_Fig,'WindowStyle','normal','DockControls','off','MenuBar','none');
+set(FitData.DetachedRMSD_Fig,'Resize','off');
+set(FitData.DetachedRMSD_Fig,'Name','Hyscorean: EasySpin - Individual Fit RMSD','NumberTitle','off');
+
+%Additional plot required for the total RMSD display
+numPlots = numSpec+1;
+
+%Generate tags for the plot tags
+Tags{1} = 'DetachedRmsdPlot_Total';
+for i=2:numPlots
+  Tags{i} = sprintf('DetachedRmsdPlot%i', i);
+end
+
+%Set the figure size in accordance to how many plots are required 
+sz = [600 numPlots*200]; % figure size
+screensize = get(0,'ScreenSize');
+xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
+ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
+set(FitData.DetachedRMSD_Fig,'Position',[xpos ypos sz(1) sz(2)])
+
+%Construct the axis and plots
+cmp = lines(numPlots);
 for i=1:numPlots
+  %Generate axis fitting in the figure
   AxisWidth = 0.85/numPlots;
   YPositionAxis = 1 - i*AxisWidth - i*0.04;
   hAx = axes('Parent',FitData.DetachedRMSD_Fig,'Units','normalized','Position',[0.05 YPositionAxis 0.85 AxisWidth]);
+  %Generate a dummy plot with desired properties
   h = plot(hAx,1,NaN,'.');
   set(hAx,'Tag',Tags{i})
   set(h,'Tag',Tags{i},'MarkerSize',10,'Color',cmp(i,:));
@@ -2459,6 +2621,7 @@ for i=1:numPlots
   end
   legend(hAx,LegendTag)
 end
+%The data is introduced durin the execution of the assess function
 
 return
 %==========================================================================
@@ -2468,7 +2631,6 @@ return
 function StartpointNamesCallback(object,src,event)
 
 global FitOpts
-
 FitOpts.StartID = get(object,'value'); 
 
 return
@@ -2479,26 +2641,30 @@ function reportButtonCallback(object,src,event)
 global FitData FitOpts
 
 if getpref('hyscorean','reportlicense')
-  
+
+%Store all information contained in global variables into report data 
 ReportData.FitData = FitData; 
 ReportData.FitOpts = FitOpts; 
+
+%Get the current date
 Date = date;
 formatOut = 'yyyymmdd';
 Date = datestr(Date,formatOut);
-% ReportData.SaveName = [Date '_FitReport'];
-% ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit reports\');
-% ReportData.SavePath =  fullfile(ReportData.FitData.SimOpt{1}.FilePaths, 'Fit reports\');
 
+%Ask the user via the OS where to put the report
 [ReportData.SaveName,ReportData.SavePath] = uiputfile('*.*','Save fitting report as');
 
+%If directory does not exist just create it
 if ~exist(ReportData.SavePath,'dir')
   mkdir(ReportData.SavePath)
 end
   
-  HyscoreanPath = which('Hyscorean');
-  HyscoreanPath = HyscoreanPath(1:end-11);
+%Get Hyscorean path
+HyscoreanPath = which('Hyscorean');
+HyscoreanPath = HyscoreanPath(1:end-11);
 ReportData.FittingReport_logo_Path = [HyscoreanPath 'bin\FitReport_logo.png'];
 
+%If there are too many files just print the number of them
 if length(ReportData.FitData.SimOpt{1}.FileNames{1}) > 15
   ReportData.FitData.SimOpt{1}.FileNames = {sprintf('%i files',length(ReportData.FitData.SimOpt{1}.FileNames{1}))};
 end
@@ -2510,6 +2676,7 @@ assignin('base', 'ReportData', ReportData);
  report Hyscorean_Fitting_report -fpdf ;
 
 else
+  %Report generator is not available without the license
   warning('MATLAB report generator license missing. Report cannot be generated.')
 end
 
@@ -2535,42 +2702,47 @@ return
 %==========================================================================
 function detachButtonCallback(object,src,event)
 
-  hFig = findobj('Tag','esfitDetached');
-  if isempty(hFig)
-    hFig = figure('Tag','esfitDetached','WindowStyle','normal');
-  else
-    figure(hFig);
-    clf(hFig);
+%Search for figure, close it or\ans open it
+hFig = findobj('Tag','esfitDetached');
+if isempty(hFig)
+  hFig = figure('Tag','esfitDetached','WindowStyle','normal');
+else
+  figure(hFig);
+  clf(hFig);
+end
+
+%Set figure properties exactly as in the GUI
+sz = [1080 600]; % figure size
+screensize = get(0,'ScreenSize');
+xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
+ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
+set(hFig,'position',[xpos, ypos, sz(1), sz(2)],'units','pixels');
+
+%Get handles of the plots parents
+experimentalHandle = findobj('Tag','expdata');
+experimentalHandle = experimentalHandle.Parent;
+mainHandle = findobj('Tag','bestsimdata');
+mainHandle = mainHandle.Parent;
+inset1Handle = findobj('Tag','expdata_projection1');
+inset1Handle = inset1Handle.Parent;
+inset2Handle = findobj('Tag','bestsimdata_projection2');
+inset2Handle = inset2Handle.Parent;
+
+%Copy all objects into the new figure
+copyobj(mainHandle,hFig);
+copyobj(experimentalHandle,hFig);
+copyobj(inset1Handle,hFig);
+copyobj(inset2Handle,hFig);
+
+%Remove the tags of all children in the new figure to avoid tag clashes
+%with the GUI axis
+for i=1:length(hFig.Children)
+  for j=1:length(hFig.Children(i).Children)
+    hFig.Children(i).Children(j).Tag = '';
   end
-  
-  sz = [1080 600]; % figure size
-  screensize = get(0,'ScreenSize');
-  xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
-  ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
-  set(hFig,'position',[xpos, ypos, sz(1), sz(2)],'units','pixels');
+end
 
-  
-  experimentalHandle = findobj('Tag','expdata');
-  experimentalHandle = experimentalHandle.Parent;
-  mainHandle = findobj('Tag','bestsimdata');
-  mainHandle = mainHandle.Parent;
-  inset1Handle = findobj('Tag','expdata_projection1');
-  inset1Handle = inset1Handle.Parent;
-  inset2Handle = findobj('Tag','bestsimdata_projection2');
-  inset2Handle = inset2Handle.Parent;
-
-  copyobj(mainHandle,hFig);
-      copyobj(experimentalHandle,hFig);
-  copyobj(inset1Handle,hFig);
-  copyobj(inset2Handle,hFig);
-  
-  for i=1:length(hFig.Children)
-    for j=1:length(hFig.Children(i).Children)
-      hFig.Children(i).Children(j).Tag = '';
-    end
-  end
-
-
+%Remove the figure number and give it a title
 set(hFig,'NumberTitle','off','Name','Hyscorean: HYSCORE Fit');
 
 return
@@ -2581,23 +2753,21 @@ function ProductRuleCallback(object,src,event)
 
 global FitData
 
-    if get(object,'value')
-        numNuclei =  length(strfind(FitData.Sys0{1}.Nucs,','))+1;
-        if numNuclei < 3
-            w  = warndlg(sprintf('Product rule usage activated. However only %i nuclei are defined in the system. This may result in a slow down of the simulation.' ...
-                ,numNuclei),'Warning','modal');
-            waitfor(w)
-        end
-    end
-    
+%Warn that using product rule with less than three nuclei can slow down 
+if get(object,'value')
+  numNuclei =  length(strfind(FitData.Sys0{1}.Nucs,','))+1;
+  if numNuclei < 3
+    w  = warndlg(sprintf('Product rule usage activated. However only %i nuclei are defined in the system. This may result in a slow down of the simulation.' ...
+      ,numNuclei),'Warning','modal');
+    waitfor(w)
+  end
+end
 for i=1:length(FitData.SimOpt)
-   
-    if get(object,'value')
-        FitData.SimOpt{i}.ProductRule = 1;
-    else
-        FitData.SimOpt{i}.ProductRule = 0;
-    end
-    
+  if get(object,'value')
+    FitData.SimOpt{i}.ProductRule = 1;
+  else
+    FitData.SimOpt{i}.ProductRule = 0;
+  end
 end
 
 return
@@ -2608,11 +2778,13 @@ function loadORCACallback(object,src,event)
  
 global FitData FitOpts 
 
+%Ask the user to select the ORCA file
 [Filename,Path] = uigetfile('.prop','Load ORCA data');
 
-%-----For simulation----------------------------------
+%Convert the ORCA output to EasySpin structure
 Sys1 = orca2easyspin(fullfile(Path,Filename));
 
+%Identify all the different atoms in the ORCA output and make a list
 Commas = strfind(Sys1.Nucs,',');
 Nucs = Sys1.Nucs;
 Pos1 = 1;
@@ -2629,109 +2801,108 @@ for i=1:length(Commas)
   IsotopeNumber = NucleiName(1:strfind(NucleiName,NucleiShort)-1);
   List{i} = sprintf('<HTML>#%i <SUP> %s </SUP> %s </HTML>',i,IsotopeNumber,NucleiShort);
   Pos1 = Commas(i)+1;
-
 end
 Isotopes = isotopologues(Nucs(Pos1:end));
 Nuclei{i+1} = Isotopes(1).Nucs;
 if isempty(Nuclei{i})
   Nuclei{i+1} = Isotopes(2).Nucs;
 end
-  NucleiName =  Nuclei{i+1};
-  NucleiShort = Nucs(Pos1:end);
-  IsotopeNumber = NucleiName(1:strfind(NucleiName,NucleiShort)-1);
-  List{i+1} = sprintf('<HTML>#%i <SUP> %s </SUP> %s </HTML>',i+1,IsotopeNumber,NucleiShort);
+NucleiName =  Nuclei{i+1};
+NucleiShort = Nucs(Pos1:end);
+IsotopeNumber = NucleiName(1:strfind(NucleiName,NucleiShort)-1);
+List{i+1} = sprintf('<HTML>#%i <SUP> %s </SUP> %s </HTML>',i+1,IsotopeNumber,NucleiShort);
 
+
+%Ask the user to select the desired atoms from the list
 [Indexes,Answered] = listdlg('Name',' ','PromptString','Select the nuclei to simulate',...
   'SelectionMode','multiple',...
   'ListString',List);
 
+%Store hte current Sys and Vary structurers into temporary variables
 Temp = FitData.Sys0;
 Temp2 = FitData.Vary;
-ID = FitOpts.MethodID;
-
 
 if Answered
   try
+    %Inform the user that the simulation is running via message window
+    f = msgbox('Simulating ORCA system...');
+    delete(f.Children(1))
+    drawnow
     
-  f = msgbox('Simulating ORCA system...');
-  delete(f.Children(1))
-  drawnow
-  N = Indexes; %Number of searched atom in file !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  Sys = Sys1;
-  Sys.xyz = Sys1.xyz(N,:);
-  string = sprintf('%s',Nuclei{Indexes(1)});
-  if length(Indexes)>1
-    for i=2:length(Indexes)
-      string = sprintf('%s,%s',string,Nuclei{Indexes(i)});
+    %Get the atoms selected by the user from the list
+    N = Indexes;
+    Sys = Sys1;
+    Sys.xyz = Sys1.xyz(N,:);
+    string = sprintf('%s',Nuclei{Indexes(1)});
+    if length(Indexes)>1
+      for i=2:length(Indexes)
+        string = sprintf('%s,%s',string,Nuclei{Indexes(i)});
+      end
     end
-  end
-
-Sys.Nucs = string; %Select the type of the chosen nucleus
-Sys.A = Sys1.A(N,:);
-Sys.AFrame = Sys1.AFrame(N,:);
-Sys.Q = Sys1.Q(N,:);
-Sys.QFrame = Sys1.QFrame(N,:);
-
-
-switch FitOpts.Startpoint
-  case 1 % center of range
-    startx = zeros(FitData.nParameters,1);
-  case 2 % random
-    startx = 2*rand(FitData.nParameters,1) - 1;
-    startx(FitData.inactiveParams) = 0;
-  case 3 % selected fit set
-    h = findobj('Tag','SetListBox');
-    s = get(h,'String');
-    if ~isempty(s)
-      s = s{get(h,'Value')};
-      ID = sscanf(s,'%d');
-      startx = FitData.FitSets(ID).bestx;
+    
+    %Construct the reduced spin system to be simulated
+    Sys.Nucs = string;
+    Sys.A = Sys1.A(N,:);
+    Sys.AFrame = Sys1.AFrame(N,:);
+    Sys.Q = Sys1.Q(N,:);
+    Sys.QFrame = Sys1.QFrame(N,:);
+    
+    %Setup the simulation options required for asses to run
+    switch FitOpts.Startpoint
+      case 1 % center of range
+        startx = zeros(FitData.nParameters,1);
+      case 2 % random
+        startx = 2*rand(FitData.nParameters,1) - 1;
+        startx(FitData.inactiveParams) = 0;
+      case 3 % selected fit set
+        h = findobj('Tag','SetListBox');
+        s = get(h,'String');
+        if ~isempty(s)
+          s = s{get(h,'Value')};
+          ID = sscanf(s,'%d');
+          startx = FitData.FitSets(ID).bestx;
+        else
+          startx = zeros(FitData.nParameters,1);
+        end
+    end
+    FitData.startx = startx;
+    x0_ = startx;
+    x0_(FitData.inactiveParams) = [];
+    ORCASys = Sys;
+    if strcmp(FitOpts.Scaling, 'none')
+      fitspc = FitData.ExpSpec;
     else
-      startx = zeros(FitData.nParameters,1);
+      fitspc = FitData.ExpSpecScaled;
     end
-end
-FitData.startx = startx;
-x0_ = startx;
-x0_(FitData.inactiveParams) = [];
-nParameters_ = numel(x0_);
-
-bestx = startx;
-
-ORCASys = Sys;
-
-
-if strcmp(FitOpts.Scaling, 'none')
-  fitspc = FitData.ExpSpec;
-else
-  fitspc = FitData.ExpSpecScaled;
-end
-
-
-FitData.Sys0 = {ORCASys};
-a.A = 1;
-FitData.Vary = {a};
-FitOpts.MethodID = 8;
-
-funArgs = {fitspc,FitData,FitOpts};  % input args for assess and residuals_
-
-      assess(0,funArgs{:});
-
-FitData.Sys0 = Temp;
-FitData.Vary = Temp2;
-% FitOpts.MethodID = ID;
-
-close(f)
-
-  catch e
     
-    close(f)
+    FitData.Sys0 = {ORCASys};
+    %Set a dummy for vary for asses to work
+    Dummy.A = 1;
+    FitData.Vary = {Dummy};
+    %Set a new method ID for asses to recognize and use another color
+    FitOpts.MethodID = 8;
+    
+    %Launch the assess function (i.e. simulation)
+    funArgs = {fitspc,FitData,FitOpts};
+    assess(0,funArgs{:});
+    
+    %Once simulation finished restore the Sys and Vary as they were before
     FitData.Sys0 = Temp;
     FitData.Vary = Temp2;
-%     FitOpts.MethodID = ID;
-    f = errordlg(sprintf('Simulaton failed due to errors: \n\n %s \n\n ',getReport(e,'extended','hyperlinks','off')),'Error','modal');
-
+    
+    close(f)
+    
+  catch Error
+    
+    close(f)
+    %If crashes restore the Sys and Vary as they were before
+    FitData.Sys0 = Temp;
+    FitData.Vary = Temp2;
+    %And warn the user about the error
+    f = errordlg(sprintf('Simulaton failed due to errors: \n\n %s \n\n ',getReport(Error,'extended','hyperlinks','off')),'Error','modal');
+    
   end
-
+  
 end
 
 return
@@ -2744,104 +2915,131 @@ global FitOpts FitData
 
 warning('off','all')
 
-  FitOpts.GraphicalSettings = Hyscorean_esfit_GraphicalSettings(FitOpts.GraphicalSettings);
-  switch FitOpts.GraphicalSettings.ExperimentalSpectrumType
-    case 1
-      FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'contour';
-    case 2 
-      FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'colormap';
-    case 3
-      FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'filledcontour';
-  end
-  switch FitOpts.GraphicalSettings.FitSpectraType
-    case 1
-      FitOpts.GraphicalSettings.FitSpectraTypeString = 'colormap';
-    case 2 
-      FitOpts.GraphicalSettings.FitSpectraTypeString = 'contour';
-    case 3
-      FitOpts.GraphicalSettings.FitSpectraTypeString = 'filledcontour';
-  end
+%Launch the graphical settings GUI with the current settings and retrieve them back
+FitOpts.GraphicalSettings = Hyscorean_esfit_GraphicalSettings(FitOpts.GraphicalSettings);
 
-    f = msgbox('Rendering new graphical settings...');
+%Translate the UI element values to evaluation strings
+switch FitOpts.GraphicalSettings.ExperimentalSpectrumType
+  case 1
+    FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'contour';
+  case 2
+    FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'colormap';
+  case 3
+    FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString = 'filledcontour';
+end
+switch FitOpts.GraphicalSettings.FitSpectraType
+  case 1
+    FitOpts.GraphicalSettings.FitSpectraTypeString = 'colormap';
+  case 2
+    FitOpts.GraphicalSettings.FitSpectraTypeString = 'contour';
+  case 3
+    FitOpts.GraphicalSettings.FitSpectraTypeString = 'filledcontour';
+end
 
-  
-  h = findobj('Tag','expdata');
- 
-    Parent = findobj('Tag','dataaxes');
+%Since rendering can be slow, inform the user until everything isfinished
+f = msgbox('Rendering new graphical settings...');
 
-  
-  h3 = Parent.Children(1);
-  h2 = Parent.Children(2);
+%Find handle to experimental plot...
+h = findobj('Tag','expdata');
+%... and get its parent
+ParentExp = h.Parent;
+%Now get the parent of the fit spectra...
+Parent = findobj('Tag','dataaxes');
+%.. and the handles of the best and current fit spectra
+h3 = Parent.Children(1);
+h2 = Parent.Children(2);
 
-  xlims = h.Parent.XLim;
-  ylims = h.Parent.YLim;
-  ParentExp = h.Parent;
-  FrequencyAxis = h.XData;
-  delete(h)
-  switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
-    case 'colormap'
-      h = pcolor(ParentExp,FrequencyAxis,FrequencyAxis,-abs(FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}));
-shading(ParentExp,'interp')
-    case 'contour'
-      [~,h] = contour(ParentExp,FrequencyAxis,FrequencyAxis,abs(FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}),...
-        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
-        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
-  end
-  set(ParentExp,'XLim',xlims,'YLim',ylims);
-  set(h,'Tag','expdata');
-  linkaxes([Parent,ParentExp])
-  ParentExp.Visible = 'off';
-  if isprop(h3,'CData')
-    ColorData = h3.CData;
-  else
-    ColorData = h3.ZData;
-  end
-  delete(h3)
-  
-  switch   FitOpts.GraphicalSettings.FitSpectraTypeString
-    case 'contour'
-      if isempty(find(ColorData<0))
-        [~,h3] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
-        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
-        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
-      else
-        [~,h3] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
-        'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels),...
-        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
-      end
-    case 'colormap'
-      [h3] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
-    case 'filledcontour'
-      [~,h3] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData,'LineStyle','none',...
-        'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels));
-  end
-  set(Parent,'XLim',xlims,'YLim',ylims);
-  set(h3,'Tag','bestsimdata');
-  
-  if isprop(h2,'CData')
-    ColorData = h2.CData; 
-  else
-    ColorData = h2.ZData;
-  end
-    delete(h2)
-  switch   FitOpts.GraphicalSettings.FitSpectraTypeString
-    case 'contour'
-      [~,h2] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
-        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
-        'LineWidth',FitOpts.GraphicalSettings.LineWidth);
-    case 'colormap'
-      [h2] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
-    case 'filledcontour'
-      [~,h2] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData,'LineStyle','none',...
-        'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels));
-  end
-    shading(Parent,'interp')
-  set(h2,'Tag','currsimdata');
-  
-  warning('on','all')
+%Get the limits informations on the parent as well as the frequency axis
+xlims = h.Parent.XLim;
+ylims = h.Parent.YLim;
+FrequencyAxis = h.XData;
+%And set them to the experimental parent 
+set(ParentExp,'XLim',xlims,'YLim',ylims);
+%Now link the parent axis together again 
+linkaxes([ParentExp,Parent])
+
+%Now delete the old experimental plot 
+delete(h)
+
+%Reconstruct the new experimental plot with current settings
+switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
+  case 'colormap'
+    h = pcolor(ParentExp,FrequencyAxis,FrequencyAxis,-abs(FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}));
+    shading(ParentExp,'interp')
+    %Manipulate the two linked axis so that fit is over experimental
+    uistack(Parent,'top')
+    Parent.Visible = 'off';
+    ParentExp.Visible = 'on';
+  case 'contour'
+    [~,h] = contour(ParentExp,FrequencyAxis,FrequencyAxis,abs(FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay}),...
+      'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels),...
+      'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+    %Manipulate the two linked axis so that fit is over experimental
+    uistack(ParentExp,'top')
+    ParentExp.Visible = 'off';
+    Parent.Visible = 'on';
+end
+%Give the new plot the old tag to find it later again
+set(h,'Tag','expdata');
+
+%Get the spectrum currently plotted as best fit
+if isprop(h3,'CData')
+  ColorData = h3.CData;
+else
+  ColorData = h3.ZData;
+end
+%Delete the old plot
+delete(h3)
+
+%Reconstruct the new best fit plot with current settings
+switch   FitOpts.GraphicalSettings.FitSpectraTypeString
+  case 'contour'
+    [~,h3] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
+      FitOpts.GraphicalSettings.ContourLevels,...
+      'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+  case 'colormap'
+    [h3] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
+  case 'filledcontour'
+    [~,h3] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData,'LineStyle','none',...
+      'LevelList',linspace(-1,0,FitOpts.GraphicalSettings.ContourLevels));
+end
+%Set the limits and tag of the new plot as in the old one
+set(Parent,'XLim',xlims,'YLim',ylims);
+set(h3,'Tag','bestsimdata');
+shading(Parent,'interp')
+
+%Get the spectrum currently plotted as current fit
+if isprop(h2,'CData')
+  ColorData = h2.CData;
+else
+  ColorData = h2.ZData;
+end
+%Delete the old plot
+delete(h2)
+
+%Reconstruct the new current fit plot with current settings
+switch   FitOpts.GraphicalSettings.FitSpectraTypeString
+  case 'contour'
+    [~,h2] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
+      FitOpts.GraphicalSettings.ContourLevels,...
+      'LineWidth',FitOpts.GraphicalSettings.LineWidth);
+  case 'colormap'
+    [h2] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
+  case 'filledcontour'
+    [~,h2] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData,'LineStyle','none',...
+      'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels));
+end
+%Give the new plot its old tag
+set(h2,'Tag','currsimdata');
+
+%Warnings can now be enabled again
+warning('on','all')
+
+%Force the rendering of the new plots before the function finishes
 drawnow
 
-  close(f)
-  
+%Waits until the rendering is finished and then closes the information window
+close(f)
+
 return
 %==========================================================================
