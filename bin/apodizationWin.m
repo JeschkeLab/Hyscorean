@@ -1,48 +1,80 @@
 function [Signal,Window1,Window2] = apodizationWin(Signal,WindowType,WindowDecay1,WindowDecay2)
+%==========================================================================
+% Apodization function
+%==========================================================================
+% This function performs the aopdization of the 1D or 2D time-domain signal
+% given in the input along the first and second dimension. The apodization 
+% window is selected via the WindowType string from the list below. 
+% The WindowDecay input variables indicate the number of points after which
+% the apodization window has decayed completely.
+% The function returns the signal as well as the apodization windows used. 
+% The same window type is used for both dimensions. 
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
+
+if nargin<2
+  error('The function requires at least 2 input arguments')
+end
 
 [size1,size2]=size(Signal);
+
+if nargin<3
+  WindowDecay1 = size1;
+  WindowDecay2 = size2;
+end
+
 
 %------------------------------------------------------------------------
 % Apodization of first dimension
 %------------------------------------------------------------------------
 
-Window = getWindow(WindowType,round(WindowDecay1));
-
-if length(Window)>=size1
-  TruncatedWindow = Window(1:size1);
+%Do apodization along the first dimension if exists
+if size1>1
+  Window = getWindow(WindowType,round(WindowDecay1)); 
+  if length(Window)>=size1
+    TruncatedWindow = Window(1:size1);
+  else
+    TruncatedWindow = [Window zeros(1,size1 - WindowDecay1)];
+  end 
+  for k=1:size2
+    Signal(:,k)=TruncatedWindow'.*Signal(:,k);
+  end 
+  Window1 = Window; 
 else
-  TruncatedWindow = [Window zeros(1,size1 - WindowDecay1)];
+  Window1 = [];
 end
-
-for k=1:size2
-   Signal(:,k)=TruncatedWindow'.*Signal(:,k);
-end
-  
-Window1 = Window;
 
 %------------------------------------------------------------------------
 % Apodization of second dimension
 %------------------------------------------------------------------------
 
-Window = getWindow(WindowType,round(WindowDecay2))';
-
-%Apodization of second dimension
-
-if length(Window)>=size2
-  TruncatedWindow=Window(1:size2);
+%Do apodization along the second dimension if exists
+if size2>1
+  Window = getWindow(WindowType,round(WindowDecay2))';
+  if length(Window)>=size2
+    TruncatedWindow=Window(1:size2);
+  else
+    TruncatedWindow=[Window' zeros(1,size2-WindowDecay2)]';
+  end
+  for k=1:size1
+    Signal(k,:)=TruncatedWindow'.*Signal(k,:);
+  end 
+  Window2 = Window';  
 else
-  TruncatedWindow=[Window' zeros(1,size2-WindowDecay2)]';
+  Window2 = [];
 end
-
-for k=1:size1
-   Signal(k,:)=TruncatedWindow'.*Signal(k,:);
-end
-
-Window2 = Window';
 
 end
 
-
+%------------------------------------------------------------------------
+%Local function to generate the windows
+%------------------------------------------------------------------------
   function Window = getWindow(WindowType,WindowDecay)
     
     switch WindowType

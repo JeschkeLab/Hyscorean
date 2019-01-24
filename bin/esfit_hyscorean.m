@@ -1,7 +1,7 @@
 function varargout = esfit_hyscorean(SimFunctionName,ExpSpec,Sys0,Vary,Exp,SimOpt,FitOpt)
-%------------------------------------------------------------------------
+%==========================================================================
 % Hyscorean Fitting Module
-%------------------------------------------------------------------------
+%==========================================================================
 % This function is responsible for the generation and execution of the
 % fitting module of Hyscorean. This module employs EasySpin for fitting the
 % spectra processed via Hyscorean. This function allows the fitting of
@@ -10,10 +10,10 @@ function varargout = esfit_hyscorean(SimFunctionName,ExpSpec,Sys0,Vary,Exp,SimOp
 % processed by the same functions employed by Hyscorean during the
 % processing. 
 % (See the Hyscorean manual for further details) 
-%------------------------------------------------------------------------
+%==========================================================================
 % This module can only be executed if a valid EasySpin installation is
 % present. 
-%------------------------------------------------------------------------
+%==========================================================================
 % Adapted from esfit(EasySpin) by Stoll et al.
 %
 % Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
@@ -21,7 +21,7 @@ function varargout = esfit_hyscorean(SimFunctionName,ExpSpec,Sys0,Vary,Exp,SimOp
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License 3.0 as published by
 % the Free Software Foundation.
-%------------------------------------------------------------------------
+%==========================================================================
 
 %Check that the free software license has been accepted
 if ispref('hyscorean','LGPL_license')

@@ -1,4 +1,4 @@
-function Blindspot_simulator(SpecLlim)
+function Blindspot_simulator(SpecLlim,FrequencyAxis,Spectrum)
 
 if nargin<1
   SpecLlim = 20;

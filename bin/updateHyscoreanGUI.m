@@ -1,17 +1,22 @@
 function updateHyscoreanGUI(handles,Processed)
-%------------------------------------------------------------------------
+%==========================================================================
 % Updater of the HYSCOREAN GUI
-%------------------------------------------------------------------------
+%==========================================================================
 % Automatically update all graphical elements present on the GUI according
-% to the most recent data.
-% This function is responsible for the plotting the main spectrum as well
-% as for calling the function responsible for the plots containing the time
-% domain signals
+% to the most recent data. This function is responsible for the plotting the 
+% main spectrum as well as for calling the function responsible for the 
+% plots containing the time domain signals. 
+% During the creation and rendering of the graphics, all UI elements are
+% disabled until they are rendered to avoid overloading the main program.
+%==========================================================================
 %
-% Luis Fabregas, Hyscorean 2018
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
-% Preparations
-%------------------------------------------------------------------------
 
 %Deactivate all pushbuttons until the graphics are rendered  & update info display
 set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','inactive')

@@ -1000,8 +1000,18 @@ return
 %==========================================================================
 
 %==========================================================================
+function WindowType_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+WindowTypeString = 'chebyshev';
+return
+%==========================================================================
+
+%==========================================================================
 function BlindSpotsSimulator_Callback(hObject, eventdata, handles)
-Blindspot_simulator(str2double(get(handles.XUpperLimit,'string')))
+Blindspot_simulator(str2double(get(handles.XUpperLimit,'string')),handles.Processed.FrequencyAxis,handles.Processed.Spectrum)
 return
 %==========================================================================
 
