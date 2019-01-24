@@ -14,14 +14,6 @@ WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
 BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
 LagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
 
-%Check if simulated or experimental data
-switch get(handles.ExperimentalFlag,'Value')
-  case 1
-    type='experimental';
-  case 0
-    type='simulation';
-end
-
 Data = handles.Data;
 CombinationsSelection = get(handles.MultiTauDimensions,'Value');
 TauIndexes  = handles.Data.Combinations(CombinationsSelection,:);
@@ -95,11 +87,11 @@ if handles.backgroundCorrectionSwitch
       options.BackgroundFractalDimension2 = [];
   end
   %Set-up rest of options
-  options.AutomaticBackgroundStart = get(handles.AutomaticBackgroundStart,'Value');
+  options.AutomaticBackgroundStart = false;
   options.BackgroundStart1 = str2double(get(handles.BackgroundStart1,'string'));
   options.BackgroundStart2 = str2double(get(handles.BackgroundStart1,'string'));
   options.BackgroundCorrection2D = 0;
-  options.ZeroTimeTruncation = get(handles.ZeroTimeTruncation,'Value');
+  options.ZeroTimeTruncation = false;
   options.InvertCorrection = get(handles.InvertCorrection,'Value');
   
   set(handles.ProcessingInfo, 'String', 'Status: Correct background'); drawnow;
@@ -131,7 +123,7 @@ if handles.backgroundCorrectionSwitch
   set(handles.BackgroundCorrectionWaiting,'visible','off')
   set(handles.BackgroundCorrectionCheck,'visible','on')
   drawnow;
-elseif strcmp(type,'experimental')
+else
   Data = handles.Data;
 end
 handles.TauSelectionSwitch = false;
@@ -255,5 +247,5 @@ Processed.axis2 = FrequencyAxis2;
 
 handles.Data = Data;
 handles.Processed = Processed;
-% assignin('base', 'Processed', Processed);
+assignin('base', 'Processed', Processed);
 

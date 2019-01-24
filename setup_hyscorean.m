@@ -212,7 +212,7 @@ fprintf('=======================================================================
        fprintf('        Save path: %s \n',getpref('hyscorean','savepath')) 
     end
     if ~ispref('hyscorean','graphicalsettings')
-      GraphicalSettings = struct('LineWidth',1,'Levels',40,'PlotType',1,'Colormap',1,'Real',0,'Imaginary',0,'Absolute',1);
+      GraphicalSettings = struct('LineWidth',1,'Levels',40,'PlotType',1,'Colormap',1,'ColormapName','parula','Real',0,'Imaginary',0,'Absolute',1);
       setpref('hyscorean','graphicalsettings',GraphicalSettings)
       fprintf('        Graphical settings: defaults \n')
     else

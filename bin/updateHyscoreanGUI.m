@@ -28,9 +28,8 @@ end
 if ~handles.Data.NUSflag
       enableDisableGUI(handles,'NUSReconstruction','off')
 end
-if get(handles.AutomaticBackgroundStart,'Value')
-      enableDisableGUI(handles,'AutomaticBackground','off')
-end
+enableDisableGUI(handles,'AutomaticBackground','off')
+
 
 drawnow;
 %Enable all graphics-related GUI components
@@ -107,29 +106,11 @@ elseif GraphicalSettings.Imaginary
 end
 
 %Select current colormap
-switch GraphicalSettings.Colormap
-  case 1
-    colormap('parula')
-  case 2
-    colormap('jet')
-  case 3
-    colormap('hsv')
-  case 4
-    colormap('hot')
-  case 5
-    colormap('cool')
-  case 6
-    colormap('spring')
-  case 7
-    colormap('summer')
-  case 8
-    colormap('autumn')
-  case 9
-    colormap('winter')
-  case 10
-    colormap('gray')
+if isfield(handles.GraphicalSettings,'ColormapName')
+  colormap(colormap(handles.GraphicalSettings.ColormapName))
+else
+  colormap('parula')
 end
-
 %Compute contour levels according to minimal contour level given by user
 Levels=GraphicalSettings.Levels;
 MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
@@ -192,22 +173,6 @@ currentXTicks = xticks(handles.mainPlot);
 yticks(handles.mainPlot,currentXTicks(currentXTicks>=0))
 set(handles.mainPlot,'yticklabel',currentXTicks(currentXTicks>=0),'xticklabel',currentXTicks)
 
-%If auxiliare lines have been added (and not cleared) add them again
-if isfield(handles,'AddedLines')
-  for i=1:length(handles.AddedLines)
-    hold(handles.mainPlot,'on')
-    plot(handles.mainPlot,handles.AddedLines{i}.x,handles.AddedLines{i}.y,'k-.','LineWidth',1)
-    hold(handles.mainPlot,'off')
-  end
-end
-
-%If isotope tags have been added (and not cleared) add them again
-if isfield(handles,'AddedTags')
-  for i=1:length(handles.AddedTags)
-    text(handles.mainPlot,XupperLimit/20 + handles.AddedTags{i}.x,handles.AddedTags{i}.y,handles.AddedTags{i}.Tag,'FontSize',14)
-  end
-end
-
 
 % Finish & Exit
 %------------------------------------------------------------------------
@@ -229,7 +194,6 @@ end
 if ~handles.Data.NUSflag
       enableDisableGUI(handles,'NUSReconstruction','off')
 end
-if get(handles.AutomaticBackgroundStart,'Value')
-      enableDisableGUI(handles,'AutomaticBackground','off')
-end
+enableDisableGUI(handles,'AutomaticBackground','on')
+
 drawnow
