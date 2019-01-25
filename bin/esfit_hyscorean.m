@@ -86,6 +86,7 @@ FitOpts = [];
 %Initialize default fields
 FitData.currFitSet = [];
 FitData.CurrentSpectrumDisplay = 1;
+FitData.DisplayingFitSetSpec = false;
 FitData.CurrentCoreUsage = 0;
 FitData.DefaultExp = Exp;
 FitData.DefaultSimOpt = SimOpt;
@@ -1504,6 +1505,9 @@ end
 
 % update GUI
 %-----------------------------------------------------------
+
+FitData.DisplayingFitSetSpec = false;
+
 if FitData.GUI%&& ((UserCommand~=99) )
     FrequencyAxis = linspace(-1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),length(ExpSpec{FitData.CurrentSpectrumDisplay}));
     CurrentExpSpec = ExpSpec{FitData.CurrentSpectrumDisplay};
@@ -1982,7 +1986,13 @@ return
 
 %==========================================================================
 function displayFitSet
-global FitData
+
+global FitData FitOpts
+
+
+FitData.DisplayingFitSetSpec = true;
+
+
 h = findobj('Tag','SetListBox');
 idx = get(h,'Value');
 str = get(h,'String');
@@ -2008,20 +2018,26 @@ if ~isempty(str)
     CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
     CurrentFitSpec = abs(CurrentFitSpec);
     h = findobj('Tag','bestsimdata');
+    h2 = findobj('Tag','currsimdata');
+    colormap(h.Parent,(FitData.CustomColormap))
     switch FitOpts.GraphicalSettings.FitSpectraTypeString
       case 'colormap'
         set(h,'CData',-abs(CurrentFitSpec));
+        set(h2,'CData',NaN*abs(CurrentFitSpec));
       case 'contour'
         set(h,'ZData',-abs(CurrentFitSpec));
+        set(h2,'ZData',NaN*abs(CurrentFitSpec));
     end
     h = findobj('Tag','bestsimdata_projection1');
+    h2 = findobj('Tag','currsimdata_projection1');
     Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
-%     Inset = abs(Inset - Inset(end));
     set(h,'YData',Inset);
+    set(h2,'YData',NaN*Inset);
     h = findobj('Tag','bestsimdata_projection2');
+    h2 = findobj('Tag','currsimdata_projection2');
     Inset = max(CurrentFitSpec,[],2);
-%     Inset = abs(Inset - Inset(end));
     set(h,'XData',Inset);
+    set(h2,'XData',NaN*Inset);
     drawnow
   end
 else
@@ -2309,60 +2325,67 @@ Inset = max(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),[],2);
 set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
 Inset = max(CurrentExpSpec,[],2);
 set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
+
+%Update fit plots only if one fit has been run at least
+if isfield(FitData,'bestspec')
+
 CurrentBestSpec = abs(FitData.bestspec{FitData.CurrentSpectrumDisplay});
 
-if FitOpts.MethodID >= 7
+%If the current spectrum is not from a saved parameter set then show the current
+if ~FitData.DisplayingFitSetSpec
   
-  %Get the manual fit or ORCA fit saved in the currentFitSpec variable
-  CurrentFitSpec = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
-  CurrentFitSpec = abs(CurrentFitSpec);
-  %Get handle to plot
-  h = findobj('Tag','currsimdata');
-  if FitOpts.MethodID==7
-    %If MANUAL FITTED spectrum
-    switch FitOpts.GraphicalSettings.FitSpectraTypeString
-      case 'colormap'
-        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
-      case 'contour'
-        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
-    end    
-  else    
-    %If ORCA SIMULATED spectrum
-    switch FitOpts.GraphicalSettings.FitSpectraTypeString
-      case 'colormap'
-        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
-      case 'contour'
-        set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
+  if FitOpts.MethodID >= 7
+    
+    %Get the manual fit or ORCA fit saved in the currentFitSpec variable
+    CurrentFitSpec = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+    CurrentFitSpec = abs(CurrentFitSpec);
+    %Get handle to plot
+    h = findobj('Tag','currsimdata');
+    if FitOpts.MethodID==7
+      %If MANUAL FITTED spectrum
+      switch FitOpts.GraphicalSettings.FitSpectraTypeString
+        case 'colormap'
+          set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
+        case 'contour'
+          set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',(CurrentFitSpec)/max(max((CurrentFitSpec))));
+      end
+    else
+      %If ORCA SIMULATED spectrum
+      switch FitOpts.GraphicalSettings.FitSpectraTypeString
+        case 'colormap'
+          set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
+        case 'contour'
+          set(h,'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-(CurrentFitSpec)/max(max((CurrentFitSpec))));
+      end
     end
+    
+    %Update the inset plots
+    h = findobj('Tag','currsimdata_projection1');
+    Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
+    set(h,'YData',Inset);
+    h = findobj('Tag','currsimdata_projection2');
+    Inset = max(CurrentFitSpec,[],2);
+    set(h,'XData',Inset);
+    
+  else
+    %If AUTOMATIC FITTING spectrum
+    switch FitOpts.GraphicalSettings.FitSpectraTypeString
+      case 'colormap'
+        set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-CurrentBestSpec);
+      case 'contour'
+        set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentBestSpec));
+    end
+    
+    %Update the inset plots
+    Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],2);
+    set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+    Inset = max(CurrentBestSpec,[],2);
+    set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
+    
   end
-  
-  %Update the inset plots
-  h = findobj('Tag','currsimdata_projection1');
-  Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
-  set(h,'YData',Inset);
-  h = findobj('Tag','currsimdata_projection2');
-  Inset = max(CurrentFitSpec,[],2);
-  set(h,'XData',Inset);
   
 else
-  %If AUTOMATIC FITTING spectrum
-  switch FitOpts.GraphicalSettings.FitSpectraTypeString
-    case 'colormap'
-      set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'CData',-CurrentBestSpec);
-    case 'contour'
-      set(findobj('Tag','bestsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentBestSpec));
-  end
   
-  %Update the inset plots
-  Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],2);
-  set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
-  Inset = max(CurrentBestSpec,[],2);
-  set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
-  
-end
-
-
-if isfield(FitData,'FitSets')
   h = findobj('Tag','SetListBox');
   idx = get(h,'Value');
   fitset = FitData.FitSets(idx);
@@ -2374,20 +2397,32 @@ if isfield(FitData,'FitSets')
     data{p,3} = sprintf('%0.6g',values(p));
   end
   set(h,'Data',data);
-  
-  CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
-  %   CurrentFitSpec = abs(CurrentFitSpec - CurrentFitSpec(end,end));
-  h = findobj('Tag','currsimdata');
-  set(h,'CData',abs(CurrentFitSpec)/max(max(abs(CurrentFitSpec))));
-  h = findobj('Tag','currsimdata_projection1');
+  CurrentFitSpec = abs(fitset.fitSpec{FitData.CurrentSpectrumDisplay});
+  h = findobj('Tag','bestsimdata');
+  h2 = findobj('Tag','currsimdata');
+  %Set the bestsim to the current fit set and set the currsim invisible
+  switch FitOpts.GraphicalSettings.FitSpectraTypeString
+    case 'colormap'
+      set(h,'CData',-CurrentFitSpec/max(max(CurrentFitSpec)));
+      set(h2,'CData',NaN*CurrentFitSpec/max(max(CurrentFitSpec)));
+    case 'contour'
+      set(h,'ZData',-CurrentFitSpec/max(max(CurrentFitSpec)));
+      set(h2,'ZData',NaN*CurrentFitSpec/max(max(CurrentFitSpec)));
+  end
+  h = findobj('Tag','bestsimdata_projection1');
+  h2 = findobj('Tag','currsimdata_projection1');
   Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
   %   Inset = abs(Inset - Inset(end));
   set(h,'YData',Inset);
-  h = findobj('Tag','currsimdata_projection2');
+  set(h2,'YData',NaN*Inset);
+  h = findobj('Tag','bestsimdata_projection2');
+  h2 = findobj('Tag','currsimdata_projection2');
   Inset = max(CurrentFitSpec,[],2);
   %   Inset = abs(Inset - Inset(end));
   set(h,'XData',Inset);
+  set(h2,'XData',NaN*Inset);
   drawnow
+end
 end
 
 return

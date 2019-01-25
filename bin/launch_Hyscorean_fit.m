@@ -54,6 +54,7 @@ numSpec = length(FileNames);
 ExpSpectra = cell(numSpec);
 Exp = cell(numSpec,1);
 Opt = cell(numSpec,1);
+SpectrumDimensions = zeros(numSpec,1);
 
 %Run through each file and construct the corresponding structures
 for Index = 1:numSpec
@@ -103,9 +104,22 @@ for Index = 1:numSpec
     end
   Opt{Index}.L2GParameters = DataForFitting.L2GParameters;
   Opt{Index}.Lorentz2GaussCheck = DataForFitting.Lorentz2GaussCheck;
+  
+  %Check the expected spectral sizes
+  SpectrumDimensions(Index) = length(ExpSpectra{Index});
+  SpectrumDimensions(Index) = SpectrumDimensions(Index)*Opt{Index}.ZeroFillFactor;
+
 end
 
-  %Launch the Hyscorean fitting module with all loaded spectra
-  esfit_hyscorean('saffron',ExpSpectra,Sys,Vary,Exp,Opt)
-  
+%Get the largest spectrum and adjust the other zerofillings to match it
+MaxDimension = max(SpectrumDimensions);
+for Index = 1:numSpec
+  if SpectrumDimensions(Index)<MaxDimension
+    Opt{Index}.ZeroFillFactor = Opt{Index}.ZeroFillFactor + SpectrumDimensions(Index)/MaxDimension;
+  end
+end
+
+%Launch the Hyscorean fitting module with all loaded spectra
+esfit_hyscorean('saffron',ExpSpectra,Sys,Vary,Exp,Opt)
+
 end
