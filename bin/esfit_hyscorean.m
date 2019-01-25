@@ -536,7 +536,8 @@ if FitData.GUI
   end
   
   %Construct frequency axis
-  FrequencyAxis = linspace(-1/(2*Exp{1}.dt),1/(2*Exp{1}.dt),length(dispData));
+  TimeStep = SimOpt{1}.TimeStepFactor*Exp{1}.dt;
+  FrequencyAxis = linspace(-1/(2*TimeStep),1/(2*TimeStep),length(dispData));
   
   %Remove all warnings to avoid contour w/ NaN warning at initialization
   warning('off','all')
@@ -1509,7 +1510,8 @@ end
 FitData.DisplayingFitSetSpec = false;
 
 if FitData.GUI%&& ((UserCommand~=99) )
-    FrequencyAxis = linspace(-1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*Exp{FitData.CurrentSpectrumDisplay}.dt),length(ExpSpec{FitData.CurrentSpectrumDisplay}));
+  TimeStep = FitData.Exp{FitData.CurrentSpectrumDisplay}.dt;
+  FrequencyAxis = linspace(-1/(2*TimeStep),1/(2*TimeStep),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
     CurrentExpSpec = ExpSpec{FitData.CurrentSpectrumDisplay};
     CurrentSimSpec = simspec{FitData.CurrentSpectrumDisplay};
     FitData.CurrentSimSpec = simspec;
@@ -2305,8 +2307,9 @@ global FitData FitOpts
 %Get the current field selected in the UI element
 FitData.CurrentSpectrumDisplay = get(hObject,'value');
 
-%Construct the frequency axis again
-FrequencyAxis = linspace(-1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),1/(2*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
+%Construct the frequency axis again for the experimental spectrum
+TimeStep = FitData.SimOpt{FitData.CurrentSpectrumDisplay}.TimeStepFactor*FitData.Exp{FitData.CurrentSpectrumDisplay}.dt;
+FrequencyAxis = linspace(-1/(2*TimeStep),1/(2*TimeStep),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
 
 %Get the corresponding experimental spectrum
 CurrentExpSpec = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
@@ -2328,7 +2331,11 @@ set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
 
 %Update fit plots only if one fit has been run at least
 if isfield(FitData,'bestspec')
-
+  
+%Construct the frequency axis again for the fit spectra
+TimeStep = FitData.Exp{FitData.CurrentSpectrumDisplay}.dt;
+FrequencyAxis = linspace(-1/(2*TimeStep),1/(2*TimeStep),length(FitData.ExpSpec{FitData.CurrentSpectrumDisplay}));
+  
 CurrentBestSpec = abs(FitData.bestspec{FitData.CurrentSpectrumDisplay});
 
 %If the current spectrum is not from a saved parameter set then show the current

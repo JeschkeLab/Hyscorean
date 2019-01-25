@@ -21,7 +21,7 @@ function launch_Hyscorean_fit(FileNames,Paths,InputSystem)
 
 %Input arguments checks
 if nargin < 3, InputSystem = []; end
-if nargin < 2, Paths = {pwd}; end
+if nargin < 2 || isempty(Paths), Paths = {pwd}; end
 if (nargin<1) || (nargin>3), error('Wrong number of input arguments.'); end
 if (nargout<0), error('No output arguments are returned'); end
 if (nargout>0) && isempty(FileNames), error('At least one filename is required.'); end
@@ -107,21 +107,26 @@ for Index = 1:numSpec
   
   %Check the expected spectral sizes
   SpectrumDimensions(Index) = length(ExpSpectra{Index});
+  SpectrumDimensions2(Index) = length(ExpSpectra{Index})*Opt{Index}.ZeroFillFactor;
 
 end
 
 %Get the largest spectrum and adjust the other zerofillings to match it
 MaxDimension = max(SpectrumDimensions);
 for Index = 1:numSpec
-  if SpectrumDimensions(Index)<MaxDimension
-    Opt{Index}.ZeroFillFactor = MaxDimension/SpectrumDimensions(Index)/Opt{Index}.ZeroFillFactor;
-     ZeroFilling = MaxDimension - SpectrumDimensions(Index);
-     ZeroFilledSpectrum = zeros(SpectrumDimensions(Index) + ZeroFilling1, SpectrumDimensions(Index) + ZeroFilling2);
-     Pos = floor(ZeroFilling/2);
-     ZeroFilledSpectrum(Pos:Pos + SpectrumDimensions(Index),Pos:Pos + SpectrumDimensions(Index)) = ExpSpectra{Index};
-     ExpSpectra{Index} = ZeroFilledSpectrum;
+  if SpectrumDimensions2(Index)<max(SpectrumDimensions2)
+    Opt{Index}.ZeroFillFactor = Opt{SpectrumDimensions2 == max(SpectrumDimensions2)}.ZeroFillFactor;
+    ZeroFilling = MaxDimension - SpectrumDimensions(Index);
+    Opt{Index}.TimeStepFactor = SpectrumDimensions(Index)/(SpectrumDimensions(Index) + ZeroFilling);
+    ZeroFilledSpectrum = zeros(SpectrumDimensions(Index) + ZeroFilling, SpectrumDimensions(Index) + ZeroFilling);
+    Pos = floor(ZeroFilling/2);
+    ZeroFilledSpectrum(1+Pos:Pos + SpectrumDimensions(Index),1+Pos:Pos + SpectrumDimensions(Index)) = ExpSpectra{Index};
+    ExpSpectra{Index} = ZeroFilledSpectrum;
+  else
+    Opt{Index}.TimeStepFactor = 1;
   end
 end
+
 
 %Launch the Hyscorean fitting module with all loaded spectra
 esfit_hyscorean('saffron',ExpSpectra,Sys,Vary,Exp,Opt)
