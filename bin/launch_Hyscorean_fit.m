@@ -106,8 +106,7 @@ for Index = 1:numSpec
   Opt{Index}.Lorentz2GaussCheck = DataForFitting.Lorentz2GaussCheck;
   
   %Check the expected spectral sizes
-  SpectrumDimensions(Index) = length(ExpSpectra{Index});
-  SpectrumDimensions(Index) = SpectrumDimensions(Index)*Opt{Index}.ZeroFillFactor;
+  SpectrumDimensions(Index) = length(ExpSpectra{Index})*Opt{Index}.ZeroFillFactor;
 
 end
 
@@ -115,7 +114,7 @@ end
 MaxDimension = max(SpectrumDimensions);
 for Index = 1:numSpec
   if SpectrumDimensions(Index)<MaxDimension
-    Opt{Index}.ZeroFillFactor = Opt{Index}.ZeroFillFactor + SpectrumDimensions(Index)/MaxDimension;
+    Opt{Index}.ZeroFillFactor = MaxDimension/SpectrumDimensions(Index)/Opt{Index}.ZeroFillFactor;
   end
 end
 
