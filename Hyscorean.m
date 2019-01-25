@@ -1107,7 +1107,6 @@ RawData.TimeAxis1 = handles.Data.TimeAxis1;
 RawData.TimeAxis2 = handles.Data.TimeAxis2;
 RawData.NUSflag = handles.Data.NUSflag;
 %Check if NUS reconstruction is needed
-if handles.Data.NUSflag
   switch get(handles.ReconstructionAlgorithm,'Value')
     case 1 %Constant-lambda CAMERA Reconstruction
       ReconstructionMethod = 'constantcamera';
@@ -1122,6 +1121,7 @@ if handles.Data.NUSflag
     case 6 %IST-D Reconstruction
       ReconstructionMethod = 'istd';
   end
+if RawData.NUSflag
   RawData.NUSgrid = handles.Data.NUSgrid;
   RawData.NUS = handles.Data.NUS;
 end

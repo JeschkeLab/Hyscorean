@@ -66,13 +66,20 @@ String = sprintf('%.1f%%',100*handles.RawData.NUS.SamplingDensity );
 set(handles.SliderText,'string',String);
 end
 
-switch handles.Defaults.ReconstructionMethod
-  case {'ists','istd'}
-  set(handles.ThresholdParameter_Check,'enable','on')
-  otherwise
+if handles.RawData.NUSflag
+  switch handles.Defaults.ReconstructionMethod
+    case {'ists','istd'}
+      set(handles.ThresholdParameter_Check,'enable','on')
+    otherwise
+      set(handles.ThresholdParameter_Check,'enable','off')
+  end
+else
+  set(handles.NoiseLevel_Check,'enable','off')
+  set(handles.SamplingDensity_Check,'enable','off')
+  set(handles.LagrangeMultiplier_Check,'enable','off')
+  set(handles.BackgroundParameter_Check,'enable','off')
   set(handles.ThresholdParameter_Check,'enable','off')
 end
-  
 
 % Update handles structure
 guidata(hObject, handles);
