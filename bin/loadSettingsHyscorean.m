@@ -42,7 +42,7 @@ set(handles.MultiTauDimensions,'value',Settings.MultiTauDimension);
 catch
 end
 %Set buttons
-set(handles.ZeroTimeTruncation,'Value',Settings.ZeroTimeTruncation)
+% set(handles.ZeroTimeTruncation,'Value',Settings.ZeroTimeTruncation)
 set(handles.BackgroundMethod2,'Value',Settings.BackgroundMethod2);
 set(handles.BackgroundMethod1,'Value',Settings.BackgroundMethod1);
 set(handles.InvertCorrection,'Value',Settings.InvertCorrection)
