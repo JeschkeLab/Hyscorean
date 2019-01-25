@@ -65,8 +65,9 @@ FrequencyAxis2 = handles.Processed.axis2;
 
 % Save main figure
 %----------------------------------------------------------------------  
-GhostFigure = figure('Visible','off','Position',[100 100 790 450]); % Invisible figure
-copyobj(handles.mainPlot,GhostFigure)
+GhostFigure = figure('Visible','off','Position',[100 100 776 415]); % Invisible figure
+AxesHandles = copyobj(handles.mainPlot,GhostFigure);
+set(AxesHandles,'Position',[0.07 0.12 0.9 0.85]);
 
 set(GhostFigure,'CreateFcn','set(gcbf,''Visible'',''on'')'); % Make it visible upon loading
 %Format savename so until it is different from the rest in the folder
