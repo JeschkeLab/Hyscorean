@@ -2706,8 +2706,13 @@ HyscoreanPath = which('Hyscorean');
 HyscoreanPath = HyscoreanPath(1:end-11);
 ReportData.FittingReport_logo_Path = [HyscoreanPath 'bin\FitReport_logo.png'];
 
+%Check if it is cell
+if ~iscell(ReportData.FitData.SimOpt{1}.FileNames)
+  ReportData.FitData.SimOpt{1}.FileNames = {ReportData.FitData.SimOpt{1}.FileNames};
+end
+
 %If there are too many files just print the number of them
-if length(ReportData.FitData.SimOpt{1}.FileNames{1}) > 15
+if length(ReportData.FitData.SimOpt{1}.FileNames) > 15
   ReportData.FitData.SimOpt{1}.FileNames = {sprintf('%i files',length(ReportData.FitData.SimOpt{1}.FileNames{1}))};
 end
 
