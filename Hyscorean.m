@@ -1077,7 +1077,7 @@ Opt.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
 Opt.L2GParameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
 Opt.Lorentz2GaussCheck = get(handles.Lorentz2GaussCheck,'value');
 Opt.Symmetrization = handles.SymmetrizationString;
-
+Opt.TimeStepFactor = 1;
 %Launch the fitting module
 esfit_hyscorean('saffron',abs(handles.Processed.spectrum),[],[],Exp,Opt)
 
