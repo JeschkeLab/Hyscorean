@@ -148,6 +148,9 @@ end
 %AWG-spectrometer specific parameters
 if isfield(handles.Data,'AWG_Parameters')
   AWG_Parameters = handles.Data.AWG_Parameters;
+  if ~isfield(AWG_Parameters,'NUS_flag')
+    AWG_Parameters.NUS_flag = false;
+  end
   reportdata.NUSflag  = AWG_Parameters.NUS_flag;
   reportdata.Pulse90Length  = AWG_Parameters.events{1}.pulsedef.tp;
   reportdata.Pulse180Length  = AWG_Parameters.events{3}.pulsedef.tp;
