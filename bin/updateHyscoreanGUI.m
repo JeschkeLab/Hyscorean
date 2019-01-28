@@ -17,6 +17,7 @@ function updateHyscoreanGUI(handles,Processed)
 % the Free Software Foundation.
 %==========================================================================
 
+try
 
 %Deactivate all pushbuttons until the graphics are rendered  & update info display
 set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','inactive')
@@ -200,5 +201,32 @@ if ~handles.Data.NUSflag
       enableDisableGUI(handles,'NUSReconstruction','off')
 end
 enableDisableGUI(handles,'AutomaticBackground','on')
+
+
+catch Error
+  
+  w = errordlg(sprintf('Error found during rendering of graphics: \n %s',Error.message));
+  waitfor(w);
+  %Reactivate all pushbuttons & update info display
+  set(handles.ProcessingInfo, 'String', 'Status: Finished');drawnow
+  set(findall(handles.HyscoreanFigure, 'Style', 'pushbutton'),'enable','on')
+  set(findall(handles.HyscoreanFigure, 'Style', 'radiobutton'),'enable','on')
+  set(findall(handles.HyscoreanFigure, 'Style', 'checkbox'),'enable','on')
+  set(findall(handles.HyscoreanFigure, 'Style', 'edit'),'enable','on')
+  set(findall(handles.HyscoreanFigure, 'Style', 'slider'),'enable','on')
+  set(findall(handles.HyscoreanFigure, 'Style', 'popupmenu'),'enable','on')
+  set(findall(handles.HyscoreanFigure, 'Style', 'text'),'enable','on')
+  
+  %Re-deactivate all which were deactivated
+  if ~get(handles.Lorentz2GaussCheck,'Value')
+    enableDisableGUI(handles,'Lorent2Gauss','off')
+  end
+  if ~handles.Data.NUSflag
+    enableDisableGUI(handles,'NUSReconstruction','off')
+  end
+  enableDisableGUI(handles,'AutomaticBackground','on')
+  
+  
+end
 
 drawnow
