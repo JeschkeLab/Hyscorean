@@ -2786,6 +2786,7 @@ copyobj(inset2Handle,hFig);
 for i=1:length(hFig.Children)
   for j=1:length(hFig.Children(i).Children)
     hFig.Children(i).Children(j).Tag = '';
+     hFig.Children(i).Tag = '';
   end
 end
 
@@ -3078,6 +3079,7 @@ switch   FitOpts.GraphicalSettings.FitSpectraTypeString
 end
 %Give the new plot its old tag
 set(h2,'Tag','currsimdata');
+shading(Parent,'interp')
 
 %Warnings can now be enabled again
 warning('on','all')
