@@ -157,7 +157,7 @@ set(handles.t1_Slider,'enable','off')
 set(handles.ImposeBlindSpots,'enable','off')
 set(handles.EasyspinFitButton,'enable','off')
 set(handles.AddHelpLine,'enable','off')
-set(handles.AddTag,'enable','off')
+set(handles.TransititonType,'enable','off')
 set(handles.Validation_Button,'enable','off')
 set(handles.AddTagList,'enable','off')
 set(handles.ClearTags,'enable','off')
@@ -261,7 +261,7 @@ end
 %Enable the post-processing UI elements
 set(handles.ImposeBlindSpots,'enable','on')
 set(handles.AddHelpLine,'enable','on')
-set(handles.AddTag,'enable','on')
+set(handles.TransititonType,'enable','on')
 set(handles.AddTagList,'enable','on')
 set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
@@ -322,7 +322,7 @@ try
     set(handles.t1_Slider,'enable','off')
     set(handles.ImposeBlindSpots,'enable','off')
     set(handles.AddHelpLine,'enable','off')
-    set(handles.AddTag,'enable','off')
+    set(handles.TransititonType,'enable','off')
     set(handles.AddTagList,'enable','off')
     set(handles.ClearTags,'enable','off')
     set(handles.FieldOffsetTag,'enable','off')
@@ -733,8 +733,11 @@ CenterField = CenterField*1e-4;
 %Get field offset
 Offset = get(handles.FieldOffset,'string');
 Offset = str2double(Offset)*1e-4;
+
+%Get type of transition and corresponding multiplier
+FrequencyMultiplier = handles.FrequencyMultiplier;
 %get Larmor frequency in MHz
-Larmorfrequency = gyromagneticRatio*(CenterField + Offset);
+Larmorfrequency = FrequencyMultiplier*gyromagneticRatio*(CenterField + Offset);
 X = Larmorfrequency;
 Y = abs(Larmorfrequency);
 
@@ -746,9 +749,18 @@ else
     Xaxis = Xaxis(Xaxis>0);
     Slope = -1;
 end
+
+switch FrequencyMultiplier
+  case 1
+    color = 'k';
+  case 2
+    color = 'r';
+  case 4
+    color = 'b';
+end
 Yaxis =  Y + Slope*(Xaxis - abs(X));
 hold(handles.mainPlot,'on')
-LineHandle = plot(handles.mainPlot,Xaxis,Yaxis,'k-.','LineWidth',1);
+LineHandle = plot(handles.mainPlot,Xaxis,Yaxis,'-.','LineWidth',1.5,'Color',color);
 hold(handles.mainPlot,'off')
 if isfield(handles,'AddedLines')
 size = length(handles.AddedLines);
@@ -763,45 +775,23 @@ return
 %==========================================================================
 
 %==========================================================================
-function AddTag_Callback(hObject, eventdata, handles)
-%Get gyromagnetic ratio from selected nuclei
-gyromagneticRatio = getgyro_Hyscorean(get(handles.AddTagList,'Value'));
-%Get center field in gauss
-if isfield(handles.Data,'BrukerParameters')
-  CenterField = handles.Data.BrukerParameters.CenterField;
-  %Remove units character and convert to double
-  CenterField = str2double(CenterField(1:end-2));
-elseif isfield(handles.Data,'AWG_Parameters')
-  CenterField = handles.Data.AWG_Parameters.B;
+function TransititonType_Callback(hObject, eventdata, handles)
+switch get(hObject,'Value')
+  case 1
+    FrequencyMultiplier = 1;
+  case 2
+    FrequencyMultiplier = 2;
+  case 3
+    FrequencyMultiplier = 4;
 end
-%convert to tesla
-CenterField = CenterField*1e-4;
-%Get field offset
-Offset = get(handles.FieldOffset,'string');
-Offset = str2double(Offset)*1e-4;
-%get Larmor frequency in MHz
-Larmorfrequency = gyromagneticRatio*(CenterField + Offset);
-X = Larmorfrequency;
-Y = abs(Larmorfrequency);
-Limit = str2double(get(handles.XUpperLimit,'string'));
+handles.FrequencyMultiplier = FrequencyMultiplier;
+guidata(hObject, handles);
+return
+%==========================================================================
 
-if abs(Larmorfrequency) < Limit  
-  Tags = handles.IsotopeTags;
-  Tag = Tags(get(handles.AddTagList,'Value'));
-  AestheticShift = Limit/20;
-  TagHandle = text(handles.mainPlot,AestheticShift+X,Y,sprintf('^{%s}%s',Tag.isotope,Tag.name),'FontSize',14);
-  
-  if isfield(handles,'AddedTags')
-    size = length(handles.AddedTags);
-  else
-    size = 0;
-  end
-  handles.AddedTags{size +1}.x = X;
-  handles.AddedTags{size +1}.y = Y;
-  handles.AddedTags{size +1}.Tag = sprintf('^{%s}%s',Tag.isotope,Tag.name);
-  handles.AddedTags{size +1}.handle = TagHandle;
-end
-
+%==========================================================================
+function TransititonType_CreateFcn(hObject, eventdata, handles)
+handles.FrequencyMultiplier = 1;
 guidata(hObject, handles);
 return
 %==========================================================================

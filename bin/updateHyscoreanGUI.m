@@ -120,14 +120,9 @@ end
 %Compute contour levels according to minimal contour level given by user
 Levels=GraphicalSettings.Levels;
 MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
-if MinimalContourLevel~=0
+if MinimalContourLevel~=0 && GraphicalSettings.Absolute
 MaximalContourLevel = max(max(abs(Processed.spectrum)));
-if GraphicalSettings.Absolute
 MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
-else
-  MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
-
-end
 ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
 ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
 else
