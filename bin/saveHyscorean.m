@@ -76,13 +76,30 @@ set(GhostFigure,'CreateFcn','set(gcbf,''Visible'',''on'')'); % Make it visible u
       SaveName = sprintf('%s_%s_spectrum_%i',Date,Identifier,CopyIndex);
   end
 
-%Save as Matlab figure (.fig)
-savefig(GhostFigure,fullfile(FullPath,[SaveName '.fig']), 'compact');
 %Export as PDF (.pdf)
-% export_fig(fullfile(FullPath,SaveName),'-pdf','-transparent')
-print(GhostFigure,fullfile(FullPath,SaveName),'-dpdf')
-%Delete the ghost figure
+ContourHandle = findobj(GhostFigure,'Type','contour');
+GhostFigure2 = figure('Visible','off','Position',[100 100 776 415]); % Invisible figure
+contour2lineplot(ContourHandle,1);
 delete(GhostFigure);
+xlim([-20 20])
+ylim([0 20])
+xlabel('\nu_1 [MHz]')
+ylabel('\nu_2 [MHz]')
+grid on
+plot(handles.Processed.axis1,abs(handles.Processed.axis1),'k-.')
+plot(zeros(length(handles.Processed.axis1)),handles.Processed.axis1,'k')
+
+
+%Save as Matlab figure (.fig)
+savefig(GhostFigure2,fullfile(FullPath,[SaveName '.fig']), 'compact');
+
+if exist('export_fig','file')
+export_fig(fullfile(FullPath,SaveName),'-pdf','-transparent',GhostFigure2)
+else
+print(GhostFigure,fullfile(FullPath,SaveName),'-dpdf')
+end
+%Delete the ghost figure
+delete(GhostFigure2);
 
 set(handles.ProcessingInfo, 'String', 'Status: Saving session 60%'); drawnow;
 
