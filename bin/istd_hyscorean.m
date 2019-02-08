@@ -1,17 +1,17 @@
 % ists: barebones 1d stern ist reconstruction function.
-function [Reconstruction, FunctionalValue] = istd_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,handles)
+function [ReconstructedSignal, FunctionalValues] = ists_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,handles)
 
 if (nargin < 2)
   error('At least two arguments are required');
 end
 
-%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------  
 % Preparations
 %--------------------------------------------------------------------------
   %Store the input vector length.
   N = length(Signal);
   %Check if one or two dimensional data
-  isTwoDimensional = size(Signal,2)>1;
+  isTwoDimensional = ~isvector(Signal);
 
   %Increase dimensions of all variables
   if isTwoDimensional
@@ -22,20 +22,19 @@ end
     ZeroFiller(1:size(Signal,1),1:size(Signal,2)) = Signal;
     Signal  = ZeroFiller;
     ReconstructedSpectrum = zeros(2*N);
-    Reconstruction = zeros(2*N);
+    ReconstructedSignal = zeros(2*N);
   else
     ZeroFiller = zeros(2*N,1);
     ZeroFiller(1:size(SubSamplingVector,2),1) = SubSamplingVector;
     SubSamplingVector = ZeroFiller;
     Signal = [Signal; zeros(N, 1)];
     ReconstructedSpectrum = zeros(2*N, 1);
-    Reconstruction = zeros(2*N, 1);
+    ReconstructedSignal = zeros(2*N, 1);
   end
-  
   % build an initial threshold value.
-  Treshold = max(max(abs(fft2(Signal))));
+  Threshold = max(max(abs(fft2(Signal))));
   % initialize the objective value vector.
-  FunctionalValue = [];
+  FunctionalValues = [];
   
 %--------------------------------------------------------------------------  
 % IST-D Reconstruction
@@ -44,32 +43,31 @@ end
   %Loop over the outer indices.
   for Iteration = 1 : MaxIterations
     %Compute the current spectral estimate.
-    Updater = SubSamplingVector.*(Signal - Reconstruction);
-    Updater =  fft2(Updater);
-
+    Updater = SubSamplingVector.*(Signal - ReconstructedSignal);
+    ReconstructedSpectrum =  ReconstructedSpectrum + fft2(Updater);
     %Compute and store the functional values.
-    [CurrentFunctionalValue, Updater] = ists_functional(Updater, Treshold);
-    ReconstructedSpectrum = ReconstructedSpectrum + Updater;
-    FunctionalValue = [FunctionalValue; CurrentFunctionalValue];
-
+    [CurrentFunctionalValue, ReconstructedSpectrum] = ists_functional(ReconstructedSpectrum, Threshold);
+    FunctionalValues = [FunctionalValues; CurrentFunctionalValue];
+    
+    % Should some point become NaN, set it to zero otherwise ifft2 will set
+    % everything to NaN leadin to a crash later
+    ReconstructedSpectrum(isnan(ReconstructedSpectrum)) = 0;
+    
+    
     %Update estimate and threshold.
-    Reconstruction = ifft2(ReconstructedSpectrum);
-    Treshold = Treshold*mu;
-    Treshold = Treshold*(MaxIterations-Iteration)/MaxIterations;
-
-%     FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
-%     contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
-%     set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
-%     hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
-%     figure(999),clf,plot(FunctionalValue),xlabel('Iterations'),ylabel('Functional')
-
-    drawnow
-    if Iteration>1
-    FunctionalDecrease = FunctionalValue(end) - FunctionalValue(end-1);
-    if isnan(FunctionalValue(end)) || round(FunctionalValue(end),7)==0 || FunctionalDecrease>0
-      break
+    ReconstructedSignal = ifft2(ReconstructedSpectrum);
+    Threshold = Threshold*mu;
+    Threshold = Threshold*(MaxIterations-Iteration)/MaxIterations;
+    
+ if Iteration>10
+      NormalizedFunctionalValues = FunctionalValues/max(FunctionalValues);
+      RelativeFunctionalDecrease(Iteration) = NormalizedFunctionalValues(end)-NormalizedFunctionalValues(end-1);
+%       figure(99),clf,subplot(121),plot(FunctionalValues),subplot(122),plot(log10(abs(RelativeFunctionalDecrease))),drawnow
+      if  abs(RelativeFunctionalDecrease(Iteration))<1e-7  % || RelativeFunctionalDecrease(InnerIteration)>0
+        break; % Finishes algorithm
+      end
     end
-    end
+
   end
 
 %--------------------------------------------------------------------------  
@@ -77,14 +75,14 @@ end
 %--------------------------------------------------------------------------
 
   if isTwoDimensional
-    for i=(N + 1):size(Reconstruction,2)
-      Reconstruction(:, N + 1) = [];
+    for i=(N + 1):size(ReconstructedSignal,2)
+      ReconstructedSignal(:, N + 1) = [];
     end
-    for i=(N + 1):size(Reconstruction,1)
-      Reconstruction(N + 1, :) = [];
+    for i=(N + 1):size(ReconstructedSignal,1)
+      ReconstructedSignal(N + 1, :) = [];
     end
   else
-    Reconstruction(N + 1 : end) = [];
+    ReconstructedSignal(N + 1 : end) = [];
   end
 
 end

@@ -35,7 +35,7 @@ end
 
 %Check if user-supplied else use same default as camera
 if (nargin < 3 || isempty(BackgroundParameter))
-  NoiseLevel = 1e-5 * norm(Signal);
+  NoiseLevel = 1e-6 * norm(Signal);
   BackgroundParameter = 0.1*NoiseLevel;
 end
 %--------------------------------------------------------------------------  
@@ -84,6 +84,11 @@ for Iteration = 1 : MaxIter
   %Get functional state and gradient
   [CurrentFunctionalValue, SpectralGradient] = camera_functional(ReconstructedSpectrum, BackgroundParameter);
   
+  % Should some point become NaN, set it to zero otherwise ifft2 will set
+  % everything to NaN leadin to a crash later
+  SpectralGradient(isnan(SpectralGradient)) = 0;
+  
+  
   %Compute the time-domain gradient.
   Gradient = (2*N).*ifft2(SpectralGradient);
   Gradient = (1 / LipschitzConstant).*Gradient.*(1 - SubSamplingGrid);
@@ -110,8 +115,9 @@ for Iteration = 1 : MaxIter
   PrevGradient = Gradient;
   
     if Iteration>1
-      FunctionalDecrease = FunctionalValues(end)-FunctionalValues(end-1);
-      if abs(FunctionalDecrease) < FunctionalValues(1)/1e6 || FunctionalDecrease>0
+ NormalizedFunctionalValues = FunctionalValues/max(FunctionalValues);
+      RelativeFunctionalDecrease(Iteration) = NormalizedFunctionalValues(end)-NormalizedFunctionalValues(end-1);
+      if  abs(RelativeFunctionalDecrease(Iteration) )<1e-7  % || RelativeFunctionalDecrease(InnerIteration)>0
         break; % Finishes algorithm
       end
     end

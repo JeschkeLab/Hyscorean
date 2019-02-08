@@ -63,7 +63,7 @@ end
 % check for an inner loop count argument.
 if (nargin < 8 || isempty(MaxInIter))
   % none supplied, use a default value.
-  MaxInIter = 1000;
+  MaxInIter = 10000;
 end
 
 % check for a zero-fill count argument.
@@ -84,7 +84,7 @@ end
 
 % Set the output size.
 OutputDimension = (2 ^ NZeroFillings) * SignalDimension;
-
+Elements = numel(Signal);
 %Increase dimensions of all variables
 if isTwoDimensional
   SubSamplingGrid = zeros(OutputDimension);
@@ -140,7 +140,7 @@ for OuterIteration = 1 : MaxOutIter
   LipschitzConstant = 0.5 / (CurrentBackgroundParameter * MultiplierBackgroundParameter);
   
   % Compute the initial spectral estimate.
-  ReconstructedSpectrum = fft2(Reconstruction);
+  ReconstructedSpectrum = 1/SignalDimension*fft2(Reconstruction);
   NumberOfOperations(end) = NumberOfOperations +1;
   
   % Loop over the inner indices.
@@ -154,7 +154,7 @@ for OuterIteration = 1 : MaxOutIter
     SpectralGradient(isnan(SpectralGradient)) = 0;
     
     % Compute and store the time-domain gradient.
-    Gradient = OutputDimension .* ifft2(SpectralGradient);
+    Gradient = SignalDimension*ifft2(SpectralGradient);
     NumberOfOperations(end) =  NumberOfOperations +1;
     
     % Compute the velocity factor.
@@ -175,7 +175,7 @@ for OuterIteration = 1 : MaxOutIter
 
       % compute a potential x-update.
       ReconstructionUpdate = (1 + VelocityFactor) .* ReconstructionUpdate - VelocityFactor .* y;
-      ReconstructedSpectrum = fft2(ReconstructionUpdate);
+      ReconstructedSpectrum = 1/SignalDimension*fft2(ReconstructionUpdate);
       NumberOfOperations(end) =  NumberOfOperations +1;
 
       %Check for a primary termination criterion.

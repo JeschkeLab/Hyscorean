@@ -1,68 +1,78 @@
+
 % ists: barebones 1d stern ist reconstruction function.
-function [Reconstruction, FunctionalValue] = ists_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,handles)
+function [Reconstruction, FunctionalValue] = istd_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,NZeroFillings)
 
 if (nargin < 2)
   error('At least two arguments are required');
 end
+% check for a zero-fill count argument.
+if (nargin < 5 || isempty(NZeroFillings))
+  % none supplied, use a default value.
+  NZeroFillings = 0;
+end
 
-%--------------------------------------------------------------------------  
+%--------------------------------------------------------------------------
 % Preparations
 %--------------------------------------------------------------------------
   %Store the input vector length.
-  N = length(Signal);
+  SignalDimension = length(Signal);
   %Check if one or two dimensional data
-  isTwoDimensional = ~isvector(Signal);
-
+  isTwoDimensional = size(Signal,2)>1;
+OutputDimension = (2 ^ NZeroFillings) * SignalDimension;
   %Increase dimensions of all variables
   if isTwoDimensional
-    ZeroFiller = zeros(2*N);
+    ZeroFiller = zeros(OutputDimension);
     ZeroFiller(1:size(SubSamplingVector,1),1:size(SubSamplingVector,2)) = SubSamplingVector;
     SubSamplingVector = ZeroFiller;
-    ZeroFiller = zeros(2*N);
+    ZeroFiller = zeros(OutputDimension);
     ZeroFiller(1:size(Signal,1),1:size(Signal,2)) = Signal;
     Signal  = ZeroFiller;
-    ReconstructedSpectrum = zeros(2*N);
-    Reconstruction = zeros(2*N);
+    ReconstructedSpectrum = zeros(OutputDimension);
+    Reconstruction = zeros(OutputDimension);
   else
-    ZeroFiller = zeros(2*N,1);
+    ZeroFiller = zeros(OutputDimension,1);
     ZeroFiller(1:size(SubSamplingVector,2),1) = SubSamplingVector;
     SubSamplingVector = ZeroFiller;
-    Signal = [Signal; zeros(N, 1)];
-    ReconstructedSpectrum = zeros(2*N, 1);
-    Reconstruction = zeros(2*N, 1);
+    Signal = [Signal; zeros(OutputDimension - SignalDimension, 1)];
+    ReconstructedSpectrum = zeros(OutputDimension, 1);
+    Reconstruction = zeros(OutputDimension, 1);
   end
+  
   % build an initial threshold value.
   Treshold = max(max(abs(fft2(Signal))));
   % initialize the objective value vector.
   FunctionalValue = [];
   
 %--------------------------------------------------------------------------  
-% ISTS Reconstruction
+% IST-S Reconstruction
 %--------------------------------------------------------------------------
 
   %Loop over the outer indices.
   for Iteration = 1 : MaxIterations
     %Compute the current spectral estimate.
     Updater = SubSamplingVector.*(Signal - Reconstruction);
-    ReconstructedSpectrum =  ReconstructedSpectrum + fft2(Updater);
+    Updater =  fft2(Updater);
 
     %Compute and store the functional values.
-    [CurrentFunctionalValue, ReconstructedSpectrum] = ists_functional(ReconstructedSpectrum, Treshold);
+    [CurrentFunctionalValue, Updater] = ists_functional(Updater, Treshold);
+    ReconstructedSpectrum = ReconstructedSpectrum + Updater;
     FunctionalValue = [FunctionalValue; CurrentFunctionalValue];
 
+    % Should some point become NaN, set it to zero otherwise ifft2 will set
+    % everything to NaN leadin to a crash later
+    ReconstructedSpectrum(isnan(ReconstructedSpectrum)) = 0;
+    
     %Update estimate and threshold.
     Reconstruction = ifft2(ReconstructedSpectrum);
     Treshold = Treshold*mu;
     Treshold = Treshold*(MaxIterations-Iteration)/MaxIterations;
-    
-    
-        FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
-    contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
-    set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
-    hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
-    figure(999),clf,plot(FunctionalValue),xlabel('Iterations'),ylabel('Functional')
-    drawnow
-    
+
+    if Iteration>1
+    FunctionalDecrease = FunctionalValue(end) - FunctionalValue(end-1);
+    if isnan(FunctionalValue(end)) || round(FunctionalValue(end),7)==0 || FunctionalDecrease>0
+      break
+    end
+    end
   end
 
 %--------------------------------------------------------------------------  
@@ -70,14 +80,14 @@ end
 %--------------------------------------------------------------------------
 
   if isTwoDimensional
-    for i=(N + 1):size(Reconstruction,2)
-      Reconstruction(:, N + 1) = [];
+    for i=(SignalDimension + 1):size(Reconstruction,2)
+      Reconstruction(:, SignalDimension + 1) = [];
     end
-    for i=(N + 1):size(Reconstruction,1)
-      Reconstruction(N + 1, :) = [];
+    for i=(SignalDimension + 1):size(Reconstruction,1)
+      Reconstruction(SignalDimension + 1, :) = [];
     end
   else
-    Reconstruction(N + 1 : end) = [];
+    Reconstruction(SignalDimension + 1 : end) = [];
   end
 
 end
