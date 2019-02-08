@@ -81,8 +81,9 @@ ContourHandle = findobj(GhostFigure,'Type','contour');
 GhostFigure2 = figure('Visible','off','Position',[100 100 776 415]); % Invisible figure
 contour2lineplot(ContourHandle,1);
 delete(GhostFigure);
-xlim([-20 20])
-ylim([0 20])
+Limits = str2double(get(handles.XUpperLimit,'string'));;
+xlim([-Limits Limits])
+ylim([0 Limits])
 xlabel('\nu_1 [MHz]')
 ylabel('\nu_2 [MHz]')
 grid on
