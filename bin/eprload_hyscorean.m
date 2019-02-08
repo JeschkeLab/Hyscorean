@@ -1,4 +1,7 @@
-% eprload  Load experimental EPR data
+% eprload_hyscorean  Load experimental EPR data
+%
+% THIS IS A HYSCOREAN COPY OF THE EASYSPIN FUNCTION eprload
+% ALL RIGHTS GO TO THE EASYSPIN DEVELOPMENT TEAM 
 %
 %   y = eprload(FileName)
 %   [x,y] = eprload(FileName)
