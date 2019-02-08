@@ -15,8 +15,14 @@ switch FileExtension
     
     %Load file with eprload from Easyspin
     File = FileNames{1};
-    [~,~,BrukerParameters] = eprload(File);
-    ExtractedData = eprload(File);
+    %Check if easyspin installed. If not use local eprload function copy
+    if getpref('hyscorean','easyspin_installed')
+      [~,~,BrukerParameters] = eprload(File);
+      ExtractedData = eprload(File);
+    else
+      [~,~,BrukerParameters] = eprload_hyscorean(File);
+      ExtractedData = eprload_hyscorean(File);
+    end
     
     if isvector(ExtractedData)
       
@@ -24,7 +30,12 @@ switch FileExtension
       %--------------------------------------------------------------------
       NUSflag = true;
       
-      [Abscissa,Ordinate,BrukerParameters] = eprload(File);
+      %Check if easyspin installed. If not use local eprload function copy
+      if getpref('hyscorean','easyspin_installed')
+        [Abscissa,Ordinate,BrukerParameters] = eprload(File);
+      else
+        [Abscissa,Ordinate,BrukerParameters] = eprload_hyscorean(File);
+      end
       %Decode the t1 and t2 timings from abscissa
       t2Timings = floor(Abscissa);
       t1Timings = round(10000*(Abscissa - t2Timings));
@@ -123,6 +134,23 @@ switch FileExtension
       end
       TimeAxis1 = linspace(0,TimeStep1*size(TauSignals,2),size(TauSignals,2));
       TimeAxis2 = linspace(0,TimeStep2*size(TauSignals,2),size(TauSignals,2));
+      if ~exist('TauValues')
+        
+        PulseSpelVariables = BrukerParameters.PlsSPELGlbTxt;
+        %Identify the tau definition lines
+        TauDefinitionIndexes = strfind(PulseSpelVariables,'d1 ');
+        %Extract the tau-values
+        for i=1:length(TauDefinitionIndexes)
+          Shift = 7;
+          while ~isspace(PulseSpelVariables(TauDefinitionIndexes(i) + Shift))
+            TauString(Shift - 2) =  PulseSpelVariables(TauDefinitionIndexes(i) + Shift);
+            Shift = Shift + 1;
+          end
+          TauValues(i)  = str2double(TauString);
+        end
+        TimeAxis1 = linspace(0,TimeStep1*size(TauSignals,2),size(TauSignals,2));
+        TimeAxis2 = linspace(0,TimeStep2*size(TauSignals,2),size(TauSignals,2));
+      end
       
     end
     
