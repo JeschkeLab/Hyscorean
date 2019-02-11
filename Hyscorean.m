@@ -380,7 +380,7 @@ return
 
 %==========================================================================
 function LoadSettings_Callback(hObject, eventdata, handles)
-loadSettingsHyscorean(handles)
+handles = loadSettingsHyscorean(handles);
 guidata(hObject, handles);
 return
 %==========================================================================
