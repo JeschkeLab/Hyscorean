@@ -90,8 +90,8 @@ end
 
 %Get data
 Spectrum = Processed.spectrum;
-axis1 = Processed.axis1;
-axis2 = Processed.axis2;
+FrequencyAxis1 = Processed.axis1;
+FrequencyAxis2 = Processed.axis2;
 
 %Get and set axis limits
 XupperLimit = str2double(get(handles.XUpperLimit,'string'));
@@ -121,7 +121,7 @@ end
 Levels=GraphicalSettings.Levels;
 MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
 if MinimalContourLevel~=0 && GraphicalSettings.Absolute
-MaximalContourLevel = max(max(abs(Processed.spectrum)));
+MaximalContourLevel =max(max(abs(Processed.spectrum)));
 MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
 ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
 ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
@@ -146,14 +146,14 @@ switch GraphicalSettings.PlotType
   case 1 %Contour plot
     if get(handles.ImposeBlindSpots,'Value')
       %If blindspots are superimposed, make contour only black to adapt to hot-colormap
-      contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.LineWidth,'Color','k');
+      contour(handles.mainPlot,FrequencyAxis1,FrequencyAxis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.LineWidth,'Color','k');
     else
-      contour(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.LineWidth);
+      contour(handles.mainPlot,FrequencyAxis1,FrequencyAxis2,Spectrum,ContourLevels,'LineWidth',GraphicalSettings.LineWidth);
     end
   case 2 %Filled contour plot
-    contourf(handles.mainPlot,axis1,axis2,Spectrum,ContourLevels);
+    contourf(handles.mainPlot,FrequencyAxis1,FrequencyAxis2,Spectrum,ContourLevels);
   case 3 %Pseudocolor plot
-    pcolor(handles.mainPlot,axis1,axis2,Spectrum),shading(handles.mainPlot,'interp')
+    pcolor(handles.mainPlot,FrequencyAxis1,FrequencyAxis2,Spectrum),shading(handles.mainPlot,'interp')
 end
 
 %Add diagonal/antidiagonal and zero-vertical auxiliary lines
@@ -193,7 +193,9 @@ if ~get(handles.Lorentz2GaussCheck,'Value')
       enableDisableGUI(handles,'Lorent2Gauss','off')
 end
 if ~handles.Data.NUSflag
-      enableDisableGUI(handles,'NUSReconstruction','off')
+  enableDisableGUI(handles,'NUSReconstruction','off')
+else
+  enableDisableGUI(handles,'NUSReconstruction','on')
 end
 enableDisableGUI(handles,'AutomaticBackground','on')
 
@@ -216,9 +218,11 @@ catch Error
   if ~get(handles.Lorentz2GaussCheck,'Value')
     enableDisableGUI(handles,'Lorent2Gauss','off')
   end
-  if ~handles.Data.NUSflag
-    enableDisableGUI(handles,'NUSReconstruction','off')
-  end
+if ~handles.Data.NUSflag
+  enableDisableGUI(handles,'NUSReconstruction','off')
+else
+  enableDisableGUI(handles,'NUSReconstruction','on')
+end
   enableDisableGUI(handles,'AutomaticBackground','on')
   
   

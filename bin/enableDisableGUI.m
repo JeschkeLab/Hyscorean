@@ -10,16 +10,26 @@ switch Panel
       case 1
         set(handles.MaxEntLagrangianMultiplier,'enable','on')
         set(handles.LagrangeMultiplierText,'enable','on')
-      case 2
+        set(handles.BackgroundParameterText,'enable','on')
+        set(handles.MaxEntBackgroundParameter,'enable','on')
+      case {2,3,4}
+        set(handles.MaxEntLagrangianMultiplier,'enable','on')
+        set(handles.LagrangeMultiplierText,'enable','on')
+        set(handles.BackgroundParameterText,'enable','off')
+        set(handles.MaxEntBackgroundParameter,'enable','off')
+      otherwise
         set(handles.MaxEntLagrangianMultiplier,'enable','off')
         set(handles.LagrangeMultiplierText,'enable','off')
+        set(handles.BackgroundParameterText,'enable','off')
+        set(handles.MaxEntBackgroundParameter,'enable','off')
     end
     else
       set(handles.MaxEntLagrangianMultiplier,'enable',Action)
       set(handles.LagrangeMultiplierText,'enable',Action)
+      set(handles.BackgroundParameterText,'enable',Action)
+      set(handles.NUSReconstructionText,'enable',Action)
     end
-    set(handles.ReconstructionAlgorithm,'enable',Action)
-    set(handles.NUSReconstructionText,'enable',Action)
+    
     set(handles.plotNUSgridText,'enable',Action)
     set(handles.plotNUSgrid,'enable',Action)
     
