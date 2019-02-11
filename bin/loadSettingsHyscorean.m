@@ -1,4 +1,4 @@
-function loadSettings(handles)
+function handles = loadSettingsHyscorean(handles)
 
 try
   %Get path to settings file with loading GUI
@@ -12,16 +12,43 @@ end
 Settings = Settings.Settings;
 
 %Set edit boxes
-set(handles.L2G_tau,'string',Settings.tauFactor1)
-set(handles.L2G_tau2,'string',Settings.tauFactor2)
-set(handles.L2G_sigma,'string',Settings.sigmaFactor1)
-set(handles.L2G_sigma2,'string',Settings.sigmaFactor2)
-set(handles.ZeroFilling2,'string',Settings.zerofilling2)
-set(handles.ZeroFilling1,'string',Settings.zerofilling1)
-set(handles.MaxEntBackgroundParameter,'string',Settings.MaxEntBackgroundParameter)
-set(handles.MaxEntLagrangianMultiplier,'string',Settings.MaxEntLagrangianMultiplier)
-set(handles.WindowType,'value',Settings.WindowType)
+set(handles.L2G_tau,'string',Settings.tauFactor1);
+set(handles.L2G_tau2,'string',Settings.tauFactor2);
+set(handles.L2G_sigma,'string',Settings.sigmaFactor1);
+set(handles.L2G_sigma2,'string',Settings.sigmaFactor2);
+set(handles.ZeroFilling2,'string',Settings.zerofilling2);
+set(handles.ZeroFilling1,'string',Settings.zerofilling1);
+set(handles.MaxEntBackgroundParameter,'string',Settings.MaxEntBackgroundParameter);
+set(handles.MaxEntLagrangianMultiplier,'string',Settings.MaxEntLagrangianMultiplier);
+set(handles.WindowType,'value',Settings.WindowType);
+ switch WindowMenuState
+    case 1
+     WindowType =  'hamming';
+    case 2
+     WindowType =  'chebyshev';  
+    case 3
+     WindowType =  'welch';
+    case 4
+      WindowType = 'blackman'; 
+    case 5
+      WindowType = 'bartlett';
+    case 6
+      WindowType = 'connes';
+    case 7
+      WindowType = 'cosine';
+    case 8
+      WindowType = 'tukey25';
+    case 9
+      WindowType = 'tukey50';
+    case 10
+      WindowType = 'tukey75';
+    case 11
+      WindowType = 'hann';
+    case 12
+      WindowType = 'none';  
+  end
 try
+handles.WindowTypeString = WindowType;
 set(handles.WindowLength1,'string',Settings.WindowDecay1);
 set(handles.WindowLength2,'string',Settings.WindowDecay2);
 set(handles.Symmetrization_ListBox,'value',Settings.Symmetrization);
