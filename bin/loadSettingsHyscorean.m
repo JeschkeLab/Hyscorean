@@ -21,7 +21,7 @@ set(handles.ZeroFilling1,'string',Settings.zerofilling1);
 set(handles.MaxEntBackgroundParameter,'string',Settings.MaxEntBackgroundParameter);
 set(handles.MaxEntLagrangianMultiplier,'string',Settings.MaxEntLagrangianMultiplier);
 set(handles.WindowType,'value',Settings.WindowType);
- switch WindowMenuState
+ switch Settings.WindowType
     case 1
      WindowType =  'hamming';
     case 2

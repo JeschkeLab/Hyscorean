@@ -29,7 +29,8 @@ switch Panel
       set(handles.BackgroundParameterText,'enable',Action)
       set(handles.NUSReconstructionText,'enable',Action)
     end
-    
+    set(handles.NUSReconstructionText,'enable',Action)
+    set(handles.ReconstructionAlgorithm,'enable',Action)
     set(handles.plotNUSgridText,'enable',Action)
     set(handles.plotNUSgrid,'enable',Action)
     
