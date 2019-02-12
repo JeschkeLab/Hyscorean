@@ -211,7 +211,7 @@ function Linewidth_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of Linewidth as text
 %        str2double(get(hObject,'String')) returns contents of Linewidth as a double
-handles.GraphicalSettings.Linewidth = str2double(get(hObject,'string'));
+handles.GraphicalSettings.LineWidth = str2double(get(hObject,'string'));
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
