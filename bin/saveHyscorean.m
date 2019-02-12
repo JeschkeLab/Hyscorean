@@ -78,7 +78,7 @@ set(GhostFigure,'CreateFcn','set(gcbf,''Visible'',''on'')'); % Make it visible u
 
 %Export as PDF (.pdf)
 ContourHandle = findobj(GhostFigure,'Type','contour');
-GhostFigure2 = figure('Visible','off','Position',[100 100 776 415]); % Invisible figure
+GhostFigure2 = figure('Visible','on','Position',[100 100 776 415]); % Invisible figure
 contour2lineplot(ContourHandle,1);
 delete(GhostFigure);
 Limits = str2double(get(handles.XUpperLimit,'string'));;
@@ -87,6 +87,7 @@ ylim([0 Limits])
 xlabel('\nu_1 [MHz]')
 ylabel('\nu_2 [MHz]')
 grid on
+hold on
 plot(handles.Processed.axis1,abs(handles.Processed.axis1),'k-.')
 plot(zeros(length(handles.Processed.axis1)),handles.Processed.axis1,'k')
 
