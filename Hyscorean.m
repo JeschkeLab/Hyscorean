@@ -648,9 +648,14 @@ return
 function GraphicalSettingsButton_Callback(hObject, eventdata, handles)
 
 setappdata(0,'GraphicalSettings',handles.GraphicalSettings)
-
+%Make the window appear relative to the Hyscorean window
+Position = handles.HyscoreanFigure.Position;
+Position(1) = Position(1)+500;
+Position(2) = Position(2)+60;
+Position(3) = 451.0;
+Position(4) = 177.0;
 %Call graphical settings GUI
-Hyscorean_GraphicalSettings
+Hyscorean_GraphicalSettings('Position',Position)
 uiwait(Hyscorean_GraphicalSettings)
 
 handles.GraphicalSettings = getappdata(0,'GraphicalSettings');
@@ -904,8 +909,21 @@ function MinimalContourLevel_Callback(hObject, eventdata, handles)
 if str2double(get(hObject,'String')) < 0
   set(hObject,'String',0)
 end
-if str2double(get(hObject,'String')) >= 100
-  set(hObject,'String',90)
+if str2double(get(hObject,'String')) >= str2double(get(handles.MaximalContourLevel,'String'))
+  set(hObject,'String',str2double(get(handles.MaximalContourLevel,'String'))-0.5)
+end
+updateHyscoreanGUI(handles,handles.Processed)  
+guidata(hObject, handles);
+return
+%==========================================================================
+
+%==========================================================================
+function MaximalContourLevel_Callback(hObject, eventdata, handles)
+if str2double(get(hObject,'String')) > 100
+  set(hObject,'String',100)
+end
+if str2double(get(hObject,'String')) <= str2double(get(handles.MinimalContourLevel,'String'))
+  set(hObject,'String',str2double(get(handles.MinimalContourLevel,'String'))+0.5)
 end
 updateHyscoreanGUI(handles,handles.Processed)  
 guidata(hObject, handles);
