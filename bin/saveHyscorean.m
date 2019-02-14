@@ -3,6 +3,7 @@ function saveHyscorean(handles)
 set(handles.ProcessingInfo, 'String', 'Status: Saving session'); drawnow;
 CrushFlag = false;
 SaveHyscoreanSettings = handles.SaveHyscoreanSettings;
+GraphicalSettings = handles.GraphicalSettings;
 % Prepare saving directory and path
 %----------------------------------------------------------------------
 
@@ -65,7 +66,7 @@ FrequencyAxis2 = handles.Processed.axis2;
 
 % Save main figure
 %----------------------------------------------------------------------  
-GhostFigure = figure('Visible','off','Position',[100 100 776 415]); % Invisible figure
+GhostFigure = figure('Visible','on','Units','pixels','Position',[100 100 776 415]); % Invisible figure
 AxesHandles = copyobj(handles.mainPlot,GhostFigure);
 set(AxesHandles,'Position',[0.07 0.12 0.9 0.85]);
 
@@ -78,19 +79,23 @@ set(GhostFigure,'CreateFcn','set(gcbf,''Visible'',''on'')'); % Make it visible u
 
 %Export as PDF (.pdf)
 ContourHandle = findobj(GhostFigure,'Type','contour');
-GhostFigure2 = figure('Visible','on','Position',[100 100 776 415]); % Invisible figure
-contour2lineplot(ContourHandle,1);
+GhostFigure2 = figure('Visible','off','Position',[100 100 776 415]); % Invisible figure
+set(GhostFigure2.Children,'Position',[0.07 0.12 0.9 0.85]);
+contour2lineplot_hyscorean(ContourHandle,1,GraphicalSettings.ColormapName,GraphicalSettings.LineWidth);
 delete(GhostFigure);
-Limits = str2double(get(handles.XUpperLimit,'string'));;
+Limits = str2double(get(handles.XUpperLimit,'string'));
 xlim([-Limits Limits])
 ylim([0 Limits])
 xlabel('\nu_1 [MHz]')
 ylabel('\nu_2 [MHz]')
 grid on
 hold on
+box on
 plot(handles.Processed.axis1,abs(handles.Processed.axis1),'k-.')
 plot(zeros(length(handles.Processed.axis1)),handles.Processed.axis1,'k')
-
+currentXTicks = xticks(GhostFigure2.Children);
+yticks(GhostFigure2.Children,currentXTicks(currentXTicks>=0))
+set(GhostFigure2.Children,'yticklabel',currentXTicks(currentXTicks>=0),'xticklabel',currentXTicks)
 
 %Save as Matlab figure (.fig)
 savefig(GhostFigure2,fullfile(FullPath,[SaveName '.fig']), 'compact');
@@ -113,7 +118,7 @@ if getpref('hyscorean','reportlicense')
 reportdata = Settings;
 %Load data into report structure
 reportdata.Processed = handles.Processed;
-reportdata.GraphicalSettings = handles.GraphicalSettings;
+reportdata.GraphicalSettings = GraphicalSettings;
 reportdata.Data = handles.Data;
 reportdata.TauValues = handles.Data.TauValues;
 reportdata.TimeStep1 = handles.Data.TimeStep1;
