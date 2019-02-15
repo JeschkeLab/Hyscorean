@@ -1143,7 +1143,7 @@ Defaults.BackgroundStart1 = str2double(get(handles.BackgroundStart1,'string'));
 Defaults.BackgroundStart2 = str2double(get(handles.BackgroundStart2,'string'));
 Defaults.BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
 Defaults.LagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
-Defaults.ThresholdParameter = 0.99;
+Defaults.ThresholdParameter = 0.98;
 Defaults.ReconstructionMethod = ReconstructionMethod;
 
 %Get the current processing settings
@@ -1160,6 +1160,11 @@ Parameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
 Defaults.L2GParameters = Parameters;
 Defaults.L2GCheck = get(handles.Lorentz2GaussCheck,'Value');
 
+Defaults.MaximalContourLevel = str2double(get(handles.MaximalContourLevel,'string'));
+Defaults.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
+Defaults.XUpperLimit = str2double(get(handles.XUpperLimit,'string'));
+GraphicalSetttings = getpref('hyscorean','graphicalsettings');
+Defaults.Levels = GraphicalSetttings.Levels;
 %Launch the validation module
 Hyscorean_validationModule(RawData,Defaults)
 
