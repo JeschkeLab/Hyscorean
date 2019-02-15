@@ -30,6 +30,7 @@ TotalTrials = Length1*Length2*Length3*Length4*Length5*Length6*Length7*Length8*Le
 
 ReconstructedSpectra = zeros(2*Dimension1,2*Dimension1);
 TrialsCompleted = 0;
+PreviousTimes = [];
 set(StatusHandle,'string','Validating: estimating validation time...'),drawnow
 for Index6 = 1:Length6 %Loop this one first since this determines time duration
   for Index7 = 1:Length7
@@ -202,6 +203,8 @@ TrialsCompleted = TrialsCompleted + 1;
 
 %Update user on approx. remaining validation time
 CPU_time = toc;
+PreviousTimes(end+1) = CPU_time;
+CPU_time = mean(PreviousTimes);
 TimeRemaining = CPU_time/60*(TotalTrials - TrialsCompleted);
 Minutes=floor(TimeRemaining);
 Second=round((TimeRemaining-Minutes)*60);
