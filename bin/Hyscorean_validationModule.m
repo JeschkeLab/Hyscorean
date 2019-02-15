@@ -634,30 +634,44 @@ FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),2*Dimension2);
 
 HyscoreanPath = which('Hyscorean');
 HyscoreanPath = HyscoreanPath(1:end-11);
-CustomColormap = load(fullfile(HyscoreanPath,'bin\RedWhiteColorMap.mat'));
+CustomColormap = load(fullfile(HyscoreanPath,'bin\RedWhiteColorMap_old.mat'));
 CustomColormap = CustomColormap.mycmap;
 CustomColormap = fliplr(CustomColormap(1:end-2,:)')';
 CustomColormap(1,:) = [1 1 1];
 cla(handles.ValidationMainPlot)
-contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((MeanReconstruction)),80,'k','LineWidth',1)
-set(handles.ValidationMainPlot,'YLim',[0 20],'XLim',[-20 20])
+
+Defaults = handles.Defaults;
+ContourLevels  = Defaults.Levels;
+minContourLevel = min(min(Defaults.MinimalContourLevel/100*abs((MeanReconstruction))));
+maxContourLevel = max(max(Defaults.MaximalContourLevel/100*abs((MeanReconstruction))));
+ContourLevels = linspace(minContourLevel,maxContourLevel,ContourLevels);
+contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((MeanReconstruction)),ContourLevels,'k','LineWidth',1)
+set(handles.ValidationMainPlot,'YLim',[0 Defaults.XUpperLimit],'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
 grid(handles.ValidationMainPlot,'on')
 xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
 hold(handles.ValidationMainPlot,'on')
+
 switch handles.DisplayRadioStatus
   case 'lower'
     Display = max(LowerBound,0);
+%     h = contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display,ContourLevels);
+%     colormap(handles.ValidationMainPlot,fliplr(CustomColormap')')
+    colormap(handles.ValidationMainPlot,CustomColormap)
   case 'upper'
     Display = UpperBound;
+%         h = contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display,ContourLevels);
+%         colormap(handles.ValidationMainPlot,fliplr(CustomColormap')')
+colormap(handles.ValidationMainPlot,CustomColormap)
   case 'uncertainty'
     Display = Uncertainty;
 end
-h = pcolor(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display);
+    h = pcolor(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display);
+    h.FaceAlpha  = 0.7;
+    colormap(handles.ValidationMainPlot,CustomColormap)
+grid(handles.ValidationMainPlot,'on')
+xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
 shading(handles.ValidationMainPlot,'interp')
-colormap(handles.ValidationMainPlot,CustomColormap)
-caxis(handles.ValidationMainPlot,[0 1])
-h.FaceAlpha  = 0.7;
-set(handles.ValidationMainPlot,'YLim',[0 20],'XLim',[-20 20])
+caxis(handles.ValidationMainPlot,[Defaults.MinimalContourLevel/100 Defaults.MaximalContourLevel/100])
 hold(handles.ValidationMainPlot,'off')
 
   cla(handles.ValidationInset1)
@@ -685,7 +699,7 @@ hold(handles.ValidationMainPlot,'off')
       LowerInset =  max(Lower/max(max(Lower)));
       plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,'r','LineWidth',1.5)
   end
-  set(handles.ValidationInset1,'XLim',[-20 20])
+  set(handles.ValidationInset1,'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
   set(handles.ValidationInset1,'YLim',[0 1])
   set(handles.ValidationInset1,'XTick',[],'YTick',[])
   hold(handles.ValidationInset2,'off')
@@ -713,7 +727,7 @@ hold(handles.ValidationMainPlot,'off')
       LowerInset =  max(Lower/max(max(Lower)));
       plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,'r')
   end
-  set(handles.ValidationInset2,'YLim',[0 20])
+  set(handles.ValidationInset2,'YLim',[0 Defaults.XUpperLimit])
   set(handles.ValidationInset2,'XLim',[0 1])
 
   set(handles.ValidationInset2,'XTick',[],'YTick',[])
@@ -865,6 +879,7 @@ ExternalHandles.ReconstructedSpectra = handles.ReconstructedSpectra;
 ExternalHandles.DisplayRadioStatus = handles.DisplayRadioStatus;
 ExternalHandles.SetParameterSet_Button = handles.SetParameterSet_Button;
 ExternalHandles.RawData = handles.RawData;
+ExternalHandles.Defaults = handles.Defaults;
 if get(handles.DisplayMean_Radio,'value')
 updateValidationPlots(ExternalHandles)
 else
