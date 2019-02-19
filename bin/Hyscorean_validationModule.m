@@ -22,9 +22,9 @@ function varargout = Hyscorean_validationModule(varargin)
 
 % Edit the above text to modify the response to help Hyscorean_validationModule
 
-% Last Modified by GUIDE v2.5 11-Jan-2019 10:50:16
+% Last Modified by GUIDE v2.5 18-Feb-2019 11:49:05
 
-% Begin initialization code - DO NOT EDIT
+%------------------------------------------------------------------------------
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
@@ -41,16 +41,12 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
-% End initialization code - DO NOT EDIT
+%------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
 
-
+%------------------------------------------------------------------------------
 % --- Executes just before Hyscorean_validationModule is made visible.
 function Hyscorean_validationModule_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to Hyscorean_validationModule (see VARARGIN)
 
 % Choose default command line output for Hyscorean_validationModule
 handles.output = hObject;
@@ -66,6 +62,7 @@ String = sprintf('%.1f%%',100*handles.RawData.NUS.SamplingDensity );
 set(handles.SliderText,'string',String);
 end
 
+%Check if data is NUS and activate proper UI elements
 if handles.RawData.NUSflag
   switch handles.Defaults.ReconstructionMethod
     case {'ists','istd'}
@@ -84,9 +81,8 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes Hyscorean_validationModule wait for user response (see UIREprodE)
-% uiwait(handles.figure1);
-
+return
+%------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
@@ -116,20 +112,28 @@ return
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 
+%------------------------------------------------------------------------------
 function enableDisable_Edits(HandleBaseName,Status,handles)
 
+%Get the handles of the Min,Max and Trials edit boxes
 MinHandle = eval(['handles.',HandleBaseName,'_Min']);
 MaxHandle = eval(['handles.',HandleBaseName,'_Max']);
 TrialsHandle = eval(['handles.',HandleBaseName,'_Trials']);
 
+%Enable /Disable them
 set(MinHandle,'Enable',Status)
 set(MaxHandle,'Enable',Status)
 set(TrialsHandle,'Enable',Status)
 
 return
-
+%------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
+% The following callbacks react to the check boxes for activating or deactivating
+% the different validation parameters. They also update the total trials value
+%------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 function BackgroundStart1_Check_Callback(hObject, eventdata, handles)
+
 if get(hObject,'value')
   handles.NumberTrialsVector(1) = str2double(get(handles.BackgroundStart1_Trials,'string'));
   enableDisable_Edits('BackgroundStart1','on',handles)
@@ -139,12 +143,12 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 
-
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function BackgroundDimension1_Check_Callback(hObject, eventdata, handles)
+
 if get(hObject,'value')
   handles.NumberTrialsVector(2) = str2double(get(handles.BackgroundDimension1_Trials,'string'));
     enableDisable_Edits('BackgroundDimension1','on',handles)
@@ -154,12 +158,13 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
 
-
 %------------------------------------------------------------------------------
 function BackgroundStart2_Check_Callback(hObject, eventdata, handles)
+
  if get(hObject,'value')
   handles.NumberTrialsVector(3) = str2double(get(handles.BackgroundStart2_Trials,'string'));
   enableDisable_Edits('BackgroundStart2','on',handles)
@@ -169,12 +174,13 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
 
-
 %------------------------------------------------------------------------------
 function BackgroundDimension2_Check_Callback(hObject, eventdata, handles)
+
  if get(hObject,'value')
   handles.NumberTrialsVector(4) = str2double(get(handles.BackgroundDimension2_Trials,'string'));
     enableDisable_Edits('BackgroundDimension2','on',handles)
@@ -184,12 +190,13 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
 
-
 %------------------------------------------------------------------------------
 function LagrangeMultiplier_Check_Callback(hObject, eventdata, handles)
+
 if get(hObject,'value')
   handles.NumberTrialsVector(5) = str2double(get(handles.LagrangeMultiplier_Trials,'string'));
   enableDisable_Edits('LagrangeMultiplier','on',handles)
@@ -199,11 +206,13 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function BackgroundParameter_Check_Callback(hObject, eventdata, handles)
+
  if get(hObject,'value')
   handles.NumberTrialsVector(6) = str2double(get(handles.BackgroundParameter_Trials,'string'));
   enableDisable_Edits('BackgroundParameter','on',handles)
@@ -213,11 +222,13 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function ThresholdParameter_Check_Callback(hObject, eventdata, handles)
+
  if get(hObject,'value')
   handles.NumberTrialsVector(7) = str2double(get(handles.ThresholdParameter_Trials,'string'));
       enableDisable_Edits('ThresholdParameter','on',handles)
@@ -227,11 +238,13 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function SamplingDensity_Check_Callback(hObject, eventdata, handles)
+
 if get(hObject,'value')
   handles.NumberTrialsVector(8) = str2double(get(handles.SamplingDensity_Trials,'string'));
   set(handles.SamplingDensity_Slider,'enable','on')
@@ -245,12 +258,13 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
 
-
 %------------------------------------------------------------------------------
 function NoiseLevel_Check_Callback(hObject, eventdata, handles)
+
 if get(hObject,'value')
   handles.NumberTrialsVector(9) = str2double(get(handles.NoiseLevel_Trials,'string'));
   enableDisable_Edits('NoiseLevel','on',handles)
@@ -260,9 +274,9 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
+
 return
 %------------------------------------------------------------------------------
-
 
 
 %------------------------------------------------------------------------------
@@ -363,8 +377,6 @@ guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
-
-
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 %                            OTHER BUTTONS CALLBACKS
@@ -383,13 +395,11 @@ handles.NumberTrialsVector = ones(9,1);
 guidata(hObject, handles);
 %------------------------------------------------------------------------------
 
-
 %------------------------------------------------------------------------------
 function ZoomIn_Button_Callback(hObject, eventdata, handles)
 zoom on
 return
 %------------------------------------------------------------------------------
-
 
 %------------------------------------------------------------------------------
 function ZoomOut_Button_Callback(hObject, eventdata, handles)
@@ -400,7 +410,6 @@ set(handles.ValidationMainPlot,'xlim',[-Upperlimit Upperlimit],'ylim',[0 Upperli
 
 return
 %------------------------------------------------------------------------------
-
 
 %------------------------------------------------------------------------------
 function NextParameterSet_Button_Callback(hObject, eventdata, handles)
@@ -429,7 +438,6 @@ plotParameterSet(handles)
 end
 return
 %------------------------------------------------------------------------------
-
 
 %------------------------------------------------------------------------------
 function SetParameterSet_Button_Callback(hObject, eventdata, handles)
@@ -461,8 +469,11 @@ return
 %------------------------------------------------------------------------------
 function Validation_Button_Callback(hObject, eventdata, handles)
 %------------------------------------------------------------------------------
-% try
+
+%Get processing defaults
 Defaults = handles.Defaults;
+
+%Disable everything in the GUI during calculations
 set(handles.SetParameterSet_Button,'enable','off')
 set(handles.SetSelection_Text,'enable','off')
 set(handles.RemoveSet_Button,'enable','off')
@@ -472,6 +483,7 @@ set(handles.TitleParameterSet_Text,'enable','off')
 set(findall(handles.CurrentParameterSet_Panel, '-property', 'enable'), 'enable', 'off')
 set(findall(handles.Display_Panel, '-property', 'enable'), 'enable', 'off')
 
+% Construct the validation parameter vectors according the the GUI status
 if get(handles.BackgroundStart1_Check,'value')
   BackgroundStart1_Min = str2double(get(handles.BackgroundStart1_Min,'string'));
   BackgroundStart1_Max = str2double(get(handles.BackgroundStart1_Max,'string'));
@@ -496,7 +508,6 @@ if get(handles.BackgroundDimension1_Check,'value')
 else
   BackgroundDimension1_Vector = Defaults.BackgroundDimension1;
 end
-
 if get(handles.BackgroundDimension2_Check,'value')
   BackgroundDimension2_Min = str2double(get(handles.BackgroundDimension2_Min,'string'));
   BackgroundDimension2_Max = str2double(get(handles.BackgroundDimension2_Max,'string'));
@@ -505,7 +516,6 @@ if get(handles.BackgroundDimension2_Check,'value')
 else
   BackgroundDimension2_Vector = Defaults.BackgroundDimension2;
 end
-
 if get(handles.LagrangeMultiplier_Check,'value')
   LagrangeMultiplier_Min = str2double(get(handles.LagrangeMultiplier_Min,'string'));
   LagrangeMultiplier_Max = str2double(get(handles.LagrangeMultiplier_Max,'string'));
@@ -514,7 +524,6 @@ if get(handles.LagrangeMultiplier_Check,'value')
 else
   LagrangeMultiplier_Vector = Defaults.LagrangeMultiplier;
 end
-
 if get(handles.BackgroundParameter_Check,'value')
   BackgroundParameter_Min = str2double(get(handles.BackgroundParameter_Min,'string'));
   BackgroundParameter_Max = str2double(get(handles.BackgroundParameter_Max,'string'));
@@ -523,7 +532,6 @@ if get(handles.BackgroundParameter_Check,'value')
 else
   BackgroundParameter_Vector = Defaults.BackgroundParameter;
 end
-
 if get(handles.ThresholdParameter_Check,'value')
   ThresholdParameter_Min = str2double(get(handles.ThresholdParameter_Min,'string'));
   ThresholdParameter_Max = str2double(get(handles.ThresholdParameter_Max,'string'));
@@ -532,7 +540,6 @@ if get(handles.ThresholdParameter_Check,'value')
 else
   ThresholdParameter_Vector = Defaults.ThresholdParameter;
 end
-
 if get(handles.SamplingDensity_Check,'value')
   SamplingDensity = get(handles.SamplingDensity_Slider,'value');
   SamplingDensity_Trials = str2double(get(handles.SamplingDensity_Trials,'string'));
@@ -544,7 +551,6 @@ else
     SamplingDensity_Vector = [1 1];
   end
 end
-
 if get(handles.NoiseLevel_Check,'value')
   NoiseLevel_Min = str2double(get(handles.NoiseLevel_Min,'string'));
   NoiseLevel_Max = str2double(get(handles.NoiseLevel_Max,'string'));
@@ -554,11 +560,7 @@ else
   NoiseLevel_Vector = 0;
 end
 
-
-
-%Flip vector so longer cpu times are are the start
-ThresholdParameter_Vector = fliplr(ThresholdParameter_Vector);
-
+%Put all vectors into one structure
 ValidationVectors.BackgroundStart1_Vector = BackgroundStart1_Vector;
 ValidationVectors.BackgroundStart2_Vector = BackgroundStart2_Vector;
 ValidationVectors.BackgroundDimension1_Vector = BackgroundDimension1_Vector;
@@ -569,22 +571,24 @@ ValidationVectors.ThresholdParameter_Vector = ThresholdParameter_Vector;
 ValidationVectors.SamplingDensity_Vector  = SamplingDensity_Vector;
 ValidationVectors.NoiseLevel_Vector  = NoiseLevel_Vector;
 
-handles.ValidationMainPlot = handles.ValidationMainPlot;
-handles.ValidationInset1 = handles.ValidationInset1;
-handles.ValidationInset2 = handles.ValidationInset2;
-
+%Inform that validation starts
 set(handles.ValidationStatus,'string','Validation in progress...'),drawnow;
 
+%Launch validation protocol
 [ReconstructedSpectra,ParameterSets] = validateHyscorean(handles.RawData,ValidationVectors,handles.ValidationStatus,Defaults);
+
+%Save results to handles structure
 handles.ParameterSets = ParameterSets;
 handles.ReconstructedSpectra = ReconstructedSpectra;
+handles.ValidationVectors = ValidationVectors;
 
+%Update the GUI display
 set(handles.DisplayMean_Radio,'Value',1);
-
 updateValidationPlots(handles)
-
+%Update the parameter sets for the parameter table
 updateParameterSets(1,handles)
 
+%Re-activate everyhting in the GUI 
 set(handles.ZoomOut_Button,'visible','on')
 set(handles.ZoomIn_Button,'visible','on')
 set(handles.DetachPlot_Button,'visible','on')
@@ -596,28 +600,32 @@ set(handles.RemoveSet_Button,'enable','on')
 set(handles.SetSelection_Text,'enable','on')
 set(findall(handles.CurrentParameterSet_Panel, '-property', 'enable'), 'enable', 'on')
 set(findall(handles.Display_Panel, '-property', 'enable'), 'enable', 'on')
+set(handles.SaveValidation_Button, 'enable', 'on')
 
-
-% catch
-%   set(handles.ValidationStatus,'string','Ready'),drawnow;
-% end
-
+%Save handles and return
 guidata(hObject, handles);
 
 return
 
 %------------------------------------------------------------------------------
 function updateValidationPlots(handles)
+
+%Get all spectra generated during validation
 ReconstructedSpectra = handles.ReconstructedSpectra;
+
+%Inform that rendering is under progress
 set(handles.ValidationStatus,'string','Rendering...'),drawnow;
 
+%Compute the statistical results accorsing to the two-sigma rule of the 68-95-99.7 rule
 MeanReconstruction = mean(ReconstructedSpectra,3);
 MeanReconstruction = MeanReconstruction/max(max(MeanReconstruction));
 Uncertainty = std(ReconstructedSpectra,0,3);
 LowerBound = MeanReconstruction - 2*Uncertainty;
 UpperBound = MeanReconstruction + 2*Uncertainty;
-Dimension1 = 0.5*size(MeanReconstruction,1);
-Dimension2 = 0.5*size(MeanReconstruction,2);
+
+%Get dimensions of zero-filled signal
+Dimension1 = size(MeanReconstruction,1);
+Dimension2 = size(MeanReconstruction,2);
 
 TimeAxis1 = handles.RawData.TimeAxis1;
 TimeAxis2 = handles.RawData.TimeAxis2;
@@ -625,27 +633,39 @@ TimeStep1 = TimeAxis1(2) - TimeAxis1(1);
 TimeStep2 = TimeAxis2(2) - TimeAxis2(1);
 
 %Construct frequency axis
-FrequencyAxis1 = linspace(-1/(2*TimeStep1),1/(2*TimeStep1),2*Dimension1);
-FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),2*Dimension2);
+FrequencyAxis1 = linspace(-1/(2*TimeStep1),1/(2*TimeStep1),Dimension1);
+FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),Dimension2);
 
-%Plot reconstructed results
-% CustomColormap = [0 0.5 0.2; 0 0.45 0.2; 0 0.4 0.2; 0.05 0.4 0.2; 0.1 0.4 0.2; 0.15 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2; 0.2 0.3 0.2; 0.2 0.2 0.2; 0 0.4 0.2; 0 0.6 0.2; 0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.8 0; 0.2 0.8 0; 0.6 1 0.6; 0.7 1 0.7; 0.8 1 0.8;
-%             1 1 1; 1 1 1; 1 0.7 0.7; 1 0.65 0.65; 1 0.6 0.6;  1 0.55 0.55; 1 0.5 0.5;  1 0.45 0.45; 1 0.4 0.4; 1 0.3 0.3; 1 0.2 0.2; 1 0.15 0.15; 1 0.1 0.1; 1 0.05 0.05;   1 0 0;    0.95 0 0;      0.9 0 0;     0.8 0 0;     0.7 0 0;   0.65 0 0;  0.6 0 0];
+%Account for zero-filling size
+Dimension1 = Dimension1 - handles.Defaults.ZeroFilling1;
+Dimension2 = Dimension2 - handles.Defaults.ZeroFilling2;
 
+%Get Hyscorean path
 HyscoreanPath = which('Hyscorean');
 HyscoreanPath = HyscoreanPath(1:end-11);
+
+%Load custom modified hot colormap
 CustomColormap = load(fullfile(HyscoreanPath,'bin\RedWhiteColorMap_old.mat'));
 CustomColormap = CustomColormap.mycmap;
 CustomColormap = fliplr(CustomColormap(1:end-2,:)')';
 CustomColormap(1,:) = [1 1 1];
+
+%Clear current display in axes
 cla(handles.ValidationMainPlot)
 
+%Get graphical settings
 Defaults = handles.Defaults;
 ContourLevels  = Defaults.Levels;
+
+%Compute contour levels
 minContourLevel = min(min(Defaults.MinimalContourLevel/100*abs((MeanReconstruction))));
 maxContourLevel = max(max(Defaults.MaximalContourLevel/100*abs((MeanReconstruction))));
 ContourLevels = linspace(minContourLevel,maxContourLevel,ContourLevels);
+
+%Display mean validation spectrum as black contour plot with custom contour levels
 contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((MeanReconstruction)),ContourLevels,'k','LineWidth',1)
+
+%Configure axis
 set(handles.ValidationMainPlot,'YLim',[0 Defaults.XUpperLimit],'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
 grid(handles.ValidationMainPlot,'on')
 xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
@@ -737,6 +757,7 @@ hold(handles.ValidationInset2,'off')
 set(handles.ValidationStatus,'string','Ready'),drawnow;
 
 
+
 return
 %------------------------------------------------------------------------------
 
@@ -751,14 +772,42 @@ ParameterSets = handles.ParameterSets;
     set(handles.CurrentBackgroundStart2_Text,'string',ParameterSets(currentParameterSet).BackgroundStart2);
     set(handles.CurrentBackgroundDimension1_Text,'string',ParameterSets(currentParameterSet).BackgroundDimension1);
     set(handles.CurrentBackgroundDimension2_Text,'string',ParameterSets(currentParameterSet).BackgroundDimension2);
-    set(handles.CurrentLagrangianMultiplier_Text,'string',ParameterSets(currentParameterSet).LagrangeMultiplier);
-    set(handles.CurrentBackgroundParameter_Text,'string',ParameterSets(currentParameterSet).BackgroundParameter);
-    set(handles.CurrentThresholdParameter_Text,'string',ParameterSets(currentParameterSet).ThresholdParameter);
-    set(handles.CurrentSamplingDensity_Text,'string',ParameterSets(currentParameterSet).SamplingDensity);
-    set(handles.CurrentEntropy_Text,'string',sprintf('%.2e',ParameterSets(currentParameterSet).Entropy));
-    set(handles.CurrentRMSD_Text,'string',sprintf('%.5f',ParameterSets(currentParameterSet).RMSD));
-    set(handles.CurrentNoiseLevel_Text,'string',ParameterSets(currentParameterSet).NoiseLevel);
-
+    %For the NUS reconstruction parameters, if not NUS then just set to '-'
+    if ~isnan(ParameterSets(currentParameterSet).LagrangeMultiplier)
+      set(handles.CurrentLagrangianMultiplier_Text,'string',ParameterSets(currentParameterSet).LagrangeMultiplier);
+    else
+      set(handles.CurrentLagrangianMultiplier_Text,'string','-');
+    end
+    if ~isnan(ParameterSets(currentParameterSet).BackgroundParameter)
+      set(handles.CurrentBackgroundParameter_Text,'string',ParameterSets(currentParameterSet).BackgroundParameter);
+    else
+      set(handles.CurrentBackgroundParameter_Text,'string','-');
+    end
+    if ~isnan(ParameterSets(currentParameterSet).ThresholdParameter)
+      set(handles.CurrentThresholdParameter_Text,'string',ParameterSets(currentParameterSet).ThresholdParameter);
+    else
+      set(handles.CurrentThresholdParameter_Text,'string','-');
+    end
+    if ~isnan(ParameterSets(currentParameterSet).SamplingDensity)
+      set(handles.CurrentSamplingDensity_Text,'string',ParameterSets(currentParameterSet).SamplingDensity);
+    else
+      set(handles.CurrentSamplingDensity_Text,'string','-');
+    end
+    if ~isnan(ParameterSets(currentParameterSet).Entropy)
+      set(handles.CurrentEntropy_Text,'string',ParameterSets(currentParameterSet).Entropy);
+    else
+      set(handles.CurrentEntropy_Text,'string','-');
+    end
+    if ~isnan(ParameterSets(currentParameterSet).RMSD)
+      set(handles.CurrentRMSD_Text,'string',ParameterSets(currentParameterSet).RMSD);
+    else
+      set(handles.CurrentRMSD_Text,'string','-');
+    end
+    if ~isnan(ParameterSets(currentParameterSet).NoiseLevel)
+      set(handles.CurrentNoiseLevel_Text,'string',ParameterSets(currentParameterSet).NoiseLevel);
+    else
+      set(handles.CurrentNoiseLevel_Text,'string','-');
+    end
 return
 %------------------------------------------------------------------------------
 
@@ -803,7 +852,6 @@ set(handles.ValidationStatus,'string','Ready'),drawnow;
 return
 %------------------------------------------------------------------------------
 
-
 %------------------------------------------------------------------------------
 function Min_Edits_Callback(hObject, eventdata, handles)
 Tag = get(hObject,'Tag');
@@ -833,7 +881,6 @@ if MinValue>MaxValue
 end
 return
 %------------------------------------------------------------------------------
-
 
 %------------------------------------------------------------------------------
 function RemoveSet_Button_Callback(hObject, eventdata, handles)
@@ -920,7 +967,6 @@ guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
-
 %------------------------------------------------------------------------------
 function SamplingDensity_Slider_Callback(hObject, eventdata, handles)
 CurrentSliderValue = get(hObject,'Value');
@@ -930,63 +976,28 @@ guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
+%------------------------------------------------------------------------------
+function SaveValidation_Button_Callback(hObject, eventdata, handles)
 
-
-function NoiseLevel_Max_Callback(hObject, eventdata, handles)
-% hObject    handle to NoiseLevel_Max (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of NoiseLevel_Max as text
-%        str2double(get(hObject,'String')) returns contents of NoiseLevel_Max as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function NoiseLevel_Max_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NoiseLevel_Max (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
+%First ask user where to save the validation data
+SavePath = uigetdir(pwd,'Select folder to save...');
+%If cancelled, return
+if SavePath == 0
+  return
 end
+%Construct a structure with the input parameters
+ValidationParameters  = handles.ValidationVectors;
+%Get the validation statistics results
+ReconstructedSpectra = handles.ReconstructedSpectra;
+MeanReconstruction = mean(ReconstructedSpectra,3);
+MeanReconstruction = MeanReconstruction/max(max(MeanReconstruction));
+Uncertainty = std(ReconstructedSpectra,0,3);
+%Save them
+ValidationResults.Uncertainty = Uncertainty;
+ValidationResults.LowerBound = MeanReconstruction - 2*Uncertainty;
+ValidationResults.UpperBound = MeanReconstruction + 2*Uncertainty;
 
 
 
-
-% --- Executes during object creation, after setting all properties.
-function NoiseLevel_Trials_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NoiseLevel_Trials (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
-function NoiseLevel_Min_Callback(hObject, eventdata, handles)
-% hObject    handle to NoiseLevel_Min (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of NoiseLevel_Min as text
-%        str2double(get(hObject,'String')) returns contents of NoiseLevel_Min as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function NoiseLevel_Min_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to NoiseLevel_Min (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+return
+%------------------------------------------------------------------------------
