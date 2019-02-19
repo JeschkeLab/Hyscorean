@@ -103,9 +103,8 @@ if ~strcmp(DefaultSavePath,SavePath)
     end   
   end
 if dialog_default_saver
-Root = which('Hyscorean');
-Root = Root(1:end-12);
-Path = fullfile(Root,'\bin');
+Root = fileparts(which('Hyscorean'));
+Path = fullfile(Root,'bin');
 setpref('hyscorean','savepath',SavePath)
 % save(fullfile(Path,'Hyscorean_default_savepath.mat'),'SavePath')
 end

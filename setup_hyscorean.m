@@ -3,8 +3,7 @@ clc, clearvars
 
 %Just check that (re)-installation is done in the right folder
 try
-InstallationPath = which('setup_hyscorean');
-InstallationPath = InstallationPath(1:end-length('\setup_hyscorean.m'));
+InstallationPath = fileparts(which('setup_hyscorean'));
 CurrentPath = pwd;
 if ~strcmp(CurrentPath,InstallationPath)
   cd(InstallationPath)
@@ -53,7 +52,7 @@ if ~ispref('hyscorean','LGPL_license')
     uicontrol(FigureHandle,'style','pushbutton','Units','normalized','position',[0.25 0.005 0.2 0.04],'FontSize',9,'String','Agree','Callback',@AgreeCallback);
     uicontrol(FigureHandle,'style','pushbutton','Units','normalized','position',[0.56 0.005 0.2 0.04],'FontSize',9,'String','Disagree','Callback',@DisagreeCallback); 
     AxisHandle = axes(FigureHandle,'Units','normalized','position',[0.02 0.92 0.35 0.075]);
-    [matlabImage,~,Alpha] = imread(fullfile(InstallationPath,'\bin\licenseLogo.png'));
+    [matlabImage,~,Alpha] = imread(fullfile(InstallationPath,'bin','licenseLogo.png'));
     image(matlabImage,'AlphaData',Alpha)
     axis(AxisHandle,'off')
     %Copy text into list box
