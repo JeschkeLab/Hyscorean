@@ -199,7 +199,9 @@ try
   handles.Data = mountHYSCOREdata(handles.FileNames,handles);
 catch Error
   %If something fails then inform the user and return
-  f = errordlg(sprintf('Simulaton failed due to errors: \n\n %s \n\n ',getReport(Error,'extended','hyperlinks','off')),'Error','modal');
+  f = errordlg(sprintf('Loading failed due to errors: \n\n %s ',Error.message),'Error','modal');
+  set(handles.LoadedData, 'String', 'Loading failed');drawnow;
+  set(handles.ProcessingInfo, 'String', 'Status: Loading failed');drawnow
   waitfor(f)
   return
 end

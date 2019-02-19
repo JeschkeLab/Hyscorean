@@ -15,6 +15,20 @@ switch FileExtension
     
     %Load file with eprload from Easyspin
     File = FileNames{1};
+    
+    %Get file extension of loaded file and corresponding complementary
+    [Path,Name,FileExtension] = fileparts(File);
+    FullBaseName = fullfile(Path,Name);
+    if strcmp(FileExtension,'.DSC')
+      ComplementaryFileExtension = '.DTA';
+    else
+      ComplementaryFileExtension = '.DSC';
+    end
+    %Check that the complementary BES3T file is on the same folder
+    if ~exist([FullBaseName ComplementaryFileExtension],'file')
+      error(sprtinf('Error: Complementary %s file not found. Make sure it is on the same folder as the %s file.',ComplementaryFileExtension,FileExtension))
+    end
+    
     %Check if easyspin installed. If not use local eprload function copy
     if getpref('hyscorean','easyspin_installed')
       [~,~,BrukerParameters] = eprload(File);
@@ -29,6 +43,11 @@ switch FileExtension
       % Non-uniform sampled data
       %--------------------------------------------------------------------
       NUSflag = true;
+      
+      %Check that the additional .XGF file is on the same folder
+      if ~exist([FullBaseName '.XGF'],'file')
+        error(sprtinf('Error: Complementary .XGF file not found. Make sure it is on the same folder as the %s file.',FileExtension))
+      end
       
       %Check if easyspin installed. If not use local eprload function copy
       if getpref('hyscorean','easyspin_installed')
@@ -448,6 +467,8 @@ switch FileExtension
     MountedData.NUSflag = NUSflag;
     MountedData.isNotIntegrated  = false;
         
+  otherwise
+   error('Unvalid extension: Please check your loaded files. Allowed extensions: .DSC .DTA .mat .txt') 
 end
 
 
