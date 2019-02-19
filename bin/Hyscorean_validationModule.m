@@ -643,9 +643,13 @@ Dimension2 = Dimension2 - handles.Defaults.ZeroFilling2;
 %Get Hyscorean path
 HyscoreanPath = which('Hyscorean');
 HyscoreanPath = HyscoreanPath(1:end-11);
+<<<<<<< HEAD
 
 %Load custom modified hot colormap
 CustomColormap = load(fullfile(HyscoreanPath,'bin\RedWhiteColorMap_old.mat'));
+=======
+CustomColormap = load(fullfile(HyscoreanPath,'bin', 'RedWhiteColorMap_old.mat'));
+>>>>>>> origin/linux
 CustomColormap = CustomColormap.mycmap;
 CustomColormap = fliplr(CustomColormap(1:end-2,:)')';
 CustomColormap(1,:) = [1 1 1];

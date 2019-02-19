@@ -117,11 +117,11 @@ else
     % try to get data, unless already provided
     if ~exist('dta','var')
         % first look for already runnig averages
-        filelist = ls([estr.savepath '\*' estr.savename '.mat' ]);
+        filelist = ls([estr.savepath filesep '*' estr.savename '.mat' ]);
         datenr = str2num(filelist(:,1:8))*10000 + str2num(filelist(:,10:13));
         [~,maid] = max(datenr);
         dig_interface('savenow'); % go for another save before reading
-        SavedData = load([estr.savepath '\' filelist(maid,:)]);
+        SavedData = load([estr.savepath filesep filelist(maid,:)]);
         [RawData,Averages,ErrorText] = extractdata(SavedData,estr,filelist(maid,:));
         if ~isempty(ErrorText)
             warning(ErrorText);

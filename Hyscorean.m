@@ -84,9 +84,8 @@ set(handles.mainPlot,'xticklabel',[],'yticklabel',[])
 
 %Load and set the Hyscorean logo
 axes(handles.Icon)
-Path =  which('Hyscorean');
-Path = [Path(1:end-11) 'bin\'];
-[matlabImage,~,Alpha] = imread(fullfile(Path,'logo.png'));
+Path =  fileparts(which('Hyscorean'));
+[matlabImage,~,Alpha] = imread(fullfile(Path, 'bin', 'logo.png'));
 image(matlabImage,'AlphaData',Alpha)
 axis off
 axis image
@@ -1192,8 +1191,7 @@ set(Figure,'NumberTitle','off','Name','Hyscorean: License','menu','none','toolba
   'units','pixels','Position',[Position(1) Position(2) 0.3*screensize(3) 0.65*screensize(4)]);
 
 %Get the license
-Path = which('Hyscorean');
-Path = Path(1:end-11);
+Path = fileparts(which('Hyscorean'));
 fid = fopen(fullfile(Path,'LICENSE.LGPL.txt'));
 
 %Generate UI elements to scroll the license
