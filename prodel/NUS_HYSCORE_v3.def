@@ -1,0 +1,90 @@
+begin defs;     ECHOlibrary program directory General variables
+;-------------------------------------------------------------
+;   Definitions & Conventions
+;-------------------------------------------------------------
+; Variables:     Comments:
+;-------------------------------------------------------------
+
+p0   = 8       ; 90 pulse length
+
+p1   = 12      ; 90 soft pulse length 
+
+p2   = 32      ;
+
+p3   = 60      ;
+
+p7   = 80      ; LeCroy trigger
+
+p30  = 100     ; Trigger osciloscope
+
+pg   = 32      ; integration window       
+
+;-------------------------------------------------------------
+; Delays
+;-------------------------------------------------------------
+
+d0   = 424     ; SDI offset time
+
+d1   = 128     ; Initial delay between the first two pulses
+
+d2   = 0       ; Initial delay between the second and third pulses
+
+d3   = 160     ; Initial delay between the third and fourth pulses
+
+;-------------------------------------------------------------
+; These are automatically updated by ProDeL(DO NOT EDIT)
+;-------------------------------------------------------------
+
+d1   = 128     ; t1-timing of NUS schedule 
+d2   = 0       ; t2-timing of NUS schedule
+d3   = 160     ; t1-timing of NUS schedule 
+d4   = 0       ; t2-timing of NUS schedule
+d5   = 0       ; t1-timing of NUS schedule 
+d6   = 32      ; t2-timing of NUS schedule
+d7   = 0       ; t1-timing of NUS schedule 
+d8   = 48      ; t2-timing of NUS schedule
+d9   = 0       ; t1-timing of NUS schedule 
+d10  = 64      ; t2-timing of NUS schedule
+d11  = 0       ; t1-timing of NUS schedule 
+d12  = 80      ; t2-timing of NUS schedule
+d13  = 0       ; t1-timing of NUS schedule 
+d14  = 96      ; t2-timing of NUS schedule
+d15  = 0       ; t1-timing of NUS schedule 
+d16  = 112     ; t2-timing of NUS schedule
+d17  = 0       ; t1-timing of NUS schedule 
+d18  = 224     ; t2-timing of NUS schedule
+d19  = 0       ; t1-timing of NUS schedule 
+d20  = 0       ; t2-timing of NUS schedule
+d21  = 16      ; t1-timing of NUS schedule 
+d22  = 16      ; t2-timing of NUS schedule
+d23  = 16      ; t1-timing of NUS schedule 
+d24  = 32      ; t2-timing of NUS schedule
+d25  = 16      ; t1-timing of NUS schedule 
+d26  = 48      ; t2-timing of NUS schedule
+d27  = 16      ; t1-timing of NUS schedule 
+d28  = 64      ; t2-timing of NUS schedule
+d29  = 16      ; t1-timing of NUS schedule 
+d30  = 112     ; t2-timing of NUS schedule
+d31  = 16      ; t1-timing of NUS schedule 
+
+y    = 1       ;
+
+;-------------------------------------------------------------
+; Others
+;-------------------------------------------------------------
+
+srt  = 500 * srtu ; minimum shot repetition time
+
+h    = 1024       ; number of shots/loop                     ( counter: I )
+
+n    = 1       ; number of sweeps to accumulate           ( counter: K )
+
+s    = 0       ; Sweep length (n. of data really taken)   ( counter: X )
+
+t    = 1       ; second time axsis sweep length           ( counter: Y )
+
+w    = 800     ; Split point of sweeps (ns) ,i.e. pulse separatrion where TWT
+               ; gate pulse can be split.
+;
+end defs
+

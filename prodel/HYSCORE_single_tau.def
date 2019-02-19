@@ -1,0 +1,83 @@
+begin defs;     ECHOlibrary program directory General variables
+
+;                                               definitions & conventions
+
+;
+
+;                                                                                                               30,10,1989, PEH
+
+; Variables     ; Comments:
+
+                        ;
+
+p0   = 16      ; 90 pulse length
+
+p1   = 24      ; 90 soft pulse length 
+
+p2   = 32      ;
+
+p3   = 60      ;
+
+p7   = 80      ; LeCroy trigger
+
+p30  = 100     ; Trigger osciloscope
+
+pg   = 32      ; integration window
+
+                        ;
+
+d0   = 444     ; SDI offset time
+
+d1   = 132      ; Initial delay between the first two pulses
+
+d2   = 200     ; Initial delay between the second and third pulses
+
+d3   = 200     ; Initial delay between the third and fourth pulses
+
+d4   = 60      ; Extra delay for the matched pulse
+
+d5   = 96      ; Delay between the two pi mixing pulses. Tau2
+
+d9   = 0       ; Delay After Flash
+
+               ;
+
+dx   = 0       ; t2 time scale starting value
+
+dy   = 0       ; t1 time scale starting value
+
+               ;
+
+d30  = 16       ; t2 time scale increment
+
+d31  = 16       ; t1 time scale increment
+
+d20  = 0       ; Initial value of dx
+
+d21  = 0       ; Initial value of dy
+d10  = 1000    
+d11  = 16      
+d12  = 16      
+
+                        ;
+
+srt  = 2000 * srtu ; minimum shot repetition time
+
+h    = 130     ; number of shots/loop                     ( counter: I )
+
+n    = 1       ; number of sweeps to accumulate           ( counter: K )
+
+s    = 0       ; Sweep length (n. of data really taken)   ( counter: X )
+
+t    = 1       ; second time axsis sweep length           ( counter: Y )
+
+                        ;
+
+w    = 800     ; Split point of sweeps (ns) ,i.e. pulse separatrion where TWT
+
+                        ; gate pulse can be split.
+
+;
+
+end defs
+

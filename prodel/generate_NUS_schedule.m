@@ -7,19 +7,19 @@
 % Parameters
 %-----------------------------------------------------------------------
 
-FileName = 'NUSgrid_PRODEL_10x10_example';
+% FileName = 'NUSgrid_20000points';
 
-%Grid greatest-common denominator (GCD) [ns]
+%Grid greatest-common denominator [ns]
 TimeStep1 = 16;
 TimeStep2 = 16;
 
 %Dimensionality
-Dimension1 = 50;
-Dimension2 = 50;
+Dimension1 = 200;
+Dimension2 = 200;
 
 %NUS sampler settings
-SamplingDensity = 0.5;
-Envelope = 'expdiag';
+SamplingDensity = 0.2;
+Envelope = 'gaussian';
 Decay = [];
 
 % Construction
@@ -54,7 +54,7 @@ NUSgrid.Dimension1 = Dimension1;
 NUSgrid.Dimension2 = Dimension2;
 NUSgrid.t2Timings = t2_axis;
 NUSgrid.t1Timings = t1_axis;
-save(strcat(FileName,'.mat'),'NUSgrid')
+% save(strcat(FileName,'.mat'),'NUSgrid')
 
 %Get schedule and timings
 [t1_indices,t2_indices] = find(SamplingGrid==1);
@@ -62,5 +62,5 @@ t1_timings = t1_axis(t1_indices);
 t2_timings = t2_axis(t2_indices);
 
 %Save them to DSC file to be loaded by PRODEL program
-eprsave(FileName,t1_timings,t2_timings,FileName)
+% eprsave(['./grids/' FileName],t1_timings,t2_timings,FileName)
 
