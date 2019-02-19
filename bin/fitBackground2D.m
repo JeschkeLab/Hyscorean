@@ -43,7 +43,7 @@ for Index = 1:Dimension1
     Time2Extrapolate = 1:Dimension2;
     Data2Fit = Data(Index,options.start:end);
     NaNValid = ~isnan(Data2Fit); % Get indices where Data2Fit is valid (non NaN)
-    PolynomialFit = polyfit(Time2Fit,log(Data2Fit),1); % linear fit of logarithm
+    PolynomialFit = polyfit_hyscorean(Time2Fit,log(Data2Fit),1); % linear fit of logarithm
     switch options.BackgroundModel
         case 0
             v0=[-PolynomialFit(1) 1 3];
@@ -54,10 +54,10 @@ for Index = 1:Dimension1
             v1=fminsearch(@rms_stretched_private,v0,[],Time2Fit(NaNValid),Data2Fit(NaNValid),options.homdim);
             BackgroundTrace =decaynD_private(v1(1:2),Time2Extrapolate,options.homdim);
         case 2 %Polynomial fit
-            PolynomialFit = polyfit(Time2Fit(NaNValid),Data2Fit(NaNValid),options.PolynomialOrder);
+            PolynomialFit = polyfit_hyscorean(Time2Fit(NaNValid),Data2Fit(NaNValid),options.PolynomialOrder);
             BackgroundTrace = polyval(PolynomialFit,Time2Extrapolate);             
         case 3 %Exponential fit (Polynomial of logarithm)
-            PolynomialFit = polyfit(Time2Fit(NaNValid),log(Data2Fit(NaNValid)),options.PolynomialOrder);
+            PolynomialFit = polyfit_hyscorean(Time2Fit(NaNValid),log(Data2Fit(NaNValid)),options.PolynomialOrder);
             BackgroundTrace = exp(polyval(PolynomialFit,Time2Extrapolate));
     end;
     Background(Index,:) = BackgroundTrace;
