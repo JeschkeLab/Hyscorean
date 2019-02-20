@@ -1,21 +1,31 @@
 function [Data] = correctBackground(Data,options)
-% Background correction of 2D-time datasets from TRIER/HYSCORE experiments
-% -----------INPUT------------------------------------------------
-%       Data              Structure containing all relevant variables 
-%           .TimeAxis1    
+%==========================================================================
+% Background correction of 2D time-domain signals
+%==========================================================================
+% This function performs the background correction of two-dimensional
+% time-domain signals obtained from any experiment. The correction is
+% performed by two sequential one-dimensional background corrections.
+%
+% (see Hyscorean manual for more information)
+%==========================================================================
+% If used programaticaly outside of Hyscorean the input variables required
+% are the following:
+%
+%       Data       Structure containing all relevant variables
+%           .TimeAxis1
 %             --> Time axis 1 provided by integrateEcho.m
-%           .TimeAxis2    
+%           .TimeAxis2
 %             --> Time axis 2 provided by integrateEcho.m
-%           .Integral     
+%           .Integral
 %             --> Integral provided by integrateEcho.m
 %
-%        options          Structure containing the different parameters
+%        options   Structure containing the different parameters
 %
 %           .InvertCorrection
 %            --> Invert the order in which dimension are corrected (i.e first t2, then t1)
 %
-%           .BackgroundMethod1 / BackgroundMethod2 
-%            --> Model to be fitted along the first/second corrected dimension 
+%           .BackgroundMethod1 / BackgroundMethod2
+%            --> Model to be fitted along the first/second corrected dimension
 %                       0  fractal, n variable,  exp(-k*t^(n/3))
 %                       1  n-dimensional, n fixed, exp(-k*t^(n/3))
 %                       2  three-dimensional, exp(-k*t)
@@ -31,7 +41,7 @@ function [Data] = correctBackground(Data,options)
 %            --> Polynomial order to be employed in model 3 for first/second correction
 %
 %           .SavitzkyGolayFiltering (true/false)
-%            --> Employ Savitzky-Golay filter after correction 
+%            --> Employ Savitzky-Golay filter after correction
 %
 %           .SavitzkyOrder
 %            --> Order of the Savitzky-Golay Filter (must be even integer number)
@@ -39,7 +49,14 @@ function [Data] = correctBackground(Data,options)
 %           .SavitzkyFrameLength
 %            --> Frame length Savitzky-Golay Filter (must be even integer number larger larger than order)
 %
-% TrierAnalysis, L. Fabregas, 2017
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 %Error messages for required variables
 if ~isfield(Data,'TimeAxis1')
@@ -94,80 +111,74 @@ if ~isfield(options,'ZeroTimeTruncation')
   options.ZeroTimeTruncation = false;
 end
 
+%==========================================================================
+% Preparations
+%==========================================================================
+
 %Check if data is complex
 isComplex = ~isreal(Data.Integral);
-
-options.BackgroundCorrection2D = false;
 
 % Deactivate warnings to avoid the fitting functions to throw too many outputs
 warning ('off','all');
 
 % Sometimes something may be messed up during mountdata.m check that dimensions are consisten
 if ~(size(Data.Integral,1) == length(Data.TimeAxis1) && size(Data.Integral,2) == length(Data.TimeAxis2))
-    Data.Integral  = Data.Integral';
+  Data.Integral  = Data.Integral';
 end
 
-
-%Determine zero-times and adjust time axis
-% [ZeroTime1,ZeroTime2,Integral,~,~,~] = phase_zt(Data.TimeAxis1,Data.TimeAxis2,Data.Integral);
+%If complex do phase correction by maximizing real component
 if isComplex
-Integral = correctPhaseEchoes(Data.Integral);
+  RawSignal = correctPhaseEchoes(Data.Integral);
 else
-  Integral = Data.Integral;
+  RawSignal = Data.Integral;
 end
-ZeroTime1 = 0;
-ZeroTime2 = 0;
-% % Integral = Data.Integral;
-ZeroTimeAxis1 = Data.TimeAxis1 - ZeroTime1;
-ZeroTimeAxis2 = Data.TimeAxis2 - ZeroTime2;
-NonCorrectedIntegral = Integral;
-TimeIndex1 = 1;
-TimeIndex2 = 1;
-Data.CorrectedTimeAxis2 = ZeroTimeAxis2(TimeIndex2:end);
+%Save signal before correction for later display
+NonCorrectedIntegral = RawSignal;
+Data.CorrectedTimeAxis2 = Data.TimeAxis2;
 Data.CorrectedTimeAxis2 = Data.CorrectedTimeAxis2  - min(Data.CorrectedTimeAxis2);
-Data.CorrectedTimeAxis1 = ZeroTimeAxis1(TimeIndex1:end);
+Data.CorrectedTimeAxis1 = Data.TimeAxis1;
 Data.CorrectedTimeAxis1 = Data.CorrectedTimeAxis1  - min(Data.CorrectedTimeAxis1);
 
-
 %Option to show output of fitting functions
-options.verbose = 1;
+options.verbose = 0;
 
 % 2D-Background correction not-working
 if options.BackgroundCorrection2D
+  options.zt1= 1;
+  options.zt2= 1;
+  BackgroundNew = fitBackground2D_new(RawSignal,options);
+  RawSignal = RawSignal(TimeIndex1:end,TimeIndex2:end);
+  RawSignal = (RawSignal)-BackgroundNew;
   
-  TimeIndex1 = find(ZeroTimeAxis1 == 0);
-  TimeIndex2 = find(ZeroTimeAxis2 == 0);
-  options.zt1= TimeIndex1;
-  options.zt2= TimeIndex2;
-  BackgroundNew = fitBackground2D_new(Integral,options);
-  Integral = Integral(TimeIndex1:end,TimeIndex2:end);
-  Integral = (Integral)-BackgroundNew;
-
 else
   
-  % Inverted Background correction (1st - t2 , 2nd - t1)
-  if options.InvertCorrection
+    if options.InvertCorrection
+%==========================================================================
+% Inverted Background correction (1st - t2 , 2nd - t1)
+%==========================================================================
+
     % 1st Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod1;
     Parameters.homdim = options.BackgroundFractalDimension1;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
-      StartIndex1 = options.BackgroundStart1;
+    StartIndex1 = options.BackgroundStart1;
     Parameters.start = StartIndex1;
+    %If complex then fit real/imaginary separately
     if isComplex
-      RealBackground1 = fitBackground2D(real(Integral),Parameters);
-      RealIntegral = real(Integral)-RealBackground1;
-      ImagBackground1 = fitBackground2D(imag(Integral),Parameters);
-      ImagIntegral = imag(Integral)-ImagBackground1;
-      Integral = RealIntegral + 1i*ImagIntegral;
+      RealBackground1 = fitBackground2D(real(RawSignal),Parameters);
+      RealIntegral = real(RawSignal)-RealBackground1;
+      ImagBackground1 = fitBackground2D(imag(RawSignal),Parameters);
+      ImagIntegral = imag(RawSignal)-ImagBackground1;
+      RawSignal = RealIntegral + 1i*ImagIntegral;
       Background1 = RealBackground1 +  1i*ImagBackground1;
     else
-      Background1 = fitBackground2D(Integral,Parameters);
-      Integral = (Integral)-Background1;
+      Background1 = fitBackground2D(RawSignal,Parameters);
+      RawSignal = (RawSignal)-Background1;
     end
-  
-    Data.FirstBackgroundCorrected = real(Integral);
-
+    
+    Data.FirstBackgroundCorrected = real(RawSignal);
+    
     
     % 2nd Background correction
     Parameters.Dimension = 1;
@@ -175,24 +186,29 @@ else
     Parameters.homdim = options.BackgroundFractalDimension2;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
     if options.AutomaticBackgroundStart
-      [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
+      [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(RawSignal,2),Parameters);
     else
       StartIndex2 = options.BackgroundStart2;
     end
     Parameters.start = StartIndex2;
+    %If complex then fit real/imaginary separately
     if isComplex
-      RealBackground2 = fitBackground2D(real(Integral),Parameters);
-      RealIntegral = real(Integral)-RealBackground2;
-      ImagBackground2 = fitBackground2D(imag(Integral),Parameters);
-      ImagIntegral = imag(Integral)-ImagBackground2;
-      Integral = RealIntegral + 1i*ImagIntegral;
+      RealBackground2 = fitBackground2D(real(RawSignal),Parameters);
+      RealIntegral = real(RawSignal)-RealBackground2;
+      ImagBackground2 = fitBackground2D(imag(RawSignal),Parameters);
+      ImagIntegral = imag(RawSignal)-ImagBackground2;
+      RawSignal = RealIntegral + 1i*ImagIntegral;
       Background2 = RealBackground2 +  1i*ImagBackground2;
     else
-      Background2 = fitBackground2D(Integral,Parameters);
-      Integral = (Integral)-Background2;
+      Background2 = fitBackground2D(RawSignal,Parameters);
+      RawSignal = (RawSignal)-Background2;
     end
     
-  else  % Standard Background correction (1st - t1 , 2nd - t2)
+  else
+    
+%==========================================================================
+% Standard Background correction (1st - t1 , 2nd - t2)
+%==========================================================================
     
     % 1st Background correction
     Parameters.Dimension = 1;
@@ -200,45 +216,47 @@ else
     Parameters.homdim = options.BackgroundFractalDimension1;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
     if options.AutomaticBackgroundStart
-      [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(Integral,2),Parameters);
+      [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(RawSignal,2),Parameters);
     else
       StartIndex1 = options.BackgroundStart1;
     end
     Parameters.start = StartIndex1;
+    %If complex then fit real/imaginary separately
     if isComplex
-      RealBackground1 = fitBackground2D(real(Integral),Parameters);
-      RealIntegral = real(Integral)-RealBackground1;
-      ImagBackground1 = fitBackground2D(imag(Integral),Parameters);
-      ImagIntegral = imag(Integral)-ImagBackground1;
-      Integral = RealIntegral + 1i*ImagIntegral;
+      RealBackground1 = fitBackground2D(real(RawSignal),Parameters);
+      RealIntegral = real(RawSignal)-RealBackground1;
+      ImagBackground1 = fitBackground2D(imag(RawSignal),Parameters);
+      ImagIntegral = imag(RawSignal)-ImagBackground1;
+      RawSignal = RealIntegral + 1i*ImagIntegral;
       Background1 = RealBackground1 +  1i*ImagBackground1;
     else
-      Background1 = fitBackground2D(Integral,Parameters);
-      Integral = (Integral)-Background1;
+      Background1 = fitBackground2D(RawSignal,Parameters);
+      RawSignal = (RawSignal)-Background1;
     end
-    Data.FirstBackgroundCorrected = Integral;
-
+    Data.FirstBackgroundCorrected = RawSignal;
+    
     % 2nd Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod2;
     Parameters.homdim = options.BackgroundFractalDimension2;
     Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
     if options.AutomaticBackgroundStart
-      [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(Integral,1),Parameters);
+      [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(RawSignal,1),Parameters);
     else
       StartIndex2 = options.BackgroundStart2;
     end
     Parameters.start = StartIndex2;
+    %If complex then fit real/imaginary separately
     if isComplex
-      RealBackground2 = fitBackground2D(real(Integral),Parameters);
-      RealIntegral = real(Integral)-RealBackground2;
-      ImagBackground2 = fitBackground2D(imag(Integral),Parameters);
-      ImagIntegral = imag(Integral)-ImagBackground2;
-      Integral = RealIntegral + 1i*ImagIntegral;
+      RealBackground2 = fitBackground2D(real(RawSignal),Parameters);
+      RealIntegral = real(RawSignal)-RealBackground2;
+      ImagBackground2 = fitBackground2D(imag(RawSignal),Parameters);
+      ImagIntegral = imag(RawSignal)-ImagBackground2;
+      RawSignal = RealIntegral + 1i*ImagIntegral;
       Background2 = RealBackground2 +  1i*ImagBackground2;
     else
-      Background2 = fitBackground2D(Integral,Parameters);
-      Integral = (Integral)-Background2;
+      Background2 = fitBackground2D(RawSignal,Parameters);
+      RawSignal = (RawSignal)-Background2;
     end
   end
 end
@@ -251,24 +269,27 @@ else
   TimeIndex1 = 1;
   TimeIndex2 = 1;
 end
-Integral = Integral(TimeIndex1:end,TimeIndex2:end);
+RawSignal = RawSignal(TimeIndex1:end,TimeIndex2:end);
 
 % Savitzky-Golay filtering of background-corrected integral
-  if options.SavitzkyGolayFiltering
-    Integral =  sgolayfilt(Integral,options.SavitzkyOrder,options.SavitzkyFrameLength,[],1); % along dimension 1
-    Integral =  sgolayfilt(Integral,options.SavitzkyOrder,options.SavitzkyFrameLength,[],2); % along dimension 2
-  end
+if options.SavitzkyGolayFiltering
+  RawSignal =  sgolayfilt(RawSignal,options.SavitzkyOrder,options.SavitzkyFrameLength,[],1); % along dimension 1
+  RawSignal =  sgolayfilt(RawSignal,options.SavitzkyOrder,options.SavitzkyFrameLength,[],2); % along dimension 2
+end
 
-%Store final integral (a.k.a the signal) into data structure
-Integral = Integral/max(max(Integral));
+%Normalize the signal
+RawSignal = RawSignal/max(max(RawSignal));
 
+%Save everything back to the input structure and return it
 Data.NonCorrectedIntegral = NonCorrectedIntegral(TimeIndex1:end,TimeIndex2:end);
 Data.Background1 = Background1;
 Data.Background2 = Background2;
 Data.BackgroundStartIndex1 = StartIndex1;
 Data.BackgroundStartIndex2 = StartIndex2;
-Data.BackgroundCorrected = Integral;
-Data.PreProcessedSignal = Integral;
+Data.BackgroundCorrected = RawSignal;
+Data.PreProcessedSignal = RawSignal;
 
 %Reactivate warnings
 warning ('on','all');
+
+return
