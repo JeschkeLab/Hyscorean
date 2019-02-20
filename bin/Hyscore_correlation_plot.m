@@ -65,7 +65,7 @@ if isfield(options,'nonnewfig')
   end
 end
 plotsize = [73.8000   47.2000  434.0000  342.3000];
-figsize = [680   678   560   420];
+figsize = [680   678   450   420];
 
 
 if isfield(options,'figsize')
@@ -98,10 +98,10 @@ inset2size = plotsize;
 inset2size(2) = inset2size(2)+inset2size(4)+pixeloffset;
 inset2size(4) = (vertstretch-1) * figsize(4) - pixeloffset;
 
-w1_projection = sum(abs(y),2);
+w1_projection = max(abs(y),[],2);
 w1_projection = w1_projection/max(w1_projection);
 
-w2_projection = sum(abs(y),1);
+w2_projection = max(abs(y),[],1);
 w2_projection = w2_projection/max(w2_projection);
 
 %% first plot
@@ -238,10 +238,10 @@ y = getappdata(gca,'y');
 x1_range = index_x1(1):index_x1(2);
 x2_range = index_x2(1):index_x2(2);
 
-w1_projection = sum(abs(y(x1_range,x2_range)),2);
+w1_projection = max(abs(y(x1_range,x2_range)),[],2);
 w1_projection = w1_projection/max(w1_projection);
 
-w2_projection = sum(abs(y(x1_range,x2_range)),1);
+w2_projection = max(abs(y(x1_range,x2_range)),[],1);
 w2_projection = w2_projection/max(w2_projection);
         
 line_color = [0 0.4470 0.7410];
