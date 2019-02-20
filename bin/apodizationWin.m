@@ -75,48 +75,72 @@ end
 %------------------------------------------------------------------------
 %Local function to generate the windows
 %------------------------------------------------------------------------
-  function Window = getWindow(WindowType,WindowDecay)
-    
-    switch WindowType
-      case 'chebyshev'
-        Window = ifftshift(chebwin(WindowDecay*2));
-        Window = Window(1:WindowDecay)';
-      case 'hamming'
-        arg=linspace(0,pi,WindowDecay);
-        Window=0.54*ones(1,WindowDecay) + 0.46*cos(arg);
-      case 'welch'
-        arg=linspace(0,1,WindowDecay);
-        Window = 1 - arg.^2;
-      case 'blackman'
-        arg=linspace(0,1,WindowDecay);
-        Window = 0.42 + 0.5*cos(pi*arg) + 0.08*cos(2*pi*arg);
-      case 'bartlett'
-        arg=linspace(0,1,WindowDecay);
-        Window = 1 - abs(arg);
-      case 'connes'
-        arg=linspace(0,1,WindowDecay);
-        Window = (1 - arg.^2).^2;
-      case 'cosine'
-        arg=linspace(0,1,WindowDecay);
-        Window = cos(pi*arg/2);
-      case 'none'
-        Window = ones(1,WindowDecay);
-      case 'tukey25'
-        alpha = 0.25;
-        Window = tukeywin(2*WindowDecay,alpha);
-        Window = Window(WindowDecay+1:end)';
-      case 'tukey50'
-        alpha = 0.5;
-        Window = tukeywin(2*WindowDecay,alpha);
-        Window = Window(WindowDecay+1:end)';
-      case 'tukey75'
-        alpha = 0.75;
-        Window = tukeywin(2*WindowDecay,alpha);
-        Window = Window(WindowDecay+1:end)';
-      case 'hann'
-        alpha = 1.5;
-        Window = tukeywin(2*WindowDecay,alpha);
-        Window = Window(WindowDecay+1:end)';
-    end
-    
-  end
+function Window = getWindow(WindowType,WindowDecay)
+
+switch WindowType
+  case 'chebyshev'
+    %80dB Dolph-Chebyshev window
+    Window = ChebyshevWindow(WindowDecay*2,4);
+    Window = Window(WindowDecay+1:end)';
+  case 'hamming'
+    arg=linspace(0,pi,WindowDecay);
+    Window=0.54*ones(1,WindowDecay) + 0.46*cos(arg);
+  case 'welch'
+    arg=linspace(0,1,WindowDecay);
+    Window = 1 - arg.^2;
+  case 'blackman'
+    arg=linspace(0,1,WindowDecay);
+    Window = 0.42 + 0.5*cos(pi*arg) + 0.08*cos(2*pi*arg);
+  case 'bartlett'
+    arg=linspace(0,1,WindowDecay);
+    Window = 1 - abs(arg);
+  case 'connes'
+    arg=linspace(0,1,WindowDecay);
+    Window = (1 - arg.^2).^2;
+  case 'cosine'
+    arg=linspace(0,1,WindowDecay);
+    Window = cos(pi*arg/2);
+  case 'none'
+    Window = ones(1,WindowDecay);
+  case 'tukey25'
+    alpha = 0.25;
+    Window = TukeyWindow(2*WindowDecay,alpha);
+    Window = Window(WindowDecay+1:end)';
+  case 'tukey50'
+    alpha = 0.5;
+    Window = TukeyWindow(2*WindowDecay,alpha);
+    Window = Window(WindowDecay+1:end)';
+  case 'tukey75'
+    alpha = 0.75;
+    Window = TukeyWindow(2*WindowDecay,alpha);
+    Window = Window(WindowDecay+1:end)';
+  case 'hann'
+    alpha = 1.5;
+    Window = TukeyWindow(2*WindowDecay,alpha);
+    Window = Window(WindowDecay+1:end)';
+end
+
+end
+
+
+function Window = ChebyshevWindow(Length,alpha)
+%Define window axis
+Axis = (0:Length-1)';
+%Compute Dolph-Chebyshev window transform (Supression: dB = -20alpha)
+Beta = cosh(1/Length*acosh(10^alpha));
+Transform = (cos(Length*acos(Beta*cos(pi*Axis/Length))))/cosh(Length*acosh(Beta));
+%Get Dolph-Chebyshev window by IFFT
+Window = real(ifftshift(ifft(Transform)));
+end
+  
+function Window = TukeyWindow(Length,TaperRatio)
+%Define window axis
+Axis = linspace(0,1,Length)';
+%Period of the taper is onehalf of a quarter sine
+TaperPeriod = TaperRatio/2;
+%Get when the constant region starts/ends
+CosntantStarts = floor(TaperPeriod*(Length - 1)) + 1;
+ConstantEnds = Length - CosntantStarts + 1;
+%Tukey window is defined in three sections: taper, constant, taper
+Window = [ ((1+cos(pi/TaperPeriod*(Axis(1:CosntantStarts) - TaperPeriod)))/2);  ones(ConstantEnds-CosntantStarts-1,1); ((1+cos(pi/TaperPeriod*(Axis(ConstantEnds:end) - 1 + TaperPeriod)))/2)];
+end
