@@ -664,93 +664,99 @@ set(handles.ValidationMainPlot,'YLim',[0 Defaults.XUpperLimit],'XLim',[-Defaults
 grid(handles.ValidationMainPlot,'on')
 xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
 hold(handles.ValidationMainPlot,'on')
-
+ticks = xticks(handles.ValidationMainPlot);
+set(handles.ValidationMainPlot,'ytick',ticks)
+%Select the validation results chosen by the user to display
 switch handles.DisplayRadioStatus
   case 'lower'
     Display = max(LowerBound,0);
-%     h = contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display,ContourLevels);
-%     colormap(handles.ValidationMainPlot,fliplr(CustomColormap')')
     colormap(handles.ValidationMainPlot,CustomColormap)
   case 'upper'
     Display = UpperBound;
-%         h = contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display,ContourLevels);
-%         colormap(handles.ValidationMainPlot,fliplr(CustomColormap')')
-colormap(handles.ValidationMainPlot,CustomColormap)
+    colormap(handles.ValidationMainPlot,CustomColormap)
   case 'uncertainty'
     Display = Uncertainty;
 end
-    h = pcolor(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display);
-    h.FaceAlpha  = 0.7;
-    colormap(handles.ValidationMainPlot,CustomColormap)
+%Display it as a colormap 
+h = pcolor(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display);
+%Set transparency to see the contour plot below
+h.FaceAlpha  = 0.7;
+colormap(handles.ValidationMainPlot,CustomColormap)
+
+%Further configure the axes
 grid(handles.ValidationMainPlot,'on')
-xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
 shading(handles.ValidationMainPlot,'interp')
 caxis(handles.ValidationMainPlot,[Defaults.MinimalContourLevel/100 Defaults.MaximalContourLevel/100])
 hold(handles.ValidationMainPlot,'off')
 
-  cla(handles.ValidationInset1)
+%Clear the upper inset
+cla(handles.ValidationInset1)
 
-  MeanInset = max(MeanReconstruction(Dimension1:end,:));
-  plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
-  hold(handles.ValidationInset1,'on')
-  switch handles.DisplayRadioStatus
-    case 'uncertainty'
-      Upper = MeanReconstruction(Dimension1:end,:) + Uncertainty(Dimension1:end,:);
-      Lower = MeanReconstruction(Dimension1:end,:) - Uncertainty(Dimension1:end,:);
-      LowerInset =  max(Lower/max(max(Lower)));
-      UpperInset =  max(Upper/max(max(Upper)));
-      
-      a1 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ LowerInset  fliplr(MeanInset) ], 'r','LineStyle','none');
-      a2 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ MeanInset fliplr(UpperInset)  ], 'r','LineStyle','none');
-      a1.FaceAlpha = 0.5;
-      a2.FaceAlpha = 0.5;
-    case 'upper'
-      Upper = UpperBound(Dimension1:end,:);
-      UpperInset =  max(Upper/max(max(Upper)));
-      plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,'r','LineWidth',1.5)
-    case 'lower'
-      Lower = LowerBound(Dimension1:end,:);
-      LowerInset =  max(Lower/max(max(Lower)));
-      plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,'r','LineWidth',1.5)
-  end
-  set(handles.ValidationInset1,'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
-  set(handles.ValidationInset1,'YLim',[0 1])
-  set(handles.ValidationInset1,'XTick',[],'YTick',[])
-  hold(handles.ValidationInset2,'off')
-  
-  cla(handles.ValidationInset2)
-  MeanInset = max(MeanReconstruction);
-  plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
-  hold(handles.ValidationInset2,'on')
-  switch handles.DisplayRadioStatus
-    case 'uncertainty'
-      Upper = MeanReconstruction + Uncertainty;
-      Lower = MeanReconstruction - Uncertainty;
-      LowerInset =  max(Lower/max(max(Lower)));
-      UpperInset =  max(Upper/max(max(Upper)));
-      a1 = fill(handles.ValidationInset2, [LowerInset  fliplr(MeanInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
-      a2 = fill(handles.ValidationInset2, [MeanInset fliplr(UpperInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
-      a1.FaceAlpha = 0.5;
-      a2.FaceAlpha = 0.5;
-    case 'upper'
-      Upper = UpperBound;
-      UpperInset =  max(Upper/max(max(Upper)));
-      plot(handles.ValidationInset2,UpperInset,FrequencyAxis1,'r')
-    case 'lower'
-      Lower = LowerBound;
-      LowerInset =  max(Lower/max(max(Lower)));
-      plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,'r')
-  end
-  set(handles.ValidationInset2,'YLim',[0 Defaults.XUpperLimit])
-  set(handles.ValidationInset2,'XLim',[0 1])
-
-  set(handles.ValidationInset2,'XTick',[],'YTick',[])
-%     camroll(handles.ValidationInset2,-90)
+%Get projection of mean spectrum
+MeanInset = max(MeanReconstruction(Dimension1:end,:));
+plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
+hold(handles.ValidationInset1,'on')
+%Get projection of validation result
+switch handles.DisplayRadioStatus
+  case 'uncertainty'
+    Upper = MeanReconstruction(Dimension1:end,:) + Uncertainty(Dimension1:end,:);
+    Lower = MeanReconstruction(Dimension1:end,:) - Uncertainty(Dimension1:end,:);
+    LowerInset =  max(Lower/max(max(Lower)));
+    UpperInset =  max(Upper/max(max(Upper)));
+    a1 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ LowerInset  fliplr(MeanInset) ], 'r','LineStyle','none');
+    a2 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ MeanInset fliplr(UpperInset)  ], 'r','LineStyle','none');
+    a1.FaceAlpha = 0.5;
+    a2.FaceAlpha = 0.5;
+  case 'upper'
+    Upper = UpperBound(Dimension1:end,:);
+    UpperInset =  max(Upper/max(max(Upper)));
+    plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,'r','LineWidth',1.5)
+  case 'lower'
+    Lower = LowerBound(Dimension1:end,:);
+    LowerInset =  max(Lower/max(max(Lower)));
+    plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,'r','LineWidth',1.5)
+end
+%Configure the inset axes
+set(handles.ValidationInset1,'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
+set(handles.ValidationInset1,'YLim',[0 1])
+set(handles.ValidationInset1,'XTick',[],'YTick',[])
 hold(handles.ValidationInset2,'off')
 
+%Clear the side inset
+cla(handles.ValidationInset2)
+
+%Get projection of mean spectrum
+MeanInset = max(MeanReconstruction);
+plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
+hold(handles.ValidationInset2,'on')
+%Get projection of validation result
+switch handles.DisplayRadioStatus
+  case 'uncertainty'
+    Upper = MeanReconstruction + Uncertainty;
+    Lower = MeanReconstruction - Uncertainty;
+    LowerInset =  max(Lower/max(max(Lower)));
+    UpperInset =  max(Upper/max(max(Upper)));
+    a1 = fill(handles.ValidationInset2, [LowerInset  fliplr(MeanInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
+    a2 = fill(handles.ValidationInset2, [MeanInset fliplr(UpperInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
+    a1.FaceAlpha = 0.5;
+    a2.FaceAlpha = 0.5;
+  case 'upper'
+    Upper = UpperBound;
+    UpperInset =  max(Upper/max(max(Upper)));
+    plot(handles.ValidationInset2,UpperInset,FrequencyAxis1,'r')
+  case 'lower'
+    Lower = LowerBound;
+    LowerInset =  max(Lower/max(max(Lower)));
+    plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,'r')
+end
+%Configure the inset axes
+set(handles.ValidationInset2,'YLim',[0 Defaults.XUpperLimit])
+set(handles.ValidationInset2,'XLim',[0 1])
+set(handles.ValidationInset2,'XTick',[],'YTick',[])
+hold(handles.ValidationInset2,'off')
+
+%Inform user that the graphics are rendered
 set(handles.ValidationStatus,'string','Ready'),drawnow;
-
-
 
 return
 %------------------------------------------------------------------------------
@@ -758,71 +764,78 @@ return
 %------------------------------------------------------------------------------
 function updateParameterSets(currentParameterSet,handles)
 
+%Get parameter sets
 ParameterSets = handles.ParameterSets;
-        set(handles.SetParameterSet_Button,'string',currentParameterSet)
-        set(handles.CurrentParameterSet_Panel,'title',sprintf('Parameter Set #%i',currentParameterSet))
+set(handles.SetParameterSet_Button,'string',currentParameterSet)
+set(handles.CurrentParameterSet_Panel,'title',sprintf('Parameter Set #%i',currentParameterSet))
+%Update the text boxes of the table in the GUI
+set(handles.CurrentBackgroundStart1_Text,'string',ParameterSets(currentParameterSet).BackgroundStart1);
+set(handles.CurrentBackgroundStart2_Text,'string',ParameterSets(currentParameterSet).BackgroundStart2);
+set(handles.CurrentBackgroundDimension1_Text,'string',ParameterSets(currentParameterSet).BackgroundDimension1);
+set(handles.CurrentBackgroundDimension2_Text,'string',ParameterSets(currentParameterSet).BackgroundDimension2);
+%For the NUS reconstruction parameters, if not NUS then just set to '-'
+if ~isnan(ParameterSets(currentParameterSet).LagrangeMultiplier)
+  set(handles.CurrentLagrangianMultiplier_Text,'string',ParameterSets(currentParameterSet).LagrangeMultiplier);
+else
+  set(handles.CurrentLagrangianMultiplier_Text,'string','-');
+end
+if ~isnan(ParameterSets(currentParameterSet).BackgroundParameter)
+  set(handles.CurrentBackgroundParameter_Text,'string',ParameterSets(currentParameterSet).BackgroundParameter);
+else
+  set(handles.CurrentBackgroundParameter_Text,'string','-');
+end
+if ~isnan(ParameterSets(currentParameterSet).ThresholdParameter)
+  set(handles.CurrentThresholdParameter_Text,'string',ParameterSets(currentParameterSet).ThresholdParameter);
+else
+  set(handles.CurrentThresholdParameter_Text,'string','-');
+end
+if ~isnan(ParameterSets(currentParameterSet).SamplingDensity)
+  set(handles.CurrentSamplingDensity_Text,'string',ParameterSets(currentParameterSet).SamplingDensity);
+else
+  set(handles.CurrentSamplingDensity_Text,'string','-');
+end
+if ~isnan(ParameterSets(currentParameterSet).Entropy)
+  set(handles.CurrentEntropy_Text,'string',ParameterSets(currentParameterSet).Entropy);
+else
+  set(handles.CurrentEntropy_Text,'string','-');
+end
+if ~isnan(ParameterSets(currentParameterSet).RMSD)
+  set(handles.CurrentRMSD_Text,'string',ParameterSets(currentParameterSet).RMSD);
+else
+  set(handles.CurrentRMSD_Text,'string','-');
+end
+if ~isnan(ParameterSets(currentParameterSet).NoiseLevel)
+  set(handles.CurrentNoiseLevel_Text,'string',ParameterSets(currentParameterSet).NoiseLevel);
+else
+  set(handles.CurrentNoiseLevel_Text,'string','-');
+end
 
-    set(handles.CurrentBackgroundStart1_Text,'string',ParameterSets(currentParameterSet).BackgroundStart1);
-    set(handles.CurrentBackgroundStart2_Text,'string',ParameterSets(currentParameterSet).BackgroundStart2);
-    set(handles.CurrentBackgroundDimension1_Text,'string',ParameterSets(currentParameterSet).BackgroundDimension1);
-    set(handles.CurrentBackgroundDimension2_Text,'string',ParameterSets(currentParameterSet).BackgroundDimension2);
-    %For the NUS reconstruction parameters, if not NUS then just set to '-'
-    if ~isnan(ParameterSets(currentParameterSet).LagrangeMultiplier)
-      set(handles.CurrentLagrangianMultiplier_Text,'string',ParameterSets(currentParameterSet).LagrangeMultiplier);
-    else
-      set(handles.CurrentLagrangianMultiplier_Text,'string','-');
-    end
-    if ~isnan(ParameterSets(currentParameterSet).BackgroundParameter)
-      set(handles.CurrentBackgroundParameter_Text,'string',ParameterSets(currentParameterSet).BackgroundParameter);
-    else
-      set(handles.CurrentBackgroundParameter_Text,'string','-');
-    end
-    if ~isnan(ParameterSets(currentParameterSet).ThresholdParameter)
-      set(handles.CurrentThresholdParameter_Text,'string',ParameterSets(currentParameterSet).ThresholdParameter);
-    else
-      set(handles.CurrentThresholdParameter_Text,'string','-');
-    end
-    if ~isnan(ParameterSets(currentParameterSet).SamplingDensity)
-      set(handles.CurrentSamplingDensity_Text,'string',ParameterSets(currentParameterSet).SamplingDensity);
-    else
-      set(handles.CurrentSamplingDensity_Text,'string','-');
-    end
-    if ~isnan(ParameterSets(currentParameterSet).Entropy)
-      set(handles.CurrentEntropy_Text,'string',ParameterSets(currentParameterSet).Entropy);
-    else
-      set(handles.CurrentEntropy_Text,'string','-');
-    end
-    if ~isnan(ParameterSets(currentParameterSet).RMSD)
-      set(handles.CurrentRMSD_Text,'string',ParameterSets(currentParameterSet).RMSD);
-    else
-      set(handles.CurrentRMSD_Text,'string','-');
-    end
-    if ~isnan(ParameterSets(currentParameterSet).NoiseLevel)
-      set(handles.CurrentNoiseLevel_Text,'string',ParameterSets(currentParameterSet).NoiseLevel);
-    else
-      set(handles.CurrentNoiseLevel_Text,'string','-');
-    end
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function plotParameterSet(handles)
 
+%Inform user that graphics are being rendering
 set(handles.ValidationStatus,'string','Rendering'),drawnow;
 
+%Get the parameter set index to be displayed
 CurrentParameterSet = str2double(get(handles.SetParameterSet_Button,'string'));
 ValidationSpectra = handles.ReconstructedSpectra;
 CurrentSpectrum =  ValidationSpectra(:,:,CurrentParameterSet);
 
-Dimension1 = 0.5*size(CurrentSpectrum,1);
-Dimension2 = 0.5*size(CurrentSpectrum,2);
 
-TimeStep1 = 0.016;
-TimeStep2 = 0.016;
 %Construct frequency axis
-FrequencyAxis1 = linspace(-1/(2*TimeStep1),1/(2*TimeStep1),2*Dimension1);
-FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),2*Dimension2);
+Dimension1 = size(CurrentSpectrum,1);
+Dimension2 = size(CurrentSpectrum,2);
+TimeAxis1 = handles.RawData.TimeAxis1;
+TimeAxis2 = handles.RawData.TimeAxis2;
+TimeStep1 = TimeAxis1(end)/(1/2*Dimension1);
+TimeStep2 = TimeAxis2(end)/(1/2*Dimension2);
+FrequencyAxis1 = linspace(-1/(2*TimeStep1),1/(2*TimeStep1),Dimension1);
+FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),Dimension2);
 
+%Set the main display
 cla(handles.ValidationMainPlot)
 contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((CurrentSpectrum)),80,'LineWidth',1)
 set(handles.ValidationMainPlot,'YLim',[0 20],'XLim',[-20 20])
@@ -830,49 +843,69 @@ grid(handles.ValidationMainPlot,'on')
 xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
 colormap(handles.ValidationMainPlot,'parula')
 
+%Set the upper inset
 cla(handles.ValidationInset1)
 MeanInset = max(CurrentSpectrum(Dimension1:end,:));
 plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
 set(handles.ValidationInset1,'XLim',[-20 20])
-  set(handles.ValidationInset1,'XTick',[],'YTick',[])
+set(handles.ValidationInset1,'XTick',[],'YTick',[])
 
+%Set the side inset
 cla(handles.ValidationInset2)
 MeanInset = max(CurrentSpectrum);
 plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
 set(handles.ValidationInset2,'YLim',[0 20])
 set(handles.ValidationInset2,'XTick',[],'YTick',[])
 
+%Inform user that graphics are rendered
 set(handles.ValidationStatus,'string','Ready'),drawnow;
+
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function Min_Edits_Callback(hObject, eventdata, handles)
+
+%Get the tag of the object sent to this function
 Tag = get(hObject,'Tag');
+%Append 'max' to the tag
 Tag = [Tag(1:end-3) 'Max'];
+%Get the handles of the min and max edit boxes
 Min_EditHandle = hObject;
 Max_EditHandle = findobj('Tag',Tag);
+%Get the values
 MaxValue = str2double(get(Max_EditHandle,'string'));
 MinValue = str2double(get(Min_EditHandle,'string'));
+%Check that the given min is smaller than the max
 if MinValue>MaxValue
   set(Max_EditHandle,'string',MinValue);
   set(Min_EditHandle,'string',MaxValue);
 end
+
+guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function Max_Edits_Callback(hObject, eventdata, handles)
+
+%Get the tag of the object sent to this function
 Tag = get(hObject,'Tag');
+%Append 'min' to the tag
 Tag = [Tag(1:end-3) 'Min'];
+%Get the handles of the min and max edit boxes
 Max_EditHandle = hObject;
 Min_EditHandle = findobj('Tag',Tag);
+%Get the values
 MaxValue = str2double(get(Max_EditHandle,'string'));
 MinValue = str2double(get(Min_EditHandle,'string'));
+%Check that the given max is smaller than the min
 if MinValue>MaxValue
   set(Max_EditHandle,'string',MinValue);
   set(Min_EditHandle,'string',MaxValue);
 end
+
+guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
@@ -909,20 +942,32 @@ return
 
 %------------------------------------------------------------------------------
 function DetachPlot_Button_Callback(hObject, eventdata, handles)
-FigureHandle = figure(12);
-clf(FigureHandle)
+
+%Check if window is open, close and make new one
+FigureHandle = findobj('Tag','validationResultsDetached');
+if isempty(FigureHandle)
+  FigureHandle = figure('Tag','validationResultsDetached','WindowStyle','normal');
+else
+  figure(FigureHandle);
+  clf(FigureHandle);
+end
+%Set the figure and axis position and size
 set(FigureHandle,'Position',[-1364 463 997 623])
 ExternalHandles.ValidationMainPlot = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.08 0.12 0.7 0.6]);
 ExternalHandles.ValidationInset1 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.08 0.75 0.7 0.2]);
 ExternalHandles.ValidationInset2 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.8 0.12 0.15 0.6]);
 ExternalHandles.ValidationStatus = uicontrol('Parent',FigureHandle,'Style','text','Visible','off','Position',[0.8 0.12 0.15 0.6]);
+
+%Get GUI status and variables
 ExternalHandles.ReconstructedSpectra = handles.ReconstructedSpectra;
 ExternalHandles.DisplayRadioStatus = handles.DisplayRadioStatus;
 ExternalHandles.SetParameterSet_Button = handles.SetParameterSet_Button;
 ExternalHandles.RawData = handles.RawData;
 ExternalHandles.Defaults = handles.Defaults;
+%Update the graphics in the detached figure
+
 if get(handles.DisplayMean_Radio,'value')
-updateValidationPlots(ExternalHandles)
+  updateValidationPlots(ExternalHandles)
 else
   plotParameterSet(ExternalHandles)
 end
@@ -974,24 +1019,166 @@ return
 function SaveValidation_Button_Callback(hObject, eventdata, handles)
 
 %First ask user where to save the validation data
-SavePath = uigetdir(pwd,'Select folder to save...');
+[SaveName,SavePath] = uiputfile('*.*','Save validation as');
 %If cancelled, return
-if SavePath == 0
+if SaveName == 0
   return
 end
+
+f = msgbox('Saving validation session. Please wait...','modal');
+delete(f.Children(1))
+drawnow
+
+% Prepare saving procedures
+DateFormatOut = 'yyyymmdd';
+Date = datestr(date,DateFormatOut);
+%Set identifier
+Identifier = SaveName;
+%Get file path
+FullPath = fullfile(SavePath);
+CrashFlag = false;
+
 %Construct a structure with the input parameters
 ValidationParameters  = handles.ValidationVectors;
-%Get the validation statistics results
+RawData = handles.RawData;
+Defaults = handles.Defaults;
 ReconstructedSpectra = handles.ReconstructedSpectra;
+
+%Get the validation statistics results
 MeanReconstruction = mean(ReconstructedSpectra,3);
 MeanReconstruction = MeanReconstruction/max(max(MeanReconstruction));
 Uncertainty = std(ReconstructedSpectra,0,3);
-%Save them
+
+%Save them to an output structure
+ValidationResults.ParameterSets = handles.ParameterSets;
+for i=1:length(ValidationResults.ParameterSets)
+  SamplingDensities(i) = ValidationResults.ParameterSets(i).SamplingDensity;
+end
+ValidationParameters.SamplingDensity_Vector = unique(SamplingDensities);
 ValidationResults.Uncertainty = Uncertainty;
 ValidationResults.LowerBound = MeanReconstruction - 2*Uncertainty;
 ValidationResults.UpperBound = MeanReconstruction + 2*Uncertainty;
+ValidationResults.ReconstructedSpectra = handles.ReconstructedSpectra;
+ValidationResults.ValidationParameters = ValidationParameters;
 
+%Format savename until it is different from the rest in the folder
+SaveName = sprintf('%s_%s_ValidationData.mat',Date,Identifier);
+CopyIndex = 1;
+while true
+  %If name is different stop
+  if ~exist(fullfile(FullPath,SaveName),'file')
+    break
+  end
+  %Otherwise just increase the counter number and add to name
+  CopyIndex = CopyIndex + 1;
+  CrashFlag = true;
+  SaveName = sprintf('%s_%s_ValidationData_%i.mat',Date,Identifier,CopyIndex);
+end
 
+%Save settings to file
+save(fullfile(FullPath,SaveName),'ValidationResults');
+
+%Update the graphics in the detached figure
+ExternalHandles.ReconstructedSpectra = ReconstructedSpectra;
+ExternalHandles.RawData = RawData;
+ExternalHandles.Defaults = Defaults;
+
+%Check if window is open, close and make new one
+FigureHandle = figure('Tag','windowBeingSaved','Visible','off','WindowStyle','normal');
+%Define a create function for ghost figure, so that when it is later opened by user, it dislplays normally
+set(FigureHandle,'CreateFcn','set(gcbf,''Visible'',''on'')');
+%Set the figure and axis position and size
+set(FigureHandle,'Position',[-1364 463 997 623])
+ExternalHandles.ValidationMainPlot = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.08 0.12 0.7 0.6]);
+ExternalHandles.ValidationInset1 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.08 0.75 0.7 0.2]);
+ExternalHandles.ValidationInset2 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.8 0.12 0.15 0.6]);
+ExternalHandles.ValidationStatus = uicontrol('Parent',FigureHandle,'Style','text','Visible','off','Position',[0.8 0.12 0.15 0.6]);
+
+%Plot uncertainty and save
+ExternalHandles.DisplayRadioStatus = 'uncertainty';
+updateValidationPlots(ExternalHandles)
+%Use the same formatting in name as before to avoid filename clash
+  SaveName = sprintf('%s_%s_Uncertainty',Date,Identifier);  
+  if CrashFlag
+      SaveName = sprintf('%s_%s_Uncertainty_%i',Date,Identifier,CopyIndex);
+  end
+%Save as Matlab figure (.fig)
+savefig(FigureHandle,fullfile(FullPath,[SaveName '.fig']), 'compact');
+
+%Clear the figure axes
+cla(ExternalHandles.ValidationMainPlot)
+cla(ExternalHandles.ValidationInset1)
+cla(ExternalHandles.ValidationInset2)
+
+%Plot lower bound and save
+ExternalHandles.DisplayRadioStatus = 'lower';
+updateValidationPlots(ExternalHandles)
+%Use the same formatting in name as before to avoid filename clash
+  SaveName = sprintf('%s_%s_LowerBound',Date,Identifier);  
+  if CrashFlag
+      SaveName = sprintf('%s_%s_LowerBound_%i',Date,Identifier,CopyIndex);
+  end
+%Save as Matlab figure (.fig)
+savefig(FigureHandle,fullfile(FullPath,[SaveName '.fig']), 'compact');
+
+%Clear the figure axes
+cla(ExternalHandles.ValidationMainPlot)
+cla(ExternalHandles.ValidationInset1)
+cla(ExternalHandles.ValidationInset2)
+
+%Plot upper bound and save
+ExternalHandles.DisplayRadioStatus = 'upper';
+updateValidationPlots(ExternalHandles)
+%Use the same formatting in name as before to avoid filename clash
+  SaveName = sprintf('%s_%s_UpperBound',Date,Identifier);  
+  if CrashFlag
+      SaveName = sprintf('%s_%s_UpperBound_%i',Date,Identifier,CopyIndex);
+  end
+%Save as Matlab figure (.fig)
+savefig(FigureHandle,fullfile(FullPath,[SaveName '.fig']), 'compact');
+
+close(FigureHandle)
+
+%Check if license exists and continue if so
+if getpref('hyscorean','reportlicense')
+  
+  %Construct report data structure
+  ReportData.ValidationParametersFields = fields(ValidationParameters);
+  ReportData.ValidationParameters = ValidationParameters;
+  ReportData.Defaults = Defaults;
+  ReportData.RawData = RawData;
+  ReportData.ReconstructedSpectra = ReconstructedSpectra;
+  ReportData.MeanReconstruction = MeanReconstruction;
+  ReportData.Uncertainty = ValidationResults.Uncertainty;
+  ReportData.LowerBound = ValidationResults.LowerBound;
+  ReportData.UpperBound = ValidationResults.UpperBound;
+  ReportData.UpdateValidationPlotHandle = @updateValidationPlots;
+  %Use the same formatting in name as before to avoid filename clash
+  ReportName = sprintf('%s_%s_report',Date,Identifier);
+  if CrashFlag
+    ReportName = sprintf('%s_%s_report_%i',Date,Identifier,CopyIndex);
+  end
+  ReportData.SaveName = ReportName;
+  ReportData.SavePath = FullPath;
+  
+  %Get the location of the processing report logo
+  HyscoreanPath = which('Hyscorean');
+  HyscoreanPath = HyscoreanPath(1:end-11);
+  ReportData.ValidationReport_logo_Path = fullfile(HyscoreanPath,'bin','ValidationReport_logo.png');
+  
+  %Send structure to workspace
+  assignin('base', 'ReportData', ReportData);
+  
+  %Generate report
+  report Hyscorean_Validation_report -fpdf ;
+  
+  evalin('base','clear ReportData')
+  
+else
+  warning('MATLAB report generator not installed or license not found. Report generation was skipped.')
+end
+
+close(f)
 
 return
 %------------------------------------------------------------------------------
