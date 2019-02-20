@@ -2721,6 +2721,8 @@ assignin('base', 'ReportData', ReportData);
 %Generate report
  report Hyscorean_Fitting_report -fpdf ;
 
+evalin('base','clear ReportData')
+ 
 else
   %Report generator is not available without the license
   warning('MATLAB report generator license missing. Report cannot be generated.')
@@ -2872,7 +2874,7 @@ Temp2 = FitData.Vary;
 if Answered
   try
     %Inform the user that the simulation is running via message window
-    f = msgbox('Simulating ORCA system...');
+    f = msgbox('Simulating ORCA system...','modal');
     delete(f.Children(1))
     drawnow
     
