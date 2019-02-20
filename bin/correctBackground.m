@@ -84,6 +84,12 @@ end
 if ~isfield(options,'SavitzkyFrameLength')
   options.SavitzkyFrameLength = 11;
 end
+if ~isfield(options,'BackgroundCorrection2D')
+  options.BackgroundCorrection2D = false;
+end
+if ~isfield(options,'AutomaticBackgroundStart')
+  options.AutomaticBackgroundStart = false;
+end
 
 %Check if data is complex
 isComplex = ~isreal(Data.Integral);
