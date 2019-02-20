@@ -59,19 +59,19 @@ else
    PlotWithZeroFilling = get(handles.PlotWithZeroFilling,'Value');
 end
 %Find which of the signals to be plotted has the largest maximum
-ylimMax = max(max(real(Processed.Signal)/max(max(real(Processed.Signal)))));
-ylimMin = min(min(real(Processed.Signal)/max(max(real(Processed.Signal)))));
-if ylimMax < max(max(real(handles.Data.NonCorrectedIntegral)/max(max(real(handles.Data.NonCorrectedIntegral)))))
-  ylimMax = max(max(real(handles.Data.NonCorrectedIntegral/max(max(real(handles.Data.NonCorrectedIntegral))))));
+ylimMax = max(max(real(Processed.Signal)));
+ylimMin = min(min(real(Processed.Signal)));
+if ylimMax < max(max(real(handles.Data.NonCorrectedIntegral)))
+  ylimMax = max(max(real(handles.Data.NonCorrectedIntegral)));
 end
-if ylimMin > min(min(real(handles.Data.NonCorrectedIntegral)/max(max(real(handles.Data.NonCorrectedIntegral)))))
-  ylimMin =  min(min(real(handles.Data.NonCorrectedIntegral)/max(max(real(handles.Data.NonCorrectedIntegral)))));
+if ylimMin > min(min(real(handles.Data.NonCorrectedIntegral)))
+  ylimMin =  min(min(real(handles.Data.NonCorrectedIntegral)));
 end
-if ylimMax < max(max(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))))
-  ylimMax = max(max(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))));
+if ylimMax < max(max(real(handles.Data.PreProcessedSignal)))
+  ylimMax = max(max(real(handles.Data.PreProcessedSignal)));
 end
-if ylimMin > min(min(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))))
-  ylimMin =  min(min(real(handles.Data.PreProcessedSignal)/max(max(real(handles.Data.PreProcessedSignal)))));
+if ylimMin > min(min(real(handles.Data.PreProcessedSignal)))
+  ylimMin =  min(min(real(handles.Data.PreProcessedSignal)));
 end
 %Construct time axes for the signals
 if  PlotWithZeroFilling
@@ -318,7 +318,7 @@ if get(handles.PlotApodizationWindow,'value')
     end
   
   %Adjust window to current axis
-  Window = Window/max(Window);
+  Window = ylimMax*Window/max(Window);
 %   Window = Window';
   if WindowDecay>=length(TimeAxis1)
     Window=Window(1:length(TimeAxis1));
