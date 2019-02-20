@@ -1136,6 +1136,7 @@ if RawData.NUSflag
 end
 
 %Get the current pre-processing settings
+Defaults.InvertCorrection = str2double(get(handles.InvertCorrection,'string'));
 Defaults.BackgroundDimension1 = str2double(get(handles.BackgroundParameter1,'string'));
 Defaults.BackgroundDimension2 = str2double(get(handles.BackgroundParameter2,'string'));
 Defaults.BackgroundMethod1 = get(handles.BackgroundMethod1,'value') - 1;
