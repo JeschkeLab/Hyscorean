@@ -315,7 +315,7 @@ if getpref('hyscorean','reportlicense')
   %Get the location of the processing report logo
   HyscoreanPath = which('Hyscorean');
   HyscoreanPath = HyscoreanPath(1:end-11);
-  reportdata.ProcessingReport_logo_Path = [HyscoreanPath 'bin/ProcessingReport_logo.png'];
+  reportdata.ProcessingReport_logo_Path = fullfile(HyscoreanPath,'bin','ProcessingReport_logo.png');
   
   %Send structure to workspace
   assignin('base', 'reportdata', reportdata);
