@@ -1540,11 +1540,11 @@ if FitOpts.MethodID<7
   set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
     Temp = abs(CurrentBestSpec);
     %   Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
-    Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+    Inset = max(Temp,[],2);
     set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
     %   Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
     Temp = abs(CurrentSimSpec);
-    Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+    Inset = max(Temp,[],2);
     set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color','r');
     % update lower projection graph
     Inset = max(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
@@ -1575,7 +1575,7 @@ elseif FitOpts.MethodID==7
     set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',abs(CurrentSimSpec))
   end
   Temp = abs(CurrentSimSpec);
-  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  Inset = max(Temp,[],2);
   set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color','b');
   Temp = abs(CurrentSimSpec);
   Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
@@ -1593,7 +1593,7 @@ else
     set(findobj('Tag','currsimdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',-abs(CurrentSimSpec))
   end
   Temp = abs(CurrentSimSpec);
-  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  Inset = max(Temp,[],2);
   cmp = lines(5);
   set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color',cmp(3,:));
   Temp = abs(CurrentSimSpec);
