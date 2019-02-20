@@ -1,6 +1,21 @@
-
-% ists: barebones 1d stern ist reconstruction function.
-function [Reconstruction, FunctionalValue] = istd_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,NZeroFillings)
+function [Reconstruction, FunctionalValue] = ists_hyscorean (Signal, SubSamplingVector, mu, MaxIterations,NZeroFillings)
+%==========================================================================  
+% Stern Iterative Soft-Thresholding (IST-S)
+%==========================================================================
+% Algorithm for the reconstruction of one- or two-dimensional non-uniformly
+% sampled (NUS) signals basde on maximization of the l1-norm functional.
+% The signal is zero-filled during the procedure to double its dimension 
+% size and after reconstruction it is truncated to its original size. 
+%==========================================================================
+%
+% Adapted from Bradley Worley under the GNU GPL 3.0. license.
+% 
+% Copyright (C) 2019, Luis Fabregas Ibanez, Hyscorean 
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 if (nargin < 2)
   error('At least two arguments are required');

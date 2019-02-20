@@ -124,6 +124,7 @@ end
 
 
 function Window = ChebyshevWindow(Length,alpha)
+
 %Define window axis
 Axis = (0:Length-1)';
 %Compute Dolph-Chebyshev window transform (Supression: dB = -20alpha)
@@ -131,9 +132,11 @@ Beta = cosh(1/Length*acosh(10^alpha));
 Transform = (cos(Length*acos(Beta*cos(pi*Axis/Length))))/cosh(Length*acosh(Beta));
 %Get Dolph-Chebyshev window by IFFT
 Window = real(ifftshift(ifft(Transform)));
+
 end
   
 function Window = TukeyWindow(Length,TaperRatio)
+
 %Define window axis
 Axis = linspace(0,1,Length)';
 %Period of the taper is onehalf of a quarter sine
@@ -143,4 +146,5 @@ CosntantStarts = floor(TaperPeriod*(Length - 1)) + 1;
 ConstantEnds = Length - CosntantStarts + 1;
 %Tukey window is defined in three sections: taper, constant, taper
 Window = [ ((1+cos(pi/TaperPeriod*(Axis(1:CosntantStarts) - TaperPeriod)))/2);  ones(ConstantEnds-CosntantStarts-1,1); ((1+cos(pi/TaperPeriod*(Axis(ConstantEnds:end) - 1 + TaperPeriod)))/2)];
+
 end

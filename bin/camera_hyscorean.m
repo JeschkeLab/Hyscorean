@@ -1,19 +1,25 @@
 function [Reconstruction, FunctionalValues, NumberOfOperations,LagrangeMultipliers_Used] = camera_hyscorean (Signal,Schedule,NoiseLevel,SingleLagrangeMultiplier,BackgroundParameterVector,MultiplierBackgroundParameter,MaxOutIter,MaxInIter,NZeroFillings,Weights,handles)
-%--------------------------------------------------------------------------  
+%==========================================================================
 % Convex Accelerated Maximum Entropy Reconstruction (CAMERA)
-%--------------------------------------------------------------------------
+%==========================================================================
 % Algorithm for the reconstruction of one- or two-dimensional non-uniformly
 % sampled (NUS) signals basde on maximization of the Hoch-Hore entropy [1].
 % The signal is zero-filled during the procedure to double (or more) its 
 % dimension size and after reconstruction it is truncated to its original 
 % size.
-%
+%==========================================================================
 % Literature:
 %   [1] B. Worley, Journal of Magnetic Resonance 265, (2016), 90-98
+%==========================================================================
 %
 % Adapted from Bradley Worley under the GNU GPL 3.0. license.
-% by
-% Luis Fabregas Ibanez, 2018  
+% 
+% Copyright (C) 2019, Luis Fabregas Ibanez, Hyscorean   
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 if (nargin < 2)
   error('At least two arguments are required');
@@ -199,8 +205,7 @@ for OuterIteration = 1 : MaxOutIter
     if InnerIteration>1
       NormalizedFunctionalValues = FunctionalValues/max(FunctionalValues);
       RelativeFunctionalDecrease(InnerIteration) = NormalizedFunctionalValues(end)-NormalizedFunctionalValues(end-1);
-%       figure(99),clf,subplot(121),plot(FunctionalValues),subplot(122),plot(log10(abs(RelativeFunctionalDecrease))),drawnow
-      if  abs(RelativeFunctionalDecrease(InnerIteration) )<1e-7  % || RelativeFunctionalDecrease(InnerIteration)>0
+      if  abs(RelativeFunctionalDecrease(InnerIteration) )<1e-7 
         break; % Finishes algorithm
       end
     end

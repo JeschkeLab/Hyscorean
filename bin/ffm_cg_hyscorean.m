@@ -1,21 +1,28 @@
 function [Reconstruction, FunctionalValues] = ffm_cg_hyscorean (Signal, Schedule, BackgroundParameter, MaxIter,handles)
-%--------------------------------------------------------------------------  
+%==========================================================================  
 % FFM-CG (Fast Forward Maximum Entropy - Conjugate Gradient) Reconstruction
-%--------------------------------------------------------------------------
+%==========================================================================
 % Algorithm for the reconstruction of one- or two-dimensional non-uniformly
-% sampled (NUS) signals basde on maximization of the Hoch-Hore entropy.
+% sampled (NUS) signals basde on maximization of the Hoch-Hore entropy while
+% enforcing strict accordancy with the experimental data.
 % This method solves the FFM problem [1] by using Polak-Ribiere's conjugate
 % gradient method [2].
-%
+%==========================================================================
 % Literature:
 %  [1] N.M. Balsgart, T. Vosegaard, Journal of Magnetic Resonance 223, 
 %      2012, 164-169  
 %  [2] E. Polak, G. Ribière, Rev. Francaise Informat Recherche 
 %      Operationelle, (1969), 35–43
+%==========================================================================
 %
-% Adapted from Bradley Worley under the GNU GPL 3.0. license
-% by
-% Luis Fabregas Ibanez, 2018
+% Adapted from Bradley Worley under the GNU GPL 3.0. license.
+% 
+% Copyright (C) 2019, Luis Fabregas Ibanez, Hyscorean 
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 if (nargin < 2)
   error('At least two arguments are required');
@@ -100,12 +107,6 @@ for Iteration = 1 : MaxIter
   else
     PolakRibiereFactor = 0;
   end
-% FrequencyAxis = linspace(-1/(2*handles.Data.TimeStep1),1/(2*handles.Data.TimeStep1),length(ReconstructedSpectrum));
-%   contour(handles.mainPlot,FrequencyAxis,FrequencyAxis,abs(fftshift(ReconstructedSpectrum)),handles.GraphicalSettings.Levels)
-%   set(handles.mainPlot,'ylim',[0 20],'xlim',[-20 20]),grid(handles.mainPlot,'on')
-%   hold(handles.mainPlot,'on'),plot(handles.mainPlot,FrequencyAxis,abs(FrequencyAxis),'k-.'),hold(handles.mainPlot,'off')
-%   figure(999), clf,plot(FunctionalValues),xlabel('Iterations'),ylabel('Functional'),drawnow
-  
   
   % Update the reconstruction
   SearchDirection = Gradient + PolakRibiereFactor.*SearchDirection;
@@ -114,13 +115,14 @@ for Iteration = 1 : MaxIter
   %Store the previous gradient for next iteration
   PrevGradient = Gradient;
   
-    if Iteration>1
- NormalizedFunctionalValues = FunctionalValues/max(FunctionalValues);
-      RelativeFunctionalDecrease(Iteration) = NormalizedFunctionalValues(end)-NormalizedFunctionalValues(end-1);
-      if  abs(RelativeFunctionalDecrease(Iteration) )<1e-7  % || RelativeFunctionalDecrease(InnerIteration)>0
-        break; % Finishes algorithm
-      end
+  %Stopping conditions
+  if Iteration>1
+    NormalizedFunctionalValues = FunctionalValues/max(FunctionalValues);
+    RelativeFunctionalDecrease(Iteration) = NormalizedFunctionalValues(end)-NormalizedFunctionalValues(end-1);
+    if  abs(RelativeFunctionalDecrease(Iteration)) < 1e-7 
+      break; % Finishes algorithm
     end
+  end
   
 end
 
