@@ -90,6 +90,9 @@ end
 if ~isfield(options,'AutomaticBackgroundStart')
   options.AutomaticBackgroundStart = false;
 end
+if ~isfield(options,'ZeroTimeTruncation')
+  options.ZeroTimeTruncation = false;
+end
 
 %Check if data is complex
 isComplex = ~isreal(Data.Integral);
