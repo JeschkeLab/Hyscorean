@@ -1,28 +1,22 @@
 function varargout = Hyscorean_validationModule(varargin)
-% HYSCOREAN_VALIDATIONMODULE MATLAB code for Hyscorean_validationModule.fig
-%      HYSCOREAN_VALIDATIONMODULE, by itself, creates a new HYSCOREAN_VALIDATIONMODULE or raises the existing
-%      singleton*.
+%==========================================================================
+% Hyscorean validation module
+%==========================================================================
+% This code is responsible for all callbacks of the Hyscorean validation
+% module GUI. The function cannot be called directly since it depends on
+% input from the Hyscorean GUI. 
+% THe validation module permits the validation of all critical processing 
+% steps in Hyscorean such as background correction and reconstruction. 
 %
-%      H = HYSCOREAN_VALIDATIONMODULE returns the handle to a new HYSCOREAN_VALIDATIONMODULE or the handle to
-%      the existing singleton*.
+% (See Hyscorean's manual for more information)
+%==========================================================================
 %
-%      HYSCOREAN_VALIDATIONMODULE('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in HYSCOREAN_VALIDATIONMODULE.M with the given input arguments.
-%
-%      HYSCOREAN_VALIDATIONMODULE('Property','Value',...) creates a new HYSCOREAN_VALIDATIONMODULE or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before Hyscorean_validationModule_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to Hyscorean_validationModule_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help Hyscorean_validationModule
-
-% Last Modified by GUIDE v2.5 18-Feb-2019 11:49:05
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 %------------------------------------------------------------------------------
 gui_Singleton = 1;
@@ -643,13 +637,9 @@ Dimension2 = Dimension2 - handles.Defaults.ZeroFilling2;
 %Get Hyscorean path
 HyscoreanPath = which('Hyscorean');
 HyscoreanPath = HyscoreanPath(1:end-11);
-<<<<<<< HEAD
 
 %Load custom modified hot colormap
-CustomColormap = load(fullfile(HyscoreanPath,'bin\RedWhiteColorMap_old.mat'));
-=======
 CustomColormap = load(fullfile(HyscoreanPath,'bin', 'RedWhiteColorMap_old.mat'));
->>>>>>> origin/linux
 CustomColormap = CustomColormap.mycmap;
 CustomColormap = fliplr(CustomColormap(1:end-2,:)')';
 CustomColormap(1,:) = [1 1 1];
