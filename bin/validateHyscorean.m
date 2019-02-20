@@ -53,7 +53,7 @@ TotalTrials = Length1*Length2*Length3*Length4*Length5*Length6*Length7*Length8*Le
 %Pre-allocate the matrix containing all validation spectra
 ReconstructedSpectra = zeros(Dimension1 + Defaults.ZeroFilling1,Dimension2 + Defaults.ZeroFilling2,TotalTrials);
 %Pre-allocate structure array for parameter sets
-ParameterSets = zeros(1,TotalTrials);
+ParameterSets = repmat(struct(), TotalTrials, 1 );
 
 %==========================================================================
 % Validation
