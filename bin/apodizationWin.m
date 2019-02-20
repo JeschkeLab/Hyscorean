@@ -132,7 +132,7 @@ Beta = cosh(1/Length*acosh(10^alpha));
 Transform = (cos(Length*acos(Beta*cos(pi*Axis/Length))))/cosh(Length*acosh(Beta));
 %Get Dolph-Chebyshev window by IFFT
 Window = real(ifftshift(ifft(Transform)));
-
+Window = Window/max(Window);
 end
   
 function Window = TukeyWindow(Length,TaperRatio)
