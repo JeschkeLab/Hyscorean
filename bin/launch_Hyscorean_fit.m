@@ -1,7 +1,7 @@
 function launch_Hyscorean_fit(FileNames,Paths,InputSystem)
-%------------------------------------------------------------------------
+%==========================================================================
 % Hyscorean Fitting module external launcher 
-%------------------------------------------------------------------------
+%==========================================================================
 % This function is responsible of loading the Hyscorean ouput files with the 
 % (default) identifier sufix "DataForFitting" and constructing all structures
 % required for EasySpin to work. These structures are the Exp and Opt structures
@@ -10,14 +10,14 @@ function launch_Hyscorean_fit(FileNames,Paths,InputSystem)
 % the Hyscorean fitting module is called. The Sys and Vary structures can also
 % be given as input via the InputSystem input argument.
 % (See the Hyscorean manual for further details) 
-%------------------------------------------------------------------------
+%==========================================================================
 %
 % Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License 3.0 as published by
 % the Free Software Foundation.
-%------------------------------------------------------------------------
+%==========================================================================
 
 %Input arguments checks
 if nargin < 3, InputSystem = []; end
@@ -108,7 +108,6 @@ for Index = 1:numSpec
   %Check the expected spectral sizes
   SpectrumDimensions(Index) = length(ExpSpectra{Index});
   SpectrumDimensions2(Index) = length(ExpSpectra{Index})*Opt{Index}.ZeroFillFactor;
-
 end
 
 %Get the largest spectrum and adjust the other zerofillings to match it
@@ -126,7 +125,6 @@ for Index = 1:numSpec
     Opt{Index}.TimeStepFactor = 1;
   end
 end
-
 
 %Launch the Hyscorean fitting module with all loaded spectra
 esfit_hyscorean('saffron',ExpSpectra,Sys,Vary,Exp,Opt)

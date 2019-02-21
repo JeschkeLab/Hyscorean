@@ -1,4 +1,22 @@
 function [Data] = integrateEcho(Data,Integration,options)
+%==========================================================================
+% Hyscorean Detached Signal Monitoring 
+%==========================================================================
+% This function is responsible for integrating the echoes obtained from 
+% echo-dtected experiments. The echoes can be integrated directly by boxcar
+% integration or by fitting a gaussian to the echo and integrating the echo
+% multiplied with the fit.
+% In Hyscorean this method is used for integrating echoes detected on the
+% AWG spectrometer.
+% (see Hyscorean manual for further information)
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 if nargin<3
   options = struct();
@@ -74,42 +92,12 @@ switch Integration
     Integral = squeeze(sum(abs(AverageEcho(TimeIndex:end-TimeIndex,:,:)),1));
 end
 
-  figure(125124),set(gcf,'Color','w'),clf
-plot([-options.FittingTime, -options.FittingTime],[0, 1],'b--','LineWidth',1.5)
-hold on
-plot([options.FittingTime, options.FittingTime],[0, 1],'b--','LineWidth',1.5)
-plot(EchoAxis,abs(AverageEcho(:,1,1))/max(abs(AverageEcho(:,1,1))),'k','LineWidth',1)
-try
-plot(EchoAxis,GaussianWindow,'r','LineWidth',1)
-catch
-end
-xlabel('Echo Time Axis [ns]'),ylabel('Intensity')
-set(gca,'fontsize',9)
-hold off
-drawnow;
-
-
 %--------------------------------------------------------------------------
 % Return
 %--------------------------------------------------------------------------
 
 %Normalize integral and mount to data-structure
 Data.Integral = (Integral/max(max((Integral))));
-
-% Time axis, no zero time adaption
-% Data.TimeAxis1 = Data.TimeAxis1 - min(Data.TimeAxis1);
-% Data.TimeAxis2 = Data.TimeAxis2 - min(Data.TimeAxis2);
-
-% If requested, display integral
-%   figure(2000)
-%   set(gcf,'NumberTitle','off','Name','TrierAnalysis: Echo integrals','Units','pixels');
-%   surf(Data.TimeAxis1,Data.TimeAxis2,Data.Integral)
-%   shading flat
-%   xlabel('t_1 [ns]')
-%   ylabel('t_2 [ns]')
-%   az = 135; el = 40.4000; 
-%   view(az,el)
-
 
 end
 

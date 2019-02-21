@@ -1,7 +1,7 @@
 function HyscoreanSignalPlot(handles,Processed)
-%------------------------------------------------------------------------
+%==========================================================================
 % Time-domain signal traces updater 
-%------------------------------------------------------------------------
+%==========================================================================
 % Interactively display the traces of the different time-domain traces
 % processed throughout Hyscorean via GUI slider.  
 % This function is responsible for the update and functionality of the
@@ -12,13 +12,16 @@ function HyscoreanSignalPlot(handles,Processed)
 % processing as well as its real and imaginary parts and the apodization
 % window.
 %
-%------------------------------------------------------------------------
+% (see Hyscorean manual for more information)
+%==========================================================================
+%
 % Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
 % 
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License 3.0 as published by
 % the Free Software Foundation.
-%------------------------------------------------------------------------
+%==========================================================================
+
 
 
 % Preparations

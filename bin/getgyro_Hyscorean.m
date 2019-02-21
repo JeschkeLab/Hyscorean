@@ -1,5 +1,4 @@
-function gyromagneticRatio = getgyro(NucleifromList)
-
+function gyromagneticRatio = getgyro_Hyscorean(NucleifromList)
 %Gyromagnetic ratios in MHz/T
 
 switch NucleifromList

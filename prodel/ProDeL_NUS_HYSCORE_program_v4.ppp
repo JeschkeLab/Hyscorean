@@ -23,8 +23,6 @@ real 		value, min, max, valRe, valIm, XAbsEncode, percentage;
 char 		buffer[80], units[16], txt[10], string[50],saveCmd[200], path_filename[100], filename[100], cmdString[220];
 int 		current_t1, current_t2, taus[10],state, countXAbs;
 int 		dim, dim1,dim2,count, scheduleDim, dsetDim, current_timing, dummyDim, dimMod, measuredPoints;
-
-
 # --------------------------------------------------------------------- #
 # User Input 															#		
 # --------------------------------------------------------------------- #
@@ -112,18 +110,16 @@ aqSetComment(string);
 # Put acquisition hardware into operation mode #
 aqMbcOperate(experimentPointer);
 
-# Perform a fine tuning of the microwave bridge	#
-# printLn("Performing a fine tune..."); #
-# aqMbcFineTune(experimentPointer); #
-
 # Run a first experiment on primary to create a dataset with complete #
 # descriptor on the DSC file. Otherwise manually created files do not #
 # seem to incorporate this descripors when saved. #
 print("Running dummy measurement...");
 
+# Run experiment and wait until finished #
 aqExpRunAndWait(experimentPointer);
 
 printLn(" done");
+
 # Get a copy of the primary data set and store its pointer #
 dsetP = getCopyOfPrimary;
 # Get length of current dataset #

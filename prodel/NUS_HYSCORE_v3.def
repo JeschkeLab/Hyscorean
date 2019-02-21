@@ -1,3 +1,9 @@
+;-------------------------------------------------------------
+; PulseSPEL Variable Definition for NUS HYSCORE at X/Q-band
+;		  (14-points measurement)
+;-------------------------------------------------------------
+;  		   Luis Fabregas Ibanez, 2018
+;-------------------------------------------------------------
 begin defs;     ECHOlibrary program directory General variables
 ;-------------------------------------------------------------
 ;   Definitions & Conventions
@@ -6,17 +12,7 @@ begin defs;     ECHOlibrary program directory General variables
 ;-------------------------------------------------------------
 
 p0   = 8       ; 90 pulse length
-
 p1   = 12      ; 90 soft pulse length 
-
-p2   = 32      ;
-
-p3   = 60      ;
-
-p7   = 80      ; LeCroy trigger
-
-p30  = 100     ; Trigger osciloscope
-
 pg   = 32      ; integration window       
 
 ;-------------------------------------------------------------
@@ -24,20 +20,14 @@ pg   = 32      ; integration window
 ;-------------------------------------------------------------
 
 d0   = 424     ; SDI offset time
-
-d1   = 128     ; Initial delay between the first two pulses
-
-d2   = 0       ; Initial delay between the second and third pulses
-
-d3   = 160     ; Initial delay between the third and fourth pulses
+d2   = 200       ; Initial delay between the second and third pulses
+d3   = 200     ; Initial delay between the third and fourth pulses
 
 ;-------------------------------------------------------------
 ; These are automatically updated by ProDeL(DO NOT EDIT)
 ;-------------------------------------------------------------
 
-d1   = 128     ; t1-timing of NUS schedule 
-d2   = 0       ; t2-timing of NUS schedule
-d3   = 160     ; t1-timing of NUS schedule 
+d1   = 128     ; Initial delay between the first two pulses (tau-value)
 d4   = 0       ; t2-timing of NUS schedule
 d5   = 0       ; t1-timing of NUS schedule 
 d6   = 32      ; t2-timing of NUS schedule
@@ -73,7 +63,7 @@ y    = 1       ;
 ; Others
 ;-------------------------------------------------------------
 
-srt  = 500 * srtu ; minimum shot repetition time
+srt  = 500*srtu  ; minimum shot repetition time
 
 h    = 1024       ; number of shots/loop                     ( counter: I )
 

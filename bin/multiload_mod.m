@@ -1,9 +1,19 @@
 function [FileNames,FilePaths,CancelFlag]=multiload_mod
-%Load multiple or single files through GUI and store path and filenames
-%into cell array
+%==========================================================================
+% Save Settings
+%==========================================================================
+% Load multiple or single files through GUI and store path and filenames
+% into cell array
 %
-%L. Fabregas, Hyscorean 2018
-
+% (see Hyscorean manual for further information)
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2018-2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 if nargout>3
   error('Too many output arguments');
 end
@@ -32,3 +42,4 @@ else
   FileNames{1} = fullfile(Path,Files);
 end
 end
+

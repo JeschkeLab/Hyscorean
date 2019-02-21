@@ -1,4 +1,17 @@
 function enableDisableGUI(handles,Panel,Action)
+%==========================================================================
+% HYSCORE blind spot simulator
+%==========================================================================
+% Function for enabling or disabling different groups of UI elements of
+% Hyscorean fast and in one line. 
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 switch Panel
   

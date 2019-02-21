@@ -1,4 +1,19 @@
 function MountedData = mountHYSCOREdata(FileNames,handles)
+%==========================================================================
+% Hyscorean Mounter
+%==========================================================================
+% This function takes different data file extensions and converts their
+% data into the format that will be used by Hyscorean further on. 
+%
+% (see Hyscorean manual for further information)
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2018-2019
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
 %Check extension of file to know how to mount data
 [~,~,FileExtension] = fileparts(FileNames{1});
@@ -182,28 +197,28 @@ switch FileExtension
     MountedData.TimeAxis1 = TimeAxis1;
     MountedData.TimeAxis2 = TimeAxis2;
     if NUSflag
-    MountedData.NUSgrid = NUSgrid;
-    MountedData.NUS.SamplingDensity  = SamplingDensity;
-    MountedData.NUS.Dimension1  = Dimension1;
-    MountedData.NUS.Dimension2  = Dimension2;
-
+      MountedData.NUSgrid = NUSgrid;
+      MountedData.NUS.SamplingDensity  = SamplingDensity;
+      MountedData.NUS.Dimension1  = Dimension1;
+      MountedData.NUS.Dimension2  = Dimension2;
+      
     end
     MountedData.NUSflag = NUSflag;
     MountedData.isNotIntegrated  = false;
-
-
-  %------------------------------------------------------------------------
-  % AWG Spectrometer Files
-  %------------------------------------------------------------------------
+    
+    
+    %------------------------------------------------------------------------
+    % AWG Spectrometer Files
+    %------------------------------------------------------------------------
   case '.mat'
     NFiles = length(str2double(FileNames));
     %Preallocate first time axis vector
     TimeAxis1 = zeros(NFiles,1);
     % Preprocess measurement data of first file with uwb_eval and set up data container
-    Measurement = load(FileNames{1});    
+    Measurement = load(FileNames{1});
     %Check if data is NUS and proceed
     if isfield(Measurement.hyscore,'NUS')
-        isNUS = true;
+      isNUS = true;
     else
       isNUS = false;
       MountedData.NUSflag = isNUS;
@@ -215,9 +230,9 @@ switch FileExtension
       TimeAxis2 = Measurement.hyscore.NUS.t2Timings;
       SamplingGrid = Measurement.hyscore.NUS.SamplingGrid;
     else
-    %Get timings and set up t_2 axis and zero time
-    TimeAxis2 = (Measurement.hyscore.parvars{2}.axis - Measurement.hyscore.deadtime); % adjust t_2 axis to zero time
-    TimeAxis1(1) = Measurement.hyscore.events{3}.t - Measurement.hyscore.hyscore_t1.strt(1);  % first element of t1 vector from file name
+      %Get timings and set up t_2 axis and zero time
+      TimeAxis2 = (Measurement.hyscore.parvars{2}.axis - Measurement.hyscore.deadtime); % adjust t_2 axis to zero time
+      TimeAxis1(1) = Measurement.hyscore.events{3}.t - Measurement.hyscore.hyscore_t1.strt(1);  % first element of t1 vector from file name
     end
     
     % Evaluate data from the AWG spectrometer
@@ -230,33 +245,33 @@ switch FileExtension
     %Get first tau value
     TauValues = zeros(1,NFiles);
     TauValues(1) = Measurement.hyscore.tau;
-
+    
     set(handles.ProcessingInfo, 'String','Status: Checking data...'); drawnow;
-    % Check consistency of echo dimension and get tau values 
+    % Check consistency of echo dimension and get tau values
     for iFile = 2:NFiles
       OutputUWB = uwb_eval(FileNames{iFile},options);
-      if Dimension1 > size(OutputUWB.dta_avg,1) 
-        %If a file should contain fewer points, reduce dimension 
+      if Dimension1 > size(OutputUWB.dta_avg,1)
+        %If a file should contain fewer points, reduce dimension
         Dimension1 = size(OutputUWB.dta_avg,1);
       end
-     %Get current tau value 
-     TauValues(iFile) = OutputUWB.exp.tau;
+      %Get current tau value
+      TauValues(iFile) = OutputUWB.exp.tau;
     end
     %Get unique tau values and folding factor
     UniqueTaus = unique(TauValues);
     FoldingFactor = numel(UniqueTaus);
-
+    
     OutputUWB = uwb_eval(FileNames{1},options);
     %Adjust to consistent dimensions
     OutputUWB.dta_avg = OutputUWB.dta_avg(1:Dimension1,:);
     if isNUS
-    AverageEchos = zeros(Dimension1, size(SamplingGrid,2), size(SamplingGrid,1)*FoldingFactor);
+      AverageEchos = zeros(Dimension1, size(SamplingGrid,2), size(SamplingGrid,1)*FoldingFactor);
     else
-    AverageEchos = zeros(Dimension1, Dimension2, NFiles);
+      AverageEchos = zeros(Dimension1, Dimension2, NFiles);
     end
     EchoAxis = EchoAxis(1:Dimension1);
     
-
+    
     %Set up filtering
     SamplingRateMHZ = 1/(EchoAxis(2) - EchoAxis(1))*1e3; % sampling rate from time axis
     try
@@ -276,13 +291,13 @@ switch FileExtension
     else
       FilteredEchos = OutputUWB.dta_avg;
     end
-      if isNUS
-        currentT2SamplingScheme = SamplingGrid(:,1)==1;
-        AverageEchos(:,currentT2SamplingScheme,1) = FilteredEchos;
-      else
-        AverageEchos(:,:,1) = FilteredEchos;
-      end
-
+    if isNUS
+      currentT2SamplingScheme = SamplingGrid(:,1)==1;
+      AverageEchos(:,currentT2SamplingScheme,1) = FilteredEchos;
+    else
+      AverageEchos(:,:,1) = FilteredEchos;
+    end
+    
     % Repeat for remaining files
     for iFile = 2:NFiles
       set(handles.ProcessingInfo, 'String', sprintf('Status: Mounting file %i/%i',iFile,NFiles)); drawnow;
@@ -307,12 +322,12 @@ switch FileExtension
       end
       %If not NUS then keep constructing the t1-axis
       if ~isNUS
-      TimeAxis1(iFile) = currentT1;
+        TimeAxis1(iFile) = currentT1;
       end
       %Get tau values
       TauValues(iFile) =  OutputUWB.exp.tau;   % absolute time of first echo
-    end   
-
+    end
+    
     %In case something goes wrong and NaNs are formed set them to void
     TimeAxis1(~any(~isnan(TimeAxis1), 1)) = [];
     
@@ -325,8 +340,8 @@ switch FileExtension
     DataForInegration.TimeStep2 = (DataForInegration.TimeAxis2(2) - DataForInegration.TimeAxis2(1))/1000;
     DataForInegration.isNotIntegrated  = true;
     %Debugging (to be erased)
-%     options.fignum = 123213123;surfslices(EchoAxis,TimeAxis2,TimeAxis1,AverageEchos,options)
-
+    %     options.fignum = 123213123;surfslices(EchoAxis,TimeAxis2,TimeAxis1,AverageEchos,options)
+    
     %Integrate the echos
     options.status = handles.ProcessingInfo;
     [IntegratedData] = integrateEcho(DataForInegration,'gaussian',options);
@@ -339,7 +354,7 @@ switch FileExtension
       [Dimension1,~] = size(IntegratedData.Integral);
     end
     TauSignals = zeros(FoldingFactor,Dimension1,Dimension1);
-
+    
     %Loop through all tau-values found in the data
     if isNUS
       StartPosition = 1;
@@ -347,7 +362,7 @@ switch FileExtension
       for FoldingIndex=1:FoldingFactor
         TauSignals(FoldingIndex,:,:)=IntegratedData.Integral(1:end,StartPosition:Dimension2/FoldingFactor*FoldingIndex);
         StartPosition = Dimension2/FoldingFactor*FoldingIndex + 1;
-      end    
+      end
     else
       for Index = 1:FoldingFactor
         %Get all integrals corresponding to current tau-value
@@ -374,15 +389,15 @@ switch FileExtension
     MountedData.TimeAxis2 = TimeAxis2;
     MountedData.NUSflag = isNUS;
     if MountedData.NUSflag
-    MountedData.NUSgrid = AWG_Parameters.NUS.SamplingGrid;
-    MountedData.NUS = AWG_Parameters.NUS;
+      MountedData.NUSgrid = AWG_Parameters.NUS.SamplingGrid;
+      MountedData.NUS = AWG_Parameters.NUS;
     end
-
+    
     %------------------------------------------------------------------------
     % ASCII format
     %------------------------------------------------------------------------
-    case '.txt'
-        
+  case '.txt'
+    
     %Load data from ASCII file
     Measurement = dlmread(FileNames{1});
     t1Timings = Measurement(:,1);
@@ -390,7 +405,7 @@ switch FileExtension
     RealPart = Measurement(:,3);
     ImagPart = Measurement(:,4);
     Taus = Measurement(:,5);
-
+    
     %Get tau values
     TauValues = unique(Taus);
     
@@ -401,7 +416,7 @@ switch FileExtension
     %Round time intervals to 1 ns resolution
     DwellTimes1 = round(diff(t1Unique));
     DwellTimes2 = round(diff(t2Unique));
-
+    
     %Get effective dwell time for each  dimension
     DwellTime1 = min(DwellTimes1);
     DwellTime2 = min(DwellTimes2);
@@ -419,8 +434,8 @@ switch FileExtension
     if UniformCheck1 + UniformCheck2 == 0
       NUSflag = false;
     else
-      NUSflag = true; 
-    end   
+      NUSflag = true;
+    end
     
     if NUSflag
       %Construct NUS grid from timings
@@ -440,25 +455,23 @@ switch FileExtension
     TimeAxis1 = 0:TimeStep1:MaximalTiming1/1000;
     TimeAxis2 = 0:TimeStep2:MaximalTiming1/1000;
     
-    
     %Construct the signal matrix from the t1 and t2 timings
     FoldingFactor = length(TauValues);
     
-     TauSignals = zeros(FoldingFactor,Dimension1,Dimension2);
+    TauSignals = zeros(FoldingFactor,Dimension1,Dimension2);
     for j=1:FoldingFactor
-    for i=1:length(t1Timings)/FoldingFactor
-      Position = i + length(t1Timings)/FoldingFactor*(j - 1);
+      for i=1:length(t1Timings)/FoldingFactor
+        Position = i + length(t1Timings)/FoldingFactor*(j - 1);
         t1Pos = 1 + (t1Timings(Position) - mod(t1Timings(Position),DwellTime1))/DwellTime1;
         t2Pos = 1 + (t2Timings(Position) - mod(t2Timings(Position),DwellTime2))/DwellTime2;
         TauSignals(j,t1Pos,t2Pos) = RealPart(Position) + 1i*ImagPart(Position);
-    end
+      end
     end
     TauSignals = TauSignals(:,1:Dimension1,1:Dimension2);
     
     %Construct output structure
     MountedData.TauSignals = TauSignals;
     MountedData.TauValues = TauValues;
-%     MountedData.BrukerParameters = BrukerParameters;
     MountedData.TimeStep1 = TimeStep1;
     MountedData.TimeStep2 = TimeStep2;
     MountedData.TimeAxis1 = TimeAxis1;
@@ -466,9 +479,9 @@ switch FileExtension
     MountedData.NUSgrid = NUSgrid;
     MountedData.NUSflag = NUSflag;
     MountedData.isNotIntegrated  = false;
-        
+    
   otherwise
-   error('Unvalid extension: Please check your loaded files. Allowed extensions: .DSC .DTA .mat .txt') 
+    error('Unvalid extension: Please check your loaded files. Allowed extensions: .DSC .DTA .mat .txt')
 end
 
 
