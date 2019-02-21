@@ -18,7 +18,6 @@ function varargout = Hyscorean_validationModule(varargin)
 % the Free Software Foundation.
 %==========================================================================
 
-%------------------------------------------------------------------------------
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
@@ -35,8 +34,6 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
-%------------------------------------------------------------------------------
-%------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 % --- Executes just before Hyscorean_validationModule is made visible.
@@ -47,13 +44,13 @@ handles.output = hObject;
 handles.RawData = varargin{1};
 handles.Defaults = varargin{2};
 
-%Prepare the sampling density slider 
+%Prepare the sampling density slider
 if isfield(handles.RawData,'NUS')
-handles.RawData.NUS.SamplingDensity = length(find(handles.RawData.NUSgrid ==1))/(handles.RawData.NUS.Dimension1*handles.RawData.NUS.Dimension2);
-Npoints  = length(1:0.1:100*handles.RawData.NUS.SamplingDensity );
-set(handles.SamplingDensity_Slider,'Min', 1, 'Max',100*handles.RawData.NUS.SamplingDensity  , 'SliderStep', [1/(Npoints - 1) 5/(Npoints - 1)], 'Value', 100*handles.RawData.NUS.SamplingDensity )
-String = sprintf('%.1f%%',100*handles.RawData.NUS.SamplingDensity );
-set(handles.SliderText,'string',String);
+  handles.RawData.NUS.SamplingDensity = length(find(handles.RawData.NUSgrid ==1))/(handles.RawData.NUS.Dimension1*handles.RawData.NUS.Dimension2);
+  Npoints  = length(1:0.1:100*handles.RawData.NUS.SamplingDensity );
+  set(handles.SamplingDensity_Slider,'Min', 1, 'Max',100*handles.RawData.NUS.SamplingDensity  , 'SliderStep', [1/(Npoints - 1) 5/(Npoints - 1)], 'Value', 100*handles.RawData.NUS.SamplingDensity )
+  String = sprintf('%.1f%%',100*handles.RawData.NUS.SamplingDensity );
+  set(handles.SliderText,'string',String);
 end
 
 %Check if data is NUS and activate proper UI elements
@@ -1057,9 +1054,21 @@ end
 ValidationParameters.SamplingDensity_Vector = unique(SamplingDensities);
 ValidationResults.Uncertainty = Uncertainty;
 ValidationResults.LowerBound = MeanReconstruction - 2*Uncertainty;
+ValidationResults.MeanSpectrum = MeanReconstruction;
 ValidationResults.UpperBound = MeanReconstruction + 2*Uncertainty;
-ValidationResults.ReconstructedSpectra = handles.ReconstructedSpectra;
+ValidationResults.ValidationSpectra = handles.ReconstructedSpectra;
 ValidationResults.ValidationParameters = ValidationParameters;
+%Construct frequency axis
+Dimension1 = size(CurrentSpectrum,1);
+Dimension2 = size(CurrentSpectrum,2);
+TimeAxis1 = handles.RawData.TimeAxis1;
+TimeAxis2 = handles.RawData.TimeAxis2;
+TimeStep1 = TimeAxis1(end)/(1/2*Dimension1);
+TimeStep2 = TimeAxis2(end)/(1/2*Dimension2);
+FrequencyAxis1 = linspace(-1/(2*TimeStep1),1/(2*TimeStep1),Dimension1);
+FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),Dimension2);
+ValidationResults.FrequencyAxis1 = FrequencyAxis1;
+ValidationResults.FrequencyAxis2 = FrequencyAxis2;
 
 %Format savename until it is different from the rest in the folder
 SaveName = sprintf('%s_%s_ValidationData.mat',Date,Identifier);
@@ -1154,9 +1163,9 @@ if getpref('hyscorean','reportlicense')
   ReportData.UpperBound = ValidationResults.UpperBound;
   ReportData.UpdateValidationPlotHandle = @updateValidationPlots;
   %Use the same formatting in name as before to avoid filename clash
-  ReportName = sprintf('%s_%s_report',Date,Identifier);
+  ReportName = sprintf('%s_%s_ValidationReport',Date,Identifier);
   if CrashFlag
-    ReportName = sprintf('%s_%s_report_%i',Date,Identifier,CopyIndex);
+    ReportName = sprintf('%s_%s_ValidationReport_%i',Date,Identifier,CopyIndex);
   end
   ReportData.SaveName = ReportName;
   ReportData.SavePath = FullPath;
