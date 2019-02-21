@@ -1,57 +1,45 @@
 function [Selections,Combinations] = getTauCombinations(TauValues)
+%==========================================================================
+% Tau-combinations
+%==========================================================================
+% This function generates all possible combination of tau-values given by
+% the experimental data loaded into Hyscorean.
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
-nn = 1;
-Combinations = zeros(1,length(TauValues));
+%Initialize cell array counter
+Counter = 1;
 
-%1-tau combinations
-for i=1:length(TauValues)
-  Selections{nn} = sprintf('Tau %i ns',TauValues(i));
-  Combinations(nn,1) = i;
-  nn = nn + 1;
-end
-
-if length(TauValues)>1
-%2-tau combinations
-for i=1:length(TauValues)
-  for j=i:length(TauValues)
-    if i~=j
-      Selections{nn} = sprintf('Tau [ %i | %i ] ns',TauValues(i),TauValues(j));
-      Combinations(nn,1:2) = [i,j];
-      nn = nn + 1;
-    end
-  end
-end
-end
-
-if length(TauValues)>2
-%3-tau combinations
-for i=1:length(TauValues)
-  for j=i:length(TauValues)
-    for k=j:length(TauValues)
-      if i~=j && i~=k && j~=k
-        Selections{nn} = sprintf('Tau [ %i | %i | %i ] ns',TauValues(i),TauValues(j),TauValues(k));
-        Combinations(nn,1:3) = [i,j,k];
-        nn = nn + 1;
-      end
-    end
-  end
-end
-end
-
-
-if length(TauValues)>3
-  %3-tau combinations
-  for i=1:length(TauValues)
-    for j=1:length(TauValues)
-      for k=1:length(TauValues)
-        for l=1:length(TauValues)
-          if i~=j && i~=k && j~=k && i~=l && j~=l && k~=l
-            Selections{nn} = sprintf('Tau [ %i | %i | %i | %i ] ns',TauValues(i),TauValues(j),TauValues(k),TauValues(l));
-            Combinations(nn,1:4) = [i,j,k,l];
-            nn = nn + 1;
-          end
+%Take increasingly more tau values for combinations
+for TauValuesTaken = 1:length(TauValues)
+  %Get all possible combinations for the tau values taken
+  Combinations = combnk(TauValues,TauValuesTaken);
+  %Get the number of combinations found
+  NCombinations = size(Combinations,1);
+  %Construct formated strings with combinations 
+  for j = 1:NCombinations
+    if TauValuesTaken == 1
+      CurrentCombination = Combinations(j,:);
+      String = sprintf('Tau %i ns',CurrentCombination);
+    else
+      CurrentCombination = Combinations(j,:);
+      String = sprintf('Tau [ %i |',CurrentCombination(1));
+      if TauValuesTaken>2
+        for k = 2:TauValuesTaken-1
+          String = sprintf('%s %i |',String,CurrentCombination(k));
         end
       end
+      String = sprintf('%s %i ] ns',String,CurrentCombination(end));
     end
+    Selections{Counter} = String;
+    Counter = Counter+1;
   end
 end
+
+return
