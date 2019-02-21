@@ -15,20 +15,22 @@ function [Selections,Combinations] = getTauCombinations(TauValues)
 
 %Initialize cell array counter
 Counter = 1;
-
+Combinations = zeros(1,length(TauValues));
+Selections = cell(1);
 %Take increasingly more tau values for combinations
 for TauValuesTaken = 1:length(TauValues)
   %Get all possible combinations for the tau values taken
-  Combinations = combnk(TauValues,TauValuesTaken);
+  FoundCombinations = combnk(TauValues,TauValuesTaken);
+  IndexCombinations = combnk(1:length(TauValues),TauValuesTaken);
   %Get the number of combinations found
-  NCombinations = size(Combinations,1);
+  NCombinations = size(FoundCombinations,1);
   %Construct formated strings with combinations 
   for j = 1:NCombinations
+    CurrentIndexCombination = IndexCombinations(j,:);
+    CurrentCombination = FoundCombinations(j,:);
     if TauValuesTaken == 1
-      CurrentCombination = Combinations(j,:);
       String = sprintf('Tau %i ns',CurrentCombination);
     else
-      CurrentCombination = Combinations(j,:);
       String = sprintf('Tau [ %i |',CurrentCombination(1));
       if TauValuesTaken>2
         for k = 2:TauValuesTaken-1
@@ -38,6 +40,7 @@ for TauValuesTaken = 1:length(TauValues)
       String = sprintf('%s %i ] ns',String,CurrentCombination(end));
     end
     Selections{Counter} = String;
+    Combinations(Counter,1:TauValuesTaken) = CurrentIndexCombination;
     Counter = Counter+1;
   end
 end
