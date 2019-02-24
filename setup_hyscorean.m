@@ -246,13 +246,13 @@ clearvars
 %Callbacks for License Agreement GUI
 %==========================================================================
 
-function AgreeCallback(Object)
+function AgreeCallback(Object, ~)
 
 assignin('base','LicenseAgreed',1)
 close(Object.Parent)
 end
 
-function DisagreeCallback(Object)
+function DisagreeCallback(Object, ~)
 
 assignin('base','LicenseAgreed',0)
 close(Object.Parent)
