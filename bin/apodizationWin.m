@@ -56,11 +56,11 @@ end
 
 %Do apodization along the second dimension if exists
 if size2>1
-  Window = getWindow(WindowType,round(WindowDecay2))';
+  Window = getWindow(WindowType,round(WindowDecay2));
   if length(Window)>=size2
     TruncatedWindow=Window(1:size2);
   else
-    TruncatedWindow=[Window' zeros(1,size2-WindowDecay2)]';
+    TruncatedWindow=[Window zeros(1,size2-WindowDecay2)]';
   end
   for k=1:size1
     Signal(k,:)=TruncatedWindow'.*Signal(k,:);
@@ -143,6 +143,10 @@ Axis = linspace(0,1,Length)';
 TaperPeriod = TaperRatio/2;
 %Get when the constant region starts/ends
 CosntantStarts = floor(TaperPeriod*(Length - 1)) + 1;
+%Set this for the Hahn window
+if CosntantStarts>Length/2
+  CosntantStarts = Length/2;
+end
 ConstantEnds = Length - CosntantStarts + 1;
 %Tukey window is defined in three sections: taper, constant, taper
 Window = [ ((1+cos(pi/TaperPeriod*(Axis(1:CosntantStarts) - TaperPeriod)))/2);  ones(ConstantEnds-CosntantStarts-1,1); ((1+cos(pi/TaperPeriod*(Axis(ConstantEnds:end) - 1 + TaperPeriod)))/2)];
