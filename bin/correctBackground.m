@@ -69,21 +69,24 @@ if ~isfield(Data,'Integral')
   error('Field Integral is not provided in the Data structure')
 end
 %Set defaults for 1st background correction when not provided
+if ~isfield(options,'InvertCorrection')
+  options.InvertCorrection = false;
+end
 if ~isfield(options,'BackgroundMethod1')
-  options.BackgroundMethod1 = 3;
+  options.BackgroundMethod1 = 2;
 end
 if ~isfield(options,'BackgroundFractalDimension1')
-  options.BackgroundMethod1 = 1;
+  options.BackgroundFractalDimension1 = 1;
 end
 if ~isfield(options,'BackgroundPolynomOrder1')
-  options.BackgroundPolynomOrder2 = 1;
+  options.BackgroundPolynomOrder1 = 1;
 end
 %Set defaults for 2nd background correction when not provided
 if ~isfield(options,'BackgroundMethod2')
-  options.BackgroundMethod1 = 3;
+  options.BackgroundMethod2 = 2;
 end
 if ~isfield(options,'BackgroundFractalDimension2')
-  options.BackgroundMethod1 = 1;
+  options.BackgroundFractalDimension2 = 1;
 end
 if ~isfield(options,'BackgroundPolynomOrder2')
   options.BackgroundPolynomOrder2 = 1;
@@ -160,8 +163,11 @@ else
     % 1st Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod1;
-    Parameters.homdim = options.BackgroundFractalDimension1;
-    Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+     if Parameters.BackgroundModel ~= 2
+      Parameters.homdim = options.BackgroundFractalDimension1;
+    else
+      Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+    end
     StartIndex1 = options.BackgroundStart1;
     Parameters.start = StartIndex1;
     %If complex then fit real/imaginary separately
@@ -183,8 +189,11 @@ else
     % 2nd Background correction
     Parameters.Dimension = 1;
     Parameters.BackgroundModel = options.BackgroundMethod2;
-    Parameters.homdim = options.BackgroundFractalDimension2;
-    Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+    if Parameters.BackgroundModel ~= 2
+      Parameters.homdim = options.BackgroundFractalDimension2;
+    else
+      Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+    end
     if options.AutomaticBackgroundStart
       [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(RawSignal,2),Parameters);
     else
@@ -213,8 +222,11 @@ else
     % 1st Background correction
     Parameters.Dimension = 1;
     Parameters.BackgroundModel = options.BackgroundMethod1;
-    Parameters.homdim = options.BackgroundFractalDimension1;
-    Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+    if Parameters.BackgroundModel ~= 2
+      Parameters.homdim = options.BackgroundFractalDimension1;
+    else
+      Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+    end
     if options.AutomaticBackgroundStart
       [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(RawSignal,2),Parameters);
     else
@@ -238,8 +250,11 @@ else
     % 2nd Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod2;
-    Parameters.homdim = options.BackgroundFractalDimension2;
-    Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+    if Parameters.BackgroundModel ~= 2
+      Parameters.homdim = options.BackgroundFractalDimension2;
+    else
+      Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+    end
     if options.AutomaticBackgroundStart
       [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(RawSignal,1),Parameters);
     else
