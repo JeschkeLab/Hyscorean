@@ -291,7 +291,7 @@ if getpref('hyscorean','reportlicense')
     reportdata.BackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
     reportdata.LagrangeMultiplier = str2double(get(handles.MaxEntLagrangianMultiplier,'string'));
     reportdata.ReconstructionFunctional = handles.Data.ReconstructionConvergence;
-    SampledPoints = length(find(reportdata.NUSgrid==1));
+    SampledPoints = length(find(reportdata.Data.NUSgrid==1));
     FullSampling = reportdata.XDimension*reportdata.YDimension;
     reportdata.SamplingDensity = sprintf('%.2f%%',round(100*SampledPoints/FullSampling,2));
   end
