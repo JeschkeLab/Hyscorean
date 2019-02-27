@@ -50,8 +50,14 @@ end
 %Total number of paramter combinations to evaluate
 TotalTrials = Length1*Length2*Length3*Length4*Length5*Length6*Length7*Length8*Length9;
 
+%If symmetrization is gonna be requested then enforce square matrix dimensions
+if ~strcmp(Defaults.SymmetrizationString,'None')
+  Defaults.ZeroFilling1 = max( Defaults.ZeroFilling2, Defaults.ZeroFilling1);
+  Defaults.ZeroFilling2 = max( Defaults.ZeroFilling2, Defaults.ZeroFilling1);
+end
+
 %Pre-allocate the matrix containing all validation spectra
-ReconstructedSpectra = zeros(Dimension1 + Defaults.ZeroFilling1,Dimension2 + Defaults.ZeroFilling2,TotalTrials);
+ReconstructedSpectra = zeros(max(Dimension2,Dimension1) + Defaults.ZeroFilling1,max(Dimension2,Dimension1) + Defaults.ZeroFilling2,TotalTrials);
 %Pre-allocate structure array for parameter sets
 ParameterSets = repmat(struct(), TotalTrials, 1 );
 
@@ -113,7 +119,7 @@ for Index6 = 1:Length6
                   end
                   
                   %Set background correction input paratmers
-                  Data.Integral = CorrectedSignal;
+                  Data.Integral = CorrectedSignal';
                   Data.TimeAxis2 = TimeAxis1';
                   Data.TimeAxis1 = TimeAxis2';
                   %Set background correction options
@@ -195,7 +201,7 @@ for Index6 = 1:Length6
                   %Get Hoch-Hore Entropy and RMSD of current resconstruction
                   if RawData.NUSflag
                     PointsSampled = length(find(NUSgrid > 0));
-                    ParameterSets(TrialsCompleted+1).RMSD = norm(NUSgrid.*CorrectedSignal - NUSgrid.*ReconstructedSignal)/sqrt(PointsSampled);
+                    ParameterSets(TrialsCompleted+1).RMSD = norm(NUSgrid.*CorrectedSignal - NUSgrid.*ReconstructedSignal(1:Dimension1,1:Dimension2))/sqrt(PointsSampled);
                     ParameterSets(TrialsCompleted+1).Entropy = camera_functional(fft2(ReconstructedSignal),BackgroundParameter);
                   else
                     ParameterSets(TrialsCompleted+1).RMSD = NaN;
@@ -216,8 +222,9 @@ for Index6 = 1:Length6
                   %Use same apodization window as experimental data
                   ReconstructedSignal =  apodizationWin(ReconstructedSignal,Defaults.WindowType,Defaults.WindowDecay1,Defaults.WindowDecay2);
                   
+                
                   %Compute spectrum for current parameter set
-                  Reconstruction = abs(fftshift(fft2(ReconstructedSignal,Dimension1 + Defaults.ZeroFilling1,Dimension2 + Defaults.ZeroFilling2)));
+                  Reconstruction = abs(fftshift(fft2(ReconstructedSignal,size(ReconstructedSignal,1) + Defaults.ZeroFilling1,size(ReconstructedSignal,2) + Defaults.ZeroFilling2)));
                   
                   % if done for experimental data, then symmetrize
                   switch Defaults.SymmetrizationString
