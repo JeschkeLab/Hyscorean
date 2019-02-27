@@ -218,6 +218,17 @@ end
 % Zero-Filling
 %==========================================================================
 
+%If symmetrization is requested later, then enforce a square matrix
+if ~strcmp(handles.SymmetrizationString,'None')
+  %Use the largest zero-filling requested
+  ZeroFilling1 = max(ZeroFilling1,ZeroFilling2);
+  ZeroFilling2 = max(ZeroFilling1,ZeroFilling2);
+  %Update this change in the GUI so that user knows
+  set(handles.ZeroFilling1, 'String',ZeroFilling1 );
+  set(handles.ZeroFilling2, 'String',ZeroFilling2 );
+  drawnow;
+end
+
 %Zero-Filling of signal
 [Dimension1,Dimension2] = size(Data.ReconstructedSignal);
 Processed.Signal = zeros(Dimension1 + ZeroFilling1, Dimension2 + ZeroFilling2);
