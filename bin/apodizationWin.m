@@ -60,10 +60,10 @@ if size2>1
   if length(Window)>=size2
     TruncatedWindow=Window(1:size2);
   else
-    TruncatedWindow=[Window zeros(1,size2-WindowDecay2)]';
+    TruncatedWindow=[Window zeros(1,size2-WindowDecay2)];
   end
   for k=1:size1
-    Signal(k,:)=TruncatedWindow'.*Signal(k,:);
+    Signal(k,:)=TruncatedWindow.*Signal(k,:);
   end 
   Window2 = Window';  
 else
