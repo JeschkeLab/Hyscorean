@@ -97,15 +97,18 @@ switch FileExtension
         NUSgrid(Pos1(i),Pos2(i)) = 1;
       end
       SamplingDensity = length(find(NUSgrid==1))/numel(NUSgrid);
-      %Get tau-values for this measurement
-      CommentVar = BrukerParameters.CMNT;
-      TauDefinition = CommentVar(findstr(CommentVar,'Tau values:'):end);
-      StrPos = findstr(TauDefinition,'|');
-      TauValues = zeros(length(StrPos)-1,1);
-      for i=1:length(StrPos)-1
-        TauValues(i)  = str2double(TauDefinition(StrPos(i)+1:StrPos(i+1)-1));
+        %Get tau-values for this measurement
+        CommentVar = BrukerParameters.CMNT;
+        TauDefinition = CommentVar(findstr(CommentVar,'Tau values:'):end);
+        StrPos = findstr(TauDefinition,'|');
+        TauValues = zeros(length(StrPos)-1,1);
+        for i=1:length(StrPos)-1
+          TauValues(i)  = str2double(TauDefinition(StrPos(i)+1:StrPos(i+1)-1));
+        end
+      if isempty(TauValues)
+        TauValues = inputdlg('Tau-values could not be extracted. Input:');
+        TauValues = str2double(TauValues{1});
       end
-      
       %Construct 2D unfolded signals
       FoldingFactor = length(TauValues);
       TauSignals = nan(FoldingFactor,Dimension1,Dimension2);
@@ -153,6 +156,7 @@ switch FileExtension
         TauSignals(1,:,:) = ExtractedData;
       end
       
+      try
       %Extract the PulseSpel code for the experiment
       PulseSpelProgram = BrukerParameters.PlsSPELPrgTxt;
       %Identify the tau definition lines
@@ -168,25 +172,29 @@ switch FileExtension
       end
       TimeAxis1 = linspace(0,TimeStep1*size(TauSignals,2),size(TauSignals,2));
       TimeAxis2 = linspace(0,TimeStep2*size(TauSignals,2),size(TauSignals,2));
-      if ~exist('TauValues')
-        
-        PulseSpelVariables = BrukerParameters.PlsSPELGlbTxt;
-        %Identify the tau definition lines
-        TauDefinitionIndexes = strfind(PulseSpelVariables,'d1 ');
-        %Extract the tau-values
-        for i=1:length(TauDefinitionIndexes)
-          Shift = 7;
-          while ~isspace(PulseSpelVariables(TauDefinitionIndexes(i) + Shift))
-            TauString(Shift - 2) =  PulseSpelVariables(TauDefinitionIndexes(i) + Shift);
-            Shift = Shift + 1;
+
+        if ~exist('TauValues')
+          
+          PulseSpelVariables = BrukerParameters.PlsSPELGlbTxt;
+          %Identify the tau definition lines
+          TauDefinitionIndexes = strfind(PulseSpelVariables,'d1 ');
+          %Extract the tau-values
+          for i=1:length(TauDefinitionIndexes)
+            Shift = 7;
+            while ~isspace(PulseSpelVariables(TauDefinitionIndexes(i) + Shift))
+              TauString(Shift - 2) =  PulseSpelVariables(TauDefinitionIndexes(i) + Shift);
+              Shift = Shift + 1;
+            end
+            TauValues(i)  = str2double(TauString);
           end
-          TauValues(i)  = str2double(TauString);
         end
-        TimeAxis1 = linspace(0,TimeStep1*size(TauSignals,2),size(TauSignals,2));
-        TimeAxis2 = linspace(0,TimeStep2*size(TauSignals,2),size(TauSignals,2));
-      end
-      
+      catch
+        TauValues = inputdlg('Tau-values could not be extracted. Input:');
+        TauValues = str2double(TauValues{1});      end
     end
+    
+    TimeAxis1 = linspace(0,TimeStep1*size(TauSignals,2),size(TauSignals,2));
+    TimeAxis2 = linspace(0,TimeStep2*size(TauSignals,2),size(TauSignals,2));
     
     %Construct output structure
     MountedData.TauSignals = TauSignals;

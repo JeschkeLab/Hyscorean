@@ -1010,7 +1010,6 @@ return
 
 %==========================================================================
 function WindowType_CreateFcn(hObject, eventdata, handles)
-
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1032,6 +1031,10 @@ function EasyspinFitButton_Callback(hObject, eventdata, handles)
 Exp.Sequence = 'HYSCORE';
 if isfield(handles.Data,'BrukerParameters')
   BrukerParameters = handles.Data.BrukerParameters;
+  if ~isfield(BrukerParameters,'PlsSPELGlbTxt')
+    errordlg('Descriptor file is incomplete or corrupted. Cannot initialize the fitting module.','Desciptor fields missing','modal');
+    return
+  end
   %Extract pulse lengths
   PulseSpelText = BrukerParameters.PlsSPELGlbTxt;
   Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
