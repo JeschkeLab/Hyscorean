@@ -620,8 +620,8 @@ Dimension2 = size(MeanReconstruction,2);
 
 TimeAxis1 = handles.RawData.TimeAxis1;
 TimeAxis2 = handles.RawData.TimeAxis2;
-TimeStep1 = TimeAxis1(2) - TimeAxis1(1);
-TimeStep2 = TimeAxis2(2) - TimeAxis2(1);
+TimeStep1 = TimeAxis1(end)/length(TimeAxis1);
+TimeStep2 = TimeAxis2(end)/length(TimeAxis2);
 
 %Construct frequency axis
 FrequencyAxis1 = linspace(-1/(2*TimeStep1),1/(2*TimeStep1),Dimension1);
@@ -672,7 +672,7 @@ switch handles.DisplayRadioStatus
     Display = UpperBound;
     colormap(handles.ValidationMainPlot,CustomColormap)
   case 'uncertainty'
-    Display = Uncertainty;
+    Display = 2*Uncertainty;
 end
 %Display it as a colormap 
 h = pcolor(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display);
@@ -684,20 +684,24 @@ colormap(handles.ValidationMainPlot,CustomColormap)
 grid(handles.ValidationMainPlot,'on')
 shading(handles.ValidationMainPlot,'interp')
 caxis(handles.ValidationMainPlot,[Defaults.MinimalContourLevel/100 Defaults.MaximalContourLevel/100])
+% caxis(handles.ValidationMainPlot,[min(min(Display)) max(max(Display))])
+
 hold(handles.ValidationMainPlot,'off')
 
 %Clear the upper inset
 cla(handles.ValidationInset1)
 
+QuadrantCutoff = round(length(FrequencyAxis1)/2);
+
 %Get projection of mean spectrum
-MeanInset = max(MeanReconstruction(Dimension1:end,:));
+MeanInset = max(MeanReconstruction(:,QuadrantCutoff:end),[],2)';
 plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
 hold(handles.ValidationInset1,'on')
 %Get projection of validation result
 switch handles.DisplayRadioStatus
   case 'uncertainty'
-    Upper = MeanReconstruction(Dimension1:end,:) + Uncertainty(Dimension1:end,:);
-    Lower = MeanReconstruction(Dimension1:end,:) - Uncertainty(Dimension1:end,:);
+    Upper = MeanReconstruction(QuadrantCutoff:end,:) + 2*Uncertainty(QuadrantCutoff:end,:);
+    Lower = MeanReconstruction(QuadrantCutoff:end,:) - 2*Uncertainty(QuadrantCutoff:end,:);
     LowerInset =  max(Lower/max(max(Lower)));
     UpperInset =  max(Upper/max(max(Upper)));
     a1 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ LowerInset  fliplr(MeanInset) ], 'r','LineStyle','none');
@@ -705,11 +709,11 @@ switch handles.DisplayRadioStatus
     a1.FaceAlpha = 0.5;
     a2.FaceAlpha = 0.5;
   case 'upper'
-    Upper = UpperBound(Dimension1:end,:);
+    Upper = UpperBound(QuadrantCutoff:end,:);
     UpperInset =  max(Upper/max(max(Upper)));
     plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,'r','LineWidth',1.5)
   case 'lower'
-    Lower = LowerBound(Dimension1:end,:);
+    Lower = LowerBound(QuadrantCutoff:end,:);
     LowerInset =  max(Lower/max(max(Lower)));
     plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,'r','LineWidth',1.5)
 end
@@ -820,38 +824,40 @@ set(handles.ValidationStatus,'string','Rendering'),drawnow;
 CurrentParameterSet = str2double(get(handles.SetParameterSet_Button,'string'));
 ValidationSpectra = handles.ReconstructedSpectra;
 CurrentSpectrum =  ValidationSpectra(:,:,CurrentParameterSet);
-
+Defaults = handles.Defaults;
 
 %Construct frequency axis
 Dimension1 = size(CurrentSpectrum,1);
 Dimension2 = size(CurrentSpectrum,2);
 TimeAxis1 = handles.RawData.TimeAxis1;
 TimeAxis2 = handles.RawData.TimeAxis2;
-TimeStep1 = TimeAxis1(end)/(1/2*Dimension1);
-TimeStep2 = TimeAxis2(end)/(1/2*Dimension2);
+TimeStep1 = TimeAxis1(end)/length(TimeAxis1);
+TimeStep2 = TimeAxis2(end)/length(TimeAxis2);
 FrequencyAxis1 = linspace(-1/(2*TimeStep1),1/(2*TimeStep1),Dimension1);
 FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),Dimension2);
 
 %Set the main display
 cla(handles.ValidationMainPlot)
 contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((CurrentSpectrum)),80,'LineWidth',1)
-set(handles.ValidationMainPlot,'YLim',[0 20],'XLim',[-20 20])
+set(handles.ValidationMainPlot,'YLim',[0 Defaults.XUpperLimit],'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
 grid(handles.ValidationMainPlot,'on')
 xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
 colormap(handles.ValidationMainPlot,'parula')
+ticks = xticks(handles.ValidationMainPlot);
+set(handles.ValidationMainPlot,'ytick',ticks)
 
 %Set the upper inset
 cla(handles.ValidationInset1)
-MeanInset = max(CurrentSpectrum(Dimension1:end,:));
+MeanInset = max(CurrentSpectrum(:,round(Dimension1/2):end),[],2);
 plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
-set(handles.ValidationInset1,'XLim',[-20 20])
+set(handles.ValidationInset1,'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
 set(handles.ValidationInset1,'XTick',[],'YTick',[])
 
 %Set the side inset
 cla(handles.ValidationInset2)
 MeanInset = max(CurrentSpectrum);
 plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
-set(handles.ValidationInset2,'YLim',[0 20])
+set(handles.ValidationInset2,'YLim',[0 Defaults.XUpperLimit])
 set(handles.ValidationInset2,'XTick',[],'YTick',[])
 
 %Inform user that graphics are rendered
@@ -1059,8 +1065,8 @@ ValidationResults.UpperBound = MeanReconstruction + 2*Uncertainty;
 ValidationResults.ValidationSpectra = handles.ReconstructedSpectra;
 ValidationResults.ValidationParameters = ValidationParameters;
 %Construct frequency axis
-Dimension1 = size(CurrentSpectrum,1);
-Dimension2 = size(CurrentSpectrum,2);
+Dimension1 = size(MeanReconstruction,1);
+Dimension2 = size(MeanReconstruction,2);
 TimeAxis1 = handles.RawData.TimeAxis1;
 TimeAxis2 = handles.RawData.TimeAxis2;
 TimeStep1 = TimeAxis1(end)/(1/2*Dimension1);
