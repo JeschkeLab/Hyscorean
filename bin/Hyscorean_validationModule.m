@@ -58,8 +58,16 @@ if handles.RawData.NUSflag
   switch handles.Defaults.ReconstructionMethod
     case {'ists','istd'}
       set(handles.ThresholdParameter_Check,'enable','on')
+      set(handles.LagrangeMultiplier_Check,'enable','off')
+      set(handles.BackgroundParameter_Check,'enable','off')
+    case {'ffmgd','ffmcg'}
+      set(handles.ThresholdParameter_Check,'enable','off')
+      set(handles.LagrangeMultiplier_Check,'enable','off')
+      set(handles.BackgroundParameter_Check,'enable','on')
     otherwise
       set(handles.ThresholdParameter_Check,'enable','off')
+      set(handles.LagrangeMultiplier_Check,'enable','oon')
+      set(handles.BackgroundParameter_Check,'enable','oon')
   end
 else
   set(handles.NoiseLevel_Check,'enable','off')
@@ -133,7 +141,7 @@ else
     enableDisable_Edits('BackgroundStart1','off',handles)
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
-
+guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
 
@@ -149,7 +157,6 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
@@ -165,7 +172,6 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
@@ -181,7 +187,6 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
@@ -197,7 +202,6 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
@@ -213,7 +217,6 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
@@ -229,7 +232,6 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
@@ -249,13 +251,11 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function NoiseLevel_Check_Callback(hObject, eventdata, handles)
-
 if get(hObject,'value')
   handles.NumberTrialsVector(9) = str2double(get(handles.NoiseLevel_Trials,'string'));
   enableDisable_Edits('NoiseLevel','on',handles)
@@ -265,7 +265,6 @@ else
 end
 set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
-
 return
 %------------------------------------------------------------------------------
 
@@ -280,44 +279,48 @@ return
 function BackgroundStart1_Trials_Callback(hObject, eventdata, handles)
 handles.NumberTrialsVector(1) = floor(str2double(get(hObject,'string')));
 IntegerTrials = floor(handles.NumberTrialsVector(1));
-set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 set(hObject,'string',IntegerTrials);
 MaxValue = str2double(get(handles.BackgroundStart1_Max,'string'));
 MinValue = str2double(get(handles.BackgroundStart1_Min,'string'));
 PossibleIntegers = length(MinValue:1:MaxValue);
 if IntegerTrials>PossibleIntegers
-set(hObject,'string',PossibleIntegers);
+  handles.NumberTrialsVector(1) = PossibleIntegers;
+  set(hObject,'string',PossibleIntegers);
 end
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
+
 guidata(hObject, handles);
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function BackgroundDimension1_Trials_Callback(hObject, eventdata, handles)
 handles.NumberTrialsVector(2) = floor(str2double(get(hObject,'string')));
-set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 IntegerTrials = floor(handles.NumberTrialsVector(2));
 set(hObject,'string',IntegerTrials);
 MaxValue = str2double(get(handles.BackgroundDimension1_Max,'string'));
 MinValue = str2double(get(handles.BackgroundDimension1_Min,'string'));
 PossibleIntegers = length(MinValue:1:MaxValue);
 if IntegerTrials>PossibleIntegers
-set(hObject,'string',PossibleIntegers);
+  handles.NumberTrialsVector(2) = PossibleIntegers;
+  set(hObject,'string',PossibleIntegers);
 end
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
 %------------------------------------------------------------------------------
 
 %------------------------------------------------------------------------------
 function BackgroundStart2_Trials_Callback(hObject, eventdata, handles)
 handles.NumberTrialsVector(3) = floor(str2double(get(hObject,'string')));
-set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 IntegerTrials = floor(handles.NumberTrialsVector(3));
 set(hObject,'string',IntegerTrials);
 MaxValue = str2double(get(handles.BackgroundStart2_Max,'string'));
 MinValue = str2double(get(handles.BackgroundStart2_Min,'string'));
 PossibleIntegers = length(MinValue:1:MaxValue);
 if IntegerTrials>PossibleIntegers
-set(hObject,'string',PossibleIntegers);
+  handles.NumberTrialsVector(3) = PossibleIntegers;
+  set(hObject,'string',PossibleIntegers);
 end
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
 %------------------------------------------------------------------------------
 
@@ -331,8 +334,10 @@ MaxValue = str2double(get(handles.BackgroundDimension2_Max,'string'));
 MinValue = str2double(get(handles.BackgroundDimension2_Min,'string'));
 PossibleIntegers = length(MinValue:1:MaxValue);
 if IntegerTrials>PossibleIntegers
-set(hObject,'string',PossibleIntegers);
+  handles.NumberTrialsVector(4) = PossibleIntegers;
+  set(hObject,'string',PossibleIntegers);
 end
+set(handles.TotalTrials,'string',prod(handles.NumberTrialsVector));
 guidata(hObject, handles);
 %------------------------------------------------------------------------------
 
