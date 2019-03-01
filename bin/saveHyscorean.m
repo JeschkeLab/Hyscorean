@@ -192,6 +192,7 @@ if getpref('hyscorean','reportlicense')
   Window2 = Window2/max(Window2);
   Window1 = Window1/max(Window1);
   Window1 = Window1';
+  Window1 = Window2';
   if WindowDecay1>=length(TimeAxis1)
     Window1=Window1(1:length(TimeAxis1));
   else
