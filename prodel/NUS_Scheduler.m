@@ -1,5 +1,5 @@
 function [NUSgrid,Decay,PDF] = NUS_Scheduler(SamplingDensity,TimeAxis,Envelope,Decay,TwoDimensionalFlag,RandomGenerator,BME)
-%Construc a non-uniform sampling schedule for one-dimensional or
+%Construct a non-uniform sampling schedule for one-dimensional or
 %two-dimensional measurements. Envelope-matched sampling (EMS) is available
 %for different probability density functions matched to the time-decay
 %constant. Using the 'random' option employs purely non-matched sampling.
@@ -67,38 +67,31 @@ if TwoDimensionalFlag
     Ranks = Ranks.*(exp((TimeAxis - TimeAxis'))+exp(-(TimeAxis - TimeAxis')));
   end
   FullSampling = Dimension*Dimension;
-  P = 0;
+
   NUSgrid = zeros(Dimension);
   %Always sample first and last point
   NUSgrid(1,1) = 1;
   NUSgrid(end,end) = 1;
-  while P < SamplingDensity
-    [row,col] = find(Ranks == min(min(Ranks)));
-    NUSgrid(row,col) = 1;
-    Ranks(row,col) = realmax;
-    PointsSampled = length(find(NUSgrid>0));
-    P = PointsSampled/FullSampling;
-  end
-  
+
+  a = round(FullSampling * SamplingDensity);
+  [~, i] = mink(Ranks(:), a);
+  NUSgrid(i) = 1;
 else
   %One-dimensional grid
   switch RandomGenerator
     case 'rand'
-      Ranks = rand(1,Dimension).^PDF;
+      Ranks = rand(1,Dimension).^(PDF');
     case 'lhs'
-      Ranks = lhsdesign(1,Dimension).^PDF;
+      Ranks = lhsdesign(1,Dimension).^(PDF');
   end
   FullSampling = Dimension;
-  P = 0;
+
   NUSgrid = zeros(1,Dimension);
   %Always sample first and last point
   NUSgrid(1) = 1;
   NUSgrid(end) = 1;
-  while P < SamplingDensity
-    [row,col] = find(Ranks == min(Ranks));
-    NUSgrid(row,col) = 1;
-    Ranks(row,col) = realmax;
-    PointsSampled = length(find(NUSgrid>0));
-    P = PointsSampled/FullSampling;
-  end
+
+  a = round(FullSampling * SamplingDensity);
+  [~, i] = mink(Ranks(:), a);
+  NUSgrid(i) = 1;
 end
