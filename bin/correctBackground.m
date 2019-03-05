@@ -163,10 +163,10 @@ else
     % 1st Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod1;
-     if Parameters.BackgroundModel ~= 2
-      Parameters.homdim = options.BackgroundFractalDimension1;
-    else
-      Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+     if Parameters.BackgroundModel == 2 || Parameters.BackgroundModel == 3
+        Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+     else
+        Parameters.homdim = options.BackgroundFractalDimension1;
     end
     StartIndex1 = options.BackgroundStart1;
     Parameters.start = StartIndex1;
@@ -189,10 +189,10 @@ else
     % 2nd Background correction
     Parameters.Dimension = 1;
     Parameters.BackgroundModel = options.BackgroundMethod2;
-    if Parameters.BackgroundModel ~= 2
-      Parameters.homdim = options.BackgroundFractalDimension2;
-    else
-      Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+     if Parameters.BackgroundModel == 2 || Parameters.BackgroundModel == 3
+        Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+     else
+        Parameters.homdim = options.BackgroundFractalDimension2;
     end
     if options.AutomaticBackgroundStart
       [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(RawSignal,2),Parameters);
@@ -222,10 +222,10 @@ else
     % 1st Background correction
     Parameters.Dimension = 1;
     Parameters.BackgroundModel = options.BackgroundMethod1;
-    if Parameters.BackgroundModel ~= 2
-      Parameters.homdim = options.BackgroundFractalDimension1;
-    else
-      Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+    if Parameters.BackgroundModel == 2 || Parameters.BackgroundModel == 3
+        Parameters.PolynomialOrder = options.BackgroundPolynomOrder1;
+     else
+        Parameters.homdim = options.BackgroundFractalDimension1;
     end
     if options.AutomaticBackgroundStart
       [~,StartIndex1] = get_t_bckg_start(Data.CorrectedTimeAxis1,sum(RawSignal,2),Parameters);
@@ -250,10 +250,10 @@ else
     % 2nd Background correction
     Parameters.Dimension = 2;
     Parameters.BackgroundModel = options.BackgroundMethod2;
-    if Parameters.BackgroundModel ~= 2
-      Parameters.homdim = options.BackgroundFractalDimension2;
-    else
-      Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+    if Parameters.BackgroundModel == 2 || Parameters.BackgroundModel == 3
+        Parameters.PolynomialOrder = options.BackgroundPolynomOrder2;
+     else
+        Parameters.homdim = options.BackgroundFractalDimension2;
     end
     if options.AutomaticBackgroundStart
       [~,StartIndex2] = get_t_bckg_start(Data.CorrectedTimeAxis2',sum(RawSignal,1),Parameters);
