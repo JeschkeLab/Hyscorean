@@ -61,7 +61,7 @@ title('Reconstruction Functional')
 %==========================================================================
 subplot(245)
 handles.Data.PreProcessedSignal(handles.Data.NUSgrid==0) = NaN;
-pcolor(handles.Data.TimeAxis1,handles.Data.TimeAxis1,real(handles.Data.PreProcessedSignal))
+pcolor(handles.Data.TimeAxis2,handles.Data.TimeAxis1,abs(handles.Data.PreProcessedSignal))
 shading flat
 xlabel('t_1 [ns]')
 ylabel('t_2 [ns]')
@@ -70,15 +70,17 @@ title('NUS Signal')
 % Plot #4 Recosntructed signal
 %==========================================================================
 subplot(246)
-pcolor(handles.Data.TimeAxis1,handles.Data.TimeAxis2,real(handles.Data.ReconstructedSignal)),shading flat
+pcolor(handles.Data.TimeAxis2,handles.Data.TimeAxis1,abs(handles.Data.ReconstructedSignal)),shading flat
 xlabel('t_1 [ns]'),ylabel('t_2 [ns]'),title('Reconstructed Signal')
 
 % Plot #5 nuDFT HYSCORE spectrum
 %==========================================================================
 subplot(2,4,[3 4])
+ZeroFilling1 = str2double(get(handles.ZeroFilling1,'string'));
+ZeroFilling2 = str2double(get(handles.ZeroFilling2,'string'));
 handles.Data.PreProcessedSignal(isnan(handles.Data.PreProcessedSignal)) = 0;
-NUSSpectrum = abs(fftshift(fft2(handles.Data.PreProcessedSignal,2*Dimension1,2*Dimension2)));
-contour(FrequencyAxis1,FrequencyAxis2,NUSSpectrum,handles.GraphicalSettings.Levels)
+NUSSpectrum = abs(fftshift(fft2(handles.Data.PreProcessedSignal,ZeroFilling1 + Dimension1,ZeroFilling2 + Dimension2)));
+contour(FrequencyAxis2,FrequencyAxis1,NUSSpectrum,handles.GraphicalSettings.Levels)
 hold on
 %Plot auxilliary lines
 plot(-max(FrequencyAxis1):1:max(FrequencyAxis1),abs(-max(FrequencyAxis1):1:max(FrequencyAxis1)),'k-.'),grid on
@@ -89,7 +91,7 @@ xlim([-XLim XLim]),ylim([0 XLim])
 % Plot #6 Reconstructed HYSCORE spectrum
 %=========================================================================
 subplot(2,4,[7 8])
-ReconstructedSpectrum = abs(fftshift(fft2(handles.Data.ReconstructedSignal,2*Dimension1,2*Dimension2)));
+ReconstructedSpectrum = abs(fftshift(fft2(handles.Data.ReconstructedSignal,ZeroFilling1 + Dimension1,ZeroFilling2 + Dimension2)));
 contour(FrequencyAxis1,FrequencyAxis2,ReconstructedSpectrum,handles.GraphicalSettings.Levels)
 hold on
 %Plot auxilliary lines
