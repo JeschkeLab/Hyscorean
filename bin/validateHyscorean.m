@@ -1,3 +1,4 @@
+
 function [ReconstructedSpectra,ParameterSets] = validateHyscorean(RawData,ValidationVectors,StatusHandle,Defaults)
 %==========================================================================
 % Validation protocol
@@ -135,18 +136,8 @@ for Index6 = 1:Length6
                   
                   %Correct background
                   [Data] = correctBackground(Data,options);
-                  CorrectedSignal = Data.PreProcessedSignal;
-                  
-                  %If NUS restore NaN points to zero-augmentation
-                  if  RawData.NUSflag
-                    for i=1:Dimension1
-                      for j=1:Dimension2
-                        if isnan(CorrectedSignal(i,j))
-                          CorrectedSignal(i,j) = 0;
-                        end
-                      end
-                    end
-                  end
+                  CorrectedSignal = Data.PreProcessedSignal';
+
                   
                   %Save current parameter set
                   ParameterSets(TrialsCompleted+1).BackgroundDimension1  = ValidationVectors.BackgroundDimension1_Vector(Index3);
@@ -173,7 +164,19 @@ for Index6 = 1:Length6
                   WhiteNoise = ifft2(PowerSpectrum);
                   WhiteNoise = WhiteNoise/max(max(WhiteNoise));
                   %If not requested the noise level is zero and signal remains untouched
-                  CorrectedSignal = CorrectedSignal + ValidationVectors.NoiseLevel_Vector(Index9)*WhiteNoise;
+                  CorrectedSignal = CorrectedSignal + max(max(CorrectedSignal))*ValidationVectors.NoiseLevel_Vector(Index9)*WhiteNoise;
+                  
+                  
+                  %If NUS restore NaN points to zero-augmentation
+                  if  RawData.NUSflag
+                    for i=1:Dimension1
+                      for j=1:Dimension2
+                        if isnan(CorrectedSignal(i,j))
+                          CorrectedSignal(i,j) = 0;
+                        end
+                      end
+                    end
+                  end 
                   
                   %If NUS then do spectral reconstruction
                   if  RawData.NUSflag
