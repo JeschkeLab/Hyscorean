@@ -108,6 +108,9 @@ if handles.PlotProcessedSignal
         ProcessedSignalTrace = ProcessedSignalTrace(1:length(ProcessedSignalTrace)-str2double(get(handles.ZeroFilling1,'String')));
       end
   end
+  
+  ProcessedSignalTrace = ProcessedSignalTrace/max(max(Processed.Signal));
+  
 %   ProcessedSignalTrace = ProcessedSignalTrace/max(max(abs(Processed.Signal)));
       if PlotImaginarySignal
         plot(handles.signal_t1,TimeAxis,imag(ProcessedSignalTrace),'k','Linewidth',1)
