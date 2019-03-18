@@ -90,6 +90,10 @@ for Iteration = 1:MaxIter
   %Get functional state and gradient
   [CurrentFunctionalValue, SpectralGradient] = camera_functional(ReconstructedSpectrum,BackgroundParameter);
   
+  % Should some point become NaN, set it to zero otherwise ifft2 will set
+  % everything to NaN leadin to a crash later
+  SpectralGradient(isnan(SpectralGradient)) = 0;
+  
   %Compute and store time-domain gradient.
   Gradient = (2*N).*ifft2(SpectralGradient);
   Gradient = (1/LipschitzConstant).*Gradient.*(1 - SubSamplingGrid);

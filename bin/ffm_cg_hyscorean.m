@@ -85,6 +85,10 @@ LipschitzConstant = 0.5/BackgroundParameter;
 % loop over the inner indices.
 for Iteration = 1 : MaxIter
   
+  % Should some point become NaN, set it to zero otherwise fft2 will set
+  % everything to NaN leadin to a crash later
+  Reconstruction(isnan(Reconstruction)) = 0;
+  
   %Compute the current spectral estimate.
   ReconstructedSpectrum = fft2(Reconstruction);
   
