@@ -67,6 +67,7 @@ try
     set(handles.WindowLength1,'string',Settings.WindowDecay1);
     set(handles.WindowLength2,'string',Settings.WindowDecay2);
     set(handles.Symmetrization_ListBox,'value',Settings.Symmetrization);
+    
   catch
   end
   set(handles.WindowType,'value',Settings.WindowType)
@@ -76,6 +77,10 @@ try
   set(handles.BackgroundStart1,'string',Settings.BackgroundStart1);
   set(handles.BackgroundStart2,'string',Settings.BackgroundStart2);
   set(handles.MinimalContourLevel,'string',Settings.MinimalContourLevel);
+  try
+  set(handles.MaximalContourLevel,'string',Settings.MaximalContourLevel);
+  catch
+  end
   set(handles.XUpperLimit,'string',Settings.XUpperLimit);
   set(handles.FieldOffset,'string',Settings.FieldOffset);
   try %Try because if not the exact same file is loaded, value of list may exceed current one

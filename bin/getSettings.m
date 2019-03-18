@@ -36,6 +36,7 @@ function Settings = getSettings(handles)
   Settings.BackgroundStart2 = get(handles.BackgroundStart2,'string');
   Settings.MultiTauDimension = get(handles.MultiTauDimensions,'value');
   Settings.MinimalContourLevel = get(handles.MinimalContourLevel,'string');
+  Settings.MaximalContourLevel = get(handles.MaximalContourLevel,'string');
   Settings.XUpperLimit = get(handles.XUpperLimit,'string');
   Settings.ReconstructionAlgorithm = get(handles.ReconstructionAlgorithm,'value');
   Settings.MaxEntBackgroundParameter = str2double(get(handles.MaxEntBackgroundParameter,'string'));
