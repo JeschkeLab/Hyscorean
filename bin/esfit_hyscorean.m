@@ -1438,7 +1438,9 @@ nOutArguments = FitData.nOutArguments;
 SimFcnHandel = FitData.SimFcn;
 ScalingOption = FitOpt.Scaling;
 %Loop over all field positions (i.e. different files/spectra)
-parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
+% parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
+for Index = 1:numSpec
+  
   if numel(SimSystems)==1
     [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
   else
@@ -2831,12 +2833,17 @@ global FitData FitOpts
 [Filename,Path] = uigetfile('.prop','Load ORCA data');
 
 %Convert the ORCA output to EasySpin structure
-Sys1 = orca2easyspin(fullfile(Path,Filename));
+ORCA_Sys = orca2easyspin(fullfile(Path,Filename));
 
 %Identify all the different atoms in the ORCA output and make a list
-Commas = strfind(Sys1.Nucs,',');
-Nucs = Sys1.Nucs;
+Commas = strfind(ORCA_Sys.Nucs,',');
+Nucs = ORCA_Sys.Nucs;
+%Consistency for single-atom ORCA files
+if isempty(Commas)
+  Commas = length(Nucs)+1;
+end
 Pos1 = 1;
+%Construct list with all ORCA atoms
 List = cell(length(Commas)+1,1);
 Nuclei = cell(length(Commas)+1,1);
 for i=1:length(Commas)
@@ -2880,8 +2887,8 @@ if Answered
     
     %Get the atoms selected by the user from the list
     N = Indexes;
-    Sys = Sys1;
-    Sys.xyz = Sys1.xyz(N,:);
+    Sys = ORCA_Sys;
+    Sys.xyz = ORCA_Sys.xyz(N,:);
     string = sprintf('%s',Nuclei{Indexes(1)});
     if length(Indexes)>1
       for i=2:length(Indexes)
@@ -2891,10 +2898,18 @@ if Answered
     
     %Construct the reduced spin system to be simulated
     Sys.Nucs = string;
-    Sys.A = Sys1.A(N,:);
-    Sys.AFrame = Sys1.AFrame(N,:);
-    Sys.Q = Sys1.Q(N,:);
-    Sys.QFrame = Sys1.QFrame(N,:);
+    if isfield(ORCA_Sys,'A')
+      Sys.A = ORCA_Sys.A(N,:);
+    end
+    if isfield(ORCA_Sys,'AFrame')
+      Sys.AFrame = ORCA_Sys.AFrame(N,:);
+    end
+    if isfield(ORCA_Sys,'Q')
+      Sys.Q = ORCA_Sys.Q(N,:);
+    end
+    if isfield(ORCA_Sys,'QFrame')
+      Sys.QFrame = ORCA_Sys.QFrame(N,:);
+    end
     
     %Setup the simulation options required for asses to run
     switch FitOpts.Startpoint
