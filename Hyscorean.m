@@ -520,6 +520,11 @@ set(handles.ReconstructionCheck,'visible','off')
         set(handles.LagrangeMultiplierText,'enable','on')
         set(handles.BackgroundParameterText,'enable','on')
         set(handles.MaxEntBackgroundParameter,'enable','on')
+      case {2,3,4}
+        set(handles.MaxEntLagrangianMultiplier,'enable','off')
+        set(handles.LagrangeMultiplierText,'enable','off')
+        set(handles.BackgroundParameterText,'enable','on')
+        set(handles.MaxEntBackgroundParameter,'enable','on')
       otherwise
         set(handles.MaxEntLagrangianMultiplier,'enable','off')
         set(handles.LagrangeMultiplierText,'enable','off')
