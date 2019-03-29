@@ -62,7 +62,7 @@ SimData.ConoturHandle =  ContourHandle;
 
 %Plot with lowest tau value to construct and initialize the plot
 FirstTauValue = 100/1000;
-Axis = linspace(min(SimData.FrequencyAxis),max(SimData.FrequencyAxis),200);
+Axis = linspace(min(SimData.FrequencyAxis),max(SimData.FrequencyAxis),50);
 BlindSpotsAxis1  = Axis;
 BlindSpotsAxis2  = Axis;
 Dimension1 = length(BlindSpotsAxis1);
