@@ -214,26 +214,41 @@ if getpref('hyscorean','reportlicense')
   %Get BRUKER spectrometer-specific parameters and variables
   if isfield(handles.Data,'BrukerParameters')
     BrukerParameters = handles.Data.BrukerParameters;
-    PulseSpelText = BrukerParameters.PlsSPELGlbTxt;
-    Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
-    Pulse180DefinitionIndex = strfind(PulseSpelText,'p1   = ');
-    Shift = 7;
-    while ~isspace(PulseSpelText(Pulse90DefinitionIndex + Shift))
-      Pulse90String(Shift - 2) =  PulseSpelText(Pulse90DefinitionIndex + Shift);
-      Shift = Shift + 1;
+    if isfield(BrukerParameters,'PlsSPELGlbTxt')
+      PulseSpelText = BrukerParameters.PlsSPELGlbTxt;
+      Pulse90DefinitionIndex = strfind(PulseSpelText,'p0   = ');
+      Pulse180DefinitionIndex = strfind(PulseSpelText,'p1   = ');
+      Shift = 7;
+      while ~isspace(PulseSpelText(Pulse90DefinitionIndex + Shift))
+        Pulse90String(Shift - 2) =  PulseSpelText(Pulse90DefinitionIndex + Shift);
+        Shift = Shift + 1;
+      end
+      Shift = 7;
+      while ~isspace(PulseSpelText(Pulse180DefinitionIndex + Shift))
+        Pulse180String(Shift - 2) =  PulseSpelText(Pulse180DefinitionIndex + Shift);
+        Shift = Shift + 1;
+      end
+      reportdata.Pulse90Length  = str2double(Pulse90String);
+      reportdata.Pulse180Length  = str2double(Pulse180String);
+      reportdata.MW_Frequency = BrukerParameters.MWFQ/1e9;
+      reportdata.ShotRepTime = str2double(BrukerParameters.ShotRepTime(1:strfind(BrukerParameters.ShotRepTime,' ')));
+      reportdata.ShotsPerLoop = BrukerParameters.ShotsPLoop;
+      reportdata.NbScansDone = BrukerParameters.NbScansDone;
+      reportdata.CenterField = str2double(BrukerParameters.CenterField(1:strfind(BrukerParameters.CenterField,' ')));
+      reportdata.VideoGain = str2double(BrukerParameters.VideoGain(1:strfind(BrukerParameters.VideoGain,' ')));
+      reportdata.VideoBandwidth = str2double(BrukerParameters.VideoBW(1:strfind(BrukerParameters.VideoBW,' ')));
+    else
+      reportdata.Pulse90Length  = NaN;
+      reportdata.Pulse180Length  = NaN;
+      reportdata.MW_Frequency = NaN;
+      reportdata.ShotRepTime = NaN;
+      reportdata.ShotsPerLoop = NaN;
+      reportdata.NbScansDone = NaN;
+      reportdata.CenterField = NaN;
+      reportdata.VideoGain = NaN;
+      reportdata.VideoBandwidth = NaN;
+
     end
-    Shift = 7;
-    while ~isspace(PulseSpelText(Pulse180DefinitionIndex + Shift))
-      Pulse180String(Shift - 2) =  PulseSpelText(Pulse180DefinitionIndex + Shift);
-      Shift = Shift + 1;
-    end
-    reportdata.Pulse90Length  = str2double(Pulse90String);
-    reportdata.Pulse180Length  = str2double(Pulse180String);
-    reportdata.MW_Frequency = BrukerParameters.MWFQ/1e9;
-    reportdata.ShotRepTime = str2double(BrukerParameters.ShotRepTime(1:strfind(BrukerParameters.ShotRepTime,' ')));
-    reportdata.ShotsPerLoop = BrukerParameters.ShotsPLoop;
-    reportdata.NbScansDone = BrukerParameters.NbScansDone;
-    reportdata.CenterField = str2double(BrukerParameters.CenterField(1:strfind(BrukerParameters.CenterField,' ')));
     if handles.Data.NUSflag
       reportdata.XDimension = handles.Data.NUS.Dimension1;
       reportdata.YDimension = handles.Data.NUS.Dimension2;
@@ -243,8 +258,7 @@ if getpref('hyscorean','reportlicense')
       reportdata.YDimension = BrukerParameters.YPTS;
       reportdata.NUSflag = false;
     end
-    reportdata.VideoGain = str2double(BrukerParameters.VideoGain(1:strfind(BrukerParameters.VideoGain,' ')));
-    reportdata.VideoBandwidth = str2double(BrukerParameters.VideoBW(1:strfind(BrukerParameters.VideoBW,' ')));
+
   end
   
   %Get AWG spectrometer-specific parameters and variables
@@ -336,6 +350,7 @@ set(handles.ProcessingInfo, 'String', 'Status: Saving session 80%'); drawnow;
 % Save data for Easyspin fitting
 %==========================================================================  
 
+
 %Collect necessary data for the fitting module
 DataForFitting.Spectrum = handles.Processed.spectrum;
 DataForFitting.TauValues = handles.Data.TauValues/1000; 
@@ -371,11 +386,8 @@ DataForFitting.Symmetrization = handles.SymmetrizationString;
 %Send settings structure to base workspace
 assignin('base', 'DataForFitting', DataForFitting);
 
-%Format savename so until it is different from the rest in the folder
-SaveName = sprintf('%s_%s_DataForFitting.mat',Date,Identifier);
-
 %Use the same formatting in name as before to avoid filename clash
-SaveName = sprintf('%s_%s_report',Date,Identifier);
+SaveName = sprintf('%s_%s_DataForFitting',Date,Identifier);
 if CrashFlag
   SaveName = sprintf('%s_%s_DataForFitting_%i.mat',Date,Identifier,CopyIndex);
 end
@@ -385,6 +397,7 @@ save(fullfile(FullPath,SaveName),'DataForFitting');
 
 %Remove structure from base workspace
 evalin('base','clear DataForFitting');
+
 
 %Inform user that saving is finished
  set(handles.ProcessingInfo, 'String', 'Status: Session saved'); drawnow;
