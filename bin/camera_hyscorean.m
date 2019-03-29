@@ -183,7 +183,7 @@ for OuterIteration = 1 : MaxOutIter
       ReconstructionUpdate = (1 + VelocityFactor) .* ReconstructionUpdate - VelocityFactor .* y;
       ReconstructedSpectrum = 1/SignalDimension*fft2(ReconstructionUpdate);
       NumberOfOperations(end) =  NumberOfOperations +1;
-
+      
       %Check for a primary termination criterion.
       ok = 1;
       if (LipschitzConstant >= TresholdBackgroundparameter)
@@ -202,10 +202,10 @@ for OuterIteration = 1 : MaxOutIter
     y = (ReconstructionUpdate + VelocityFactor .* y) ./ (1 + VelocityFactor);
     Reconstruction = ReconstructionUpdate;
     %Check for a final termination criterion
-    if InnerIteration>1
+    if InnerIteration>10
       NormalizedFunctionalValues = FunctionalValues/max(FunctionalValues);
       RelativeFunctionalDecrease(InnerIteration) = NormalizedFunctionalValues(end)-NormalizedFunctionalValues(end-1);
-      if  abs(RelativeFunctionalDecrease(InnerIteration) )<1e-7 
+      if  abs(RelativeFunctionalDecrease(InnerIteration) )<1e-8
         break; % Finishes algorithm
       end
     end
