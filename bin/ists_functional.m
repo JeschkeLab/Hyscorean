@@ -19,7 +19,7 @@ function [FunctionalValue, VectorGradient] = ists_functional(ReconstructedSpectr
   FunctionalValue = sum(sum(AbsSpec));
 
   %Compute the vector gradient.
-  VectorGradient = ReconstructedSpectrum.*(abs(ReconstructedSpectrum) > Threshold);
-  VectorGradient = VectorGradient.*(1 - Threshold./abs(ReconstructedSpectrum));
+  VectorGradient = ReconstructedSpectrum.*(AbsSpec > Threshold);
+  VectorGradient = VectorGradient.*(1 - Threshold./AbsSpec);
 
   return
