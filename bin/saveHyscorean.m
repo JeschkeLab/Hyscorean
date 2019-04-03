@@ -387,7 +387,7 @@ DataForFitting.Symmetrization = handles.SymmetrizationString;
 assignin('base', 'DataForFitting', DataForFitting);
 
 %Use the same formatting in name as before to avoid filename clash
-SaveName = sprintf('%s_%s_DataForFitting',Date,Identifier);
+SaveName = sprintf('%s_%s_DataForFitting.mat',Date,Identifier);
 if CrashFlag
   SaveName = sprintf('%s_%s_DataForFitting_%i.mat',Date,Identifier,CopyIndex);
 end
