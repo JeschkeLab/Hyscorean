@@ -1269,7 +1269,8 @@ Residuals = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
 
 %Loop over all field positions (i.e. different files/spectra)
-parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
+% parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
+for Index = 1:numSpec
 
   %Run saffron for a given field position
   [t1,t2,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
@@ -1679,6 +1680,16 @@ end
           axis(hDetachedErrorPlot,'tight');
       end
   end
+  
+    hObj = findobj('Tag','detachedParamEvol');
+  if ~isempty(hObj)
+      nParam = size(FitData.ParameterEvol,2);
+      for j=1:nParam
+          hDetachedParamEvolPlot =  findobj('Tag',sprintf('detachedParamEvol_%i',j));
+          set(hDetachedParamEvolPlot,'XData',1:n,'YData',FitData.ParameterEvol(end-n+1:end,j));
+      end
+  end
+  
   drawnow
 
 end
@@ -2145,15 +2156,44 @@ while true
       waitfor(w)
     end
     
+    %Now go through the same protols as in the startup
+    if ~iscell(Sys)
+      Sys = {Sys};
+    end
+    if ~iscell(Vary)
+      Vary = {Vary};
+    end
+    
     %Check for EasySpin-based errors but validatespinsys is a private EasySpin function
     CurrentPath = cd;
     EasySpinPath = which('easyspin');
     EasySpinPath = EasySpinPath(1:end-10);
-    %Change to the location of the file to be able to call it... 
+    %Change to the location of the file to be able to call it...
     cd(fullfile(EasySpinPath,'private'))
-    [~,SpinSystemError] = validatespinsys(Sys);
-    %... and return to the location without the user noticing it
-    cd(CurrentPath)
+    try
+      
+      nComponents = numel(Sys);
+      IsoCutoff = 1e-4;
+      for c = 1:nComponents
+        SysList{c} = isotopologues(Sys{c},IsoCutoff);
+        nIsotopologues(c) = numel(SysList{c});
+      end
+      for iComponent = 1:numel(SysList)
+        for iIsotopologue = 1:nIsotopologues(iComponent)
+          
+          % Simulate single-isotopologue spectrum
+          Sys_ = SysList{iComponent}(iIsotopologue);
+          Sys_.singleiso = true;
+          [~,SpinSystemError] = validatespinsys(Sys_);
+          
+        end
+      end
+      %... and return to the location without the user noticing it
+      cd(CurrentPath)
+    catch SpinSystemError
+      cd(CurrentPath)
+      SpinSystemError = SpinSystemError.message;
+    end
     
     %If some error was found, notify the user and repeat input
     if ~isempty(SpinSystemError)
@@ -2162,11 +2202,11 @@ while true
     end
     
   end
-
+  
   %If no error of any type are found then break the loop and continue
   if exist('Sys','var') && exist('Vary','var') && isempty(SpinSystemError) && ~CompilerFailed
     break
-  end  
+  end
   %Otherwise repeat endlessly until the user gives a correct input
 end
 
@@ -2201,16 +2241,11 @@ else
   FitData.Exp = FitData.DefaultExp;
 end
 
+Sys_ = Sys{1};
 %Update the system name given in blue next to the button
-set(findobj('Tag','SystemName'),'string',Sys.Nucs)
+set(findobj('Tag','SystemName'),'string',Sys_.Nucs)
 
-%Now go through the same protols as in the startup
-if ~iscell(Sys)
-Sys = {Sys};
-end
-if ~iscell(Vary)
-Vary = {Vary};
-end
+
 nSystems = numel(Sys);
 for s = 1:nSystems
   if ~isfield(Sys{s},'weight'), Sys{s}.weight = 1; end
@@ -2694,14 +2729,18 @@ if ~isempty(FitData.ParameterEvol)
   set(FitData.detachedParamEvol_Fig,'WindowStyle','normal','DockControls','off','MenuBar','none');
   set(FitData.detachedParamEvol_Fig,'Resize','on');
   set(FitData.detachedParamEvol_Fig,'Name','Hyscorean: EasySpin - Fit Parameters Evolution','NumberTitle','off');
+  
 
   hParamTable = getParameterTableHandle;
   data = get(hParamTable,'data');
-  cmp = lines(size(FitData.ParameterEvol,2));
-  for i = 1:size(FitData.ParameterEvol,2)
+  nParam = size(FitData.ParameterEvol,2);
+  cmp = lines(nParam);
+ 
+  for i = 1:nParam
     scrollsubplot(2,1,i);
-    h = plot(FitData.ParameterEvol(:,i), '.');
-    set(h,'MarkerSize',10,'Color',cmp(i,:));
+    h = plot(FitData.ParameterEvol(:,i),'.');
+    Tag = sprintf('detachedParamEvol_%i', i);
+    set(h,'Tag',Tag,'MarkerSize',10,'Color',cmp(i,:));
     set(gca,'FontSize',9,'XTick',[]);
     ylabel(gca,'Value')
     LegendTag = data(i,2);
