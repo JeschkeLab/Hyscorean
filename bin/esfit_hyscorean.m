@@ -85,6 +85,7 @@ FitOpts = [];
 
 %Initialize default fields
 FitData.currFitSet = [];
+FitData.ParameterEvol = [];
 FitData.CurrentSpectrumDisplay = 1;
 FitData.DisplayingFitSetSpec = false;
 FitData.CurrentCoreUsage = 0;
@@ -1607,10 +1608,10 @@ end
   
   % update numbers parameter table
   if (UserCommand~=99)
-    
     % current system set
     hParamTable = getParameterTableHandle;
     data = get(hParamTable,'data');
+    FitData.ParameterEvol(end+1,1:length(simvalues)) = simvalues;
     for p=1:numel(simvalues)
       olddata = striphtml(data{p,4});
       newdata = sprintf('%0.6f',simvalues(p));
@@ -2652,7 +2653,17 @@ for i=1:numPlots
   YPositionAxis = 1 - i*AxisWidth - i*0.04;
   hAx = axes('Parent',FitData.DetachedRMSD_Fig,'Units','normalized','Position',[0.05 YPositionAxis 0.85 AxisWidth]);
   %Generate a dummy plot with desired properties
-  h = plot(hAx,1,NaN,'.');
+  if isfield(FitData,'individualErrors')
+    if i < numPlots
+      CurrentError = FitData.individualErrors{i};
+    else
+      CurrentError = FitData.errorlist;
+    end
+    h = plot(hAx,1:length(CurrentError),CurrentError,'.');
+    
+  else
+    h = plot(hAx,1,NaN,'.');
+  end
   set(hAx,'Tag',Tags{i})
   set(h,'Tag',Tags{i},'MarkerSize',10,'Color',cmp(i,:));
   set(gca,'FontSize',9,'YScale','lin','XTick',[],'YAxisLoc','right','Layer','top');
@@ -2666,6 +2677,26 @@ for i=1:numPlots
 end
 %The data is introduced durin the execution of the assess function
 
+if ~isempty(FitData.ParameterEvol)
+  %Find the figure, close it and reopen it
+  FitData.detachedParamEvol_Fig = findobj('Tag','detachedParamEvol');
+  if isempty(FitData.detachedParamEvol_Fig)
+    FitData.detachedParamEvol_Fig = figure('Tag','detachedParamEvol','WindowStyle','normal');
+  else
+    figure(FitData.detachedParamEvol_Fig);
+    clf(FitData.detachedParamEvol_Fig);
+  end
+  hParamTable = getParameterTableHandle;
+  data = get(hParamTable,'data');
+  cmp = lines(size(FitData.ParameterEvol,2));
+  for i = 1:size(FitData.ParameterEvol,2)
+    scrollsubplot(2,1,i);
+    h = plot(FitData.ParameterEvol(:,i), '.');
+    set(h,'MarkerSize',10,'Color',cmp(i,:));
+    LegendTag = data(i,2);
+    legend(h,LegendTag{1})
+  end
+end
 return
 %==========================================================================
 
