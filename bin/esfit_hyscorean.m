@@ -2639,10 +2639,10 @@ for i=2:numPlots
 end
 
 %Set the figure size in accordance to how many plots are required 
-sz = [600 numPlots*200]; % figure size
+sz = [650 numPlots*200]; % figure size
 screensize = get(0,'ScreenSize');
-xpos = ceil((screensize(3)-sz(1))/2); % center the figure on the screen horizontally
-ypos = ceil((screensize(4)-sz(2))/2); % center the figure on the screen vertically
+xpos = 2*ceil((screensize(3)-sz(1))/3); % center the figure on the screen horizontally
+ypos = 2*ceil((screensize(4)-sz(2))/3); % center the figure on the screen vertically
 set(FitData.DetachedRMSD_Fig,'Position',[xpos ypos sz(1) sz(2)])
 
 %Construct the axis and plots
@@ -2686,6 +2686,15 @@ if ~isempty(FitData.ParameterEvol)
     figure(FitData.detachedParamEvol_Fig);
     clf(FitData.detachedParamEvol_Fig);
   end
+  sz = [650 2*200]; % figure size
+  screensize = get(0,'ScreenSize');
+  xpos = ceil((screensize(3)-sz(1))/3); % center the figure on the screen horizontally
+  ypos = ceil((screensize(4)-sz(2))/3); % center the figure on the screen vertically
+  set(FitData.detachedParamEvol_Fig,'Position',[xpos ypos sz(1) sz(2)])
+  set(FitData.detachedParamEvol_Fig,'WindowStyle','normal','DockControls','off','MenuBar','none');
+  set(FitData.detachedParamEvol_Fig,'Resize','on');
+  set(FitData.detachedParamEvol_Fig,'Name','Hyscorean: EasySpin - Fit Parameters Evolution','NumberTitle','off');
+
   hParamTable = getParameterTableHandle;
   data = get(hParamTable,'data');
   cmp = lines(size(FitData.ParameterEvol,2));
@@ -2693,6 +2702,8 @@ if ~isempty(FitData.ParameterEvol)
     scrollsubplot(2,1,i);
     h = plot(FitData.ParameterEvol(:,i), '.');
     set(h,'MarkerSize',10,'Color',cmp(i,:));
+    set(gca,'FontSize',9,'XTick',[]);
+    ylabel(gca,'Value')
     LegendTag = data(i,2);
     legend(h,LegendTag{1})
   end
