@@ -1,52 +1,60 @@
 # --------------------------------------------------------------------- #
-# NON-UNIFORM SAMPLED (NUS) HYSCORE EXPERIMENT - PRODEL PROGRAM			#
+# NON-UNIFORM SAMPLED (NUS) HYSCORE EXPERIMENT - PRODEL PROGRAM	        #
 # --------------------------------------------------------------------- #
-# Enables non-uniform sampled experiments on BRUKER spectrometers 		#
-# which run on the XEPR-software with PRODEL programming compatibility  #
-#																		#
+# Enables non-uniform sampled experiments on BRUKER spectrometers       #
+# which run on the XEPR-software with PRODEL programming compatibility. #
+#                                                                       #
 # The required NUS schedule DSC files can be generated via the software #
-# package HYSCOREAN or via the Easyspin package.						#
+# package HYSCOREAN.                                                    #
 # --------------------------------------------------------------------- #
-# Created by: 															#
-#				     Luis Fabregas Ibanez, 2018	  						#
+# Created by:                                                           #
+#                                                                       #
+#           Copyright (C) 2019  Luis Fabregas, Hyscorean 2018           #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License 3.0 as published #
+# by the Free Software Foundation.                                      #
 # --------------------------------------------------------------------- #
 
 program NUS_HYSCORE_experiment();
 
 # --------------------------------------------------------------------- #
-# Variables Definitions 												#
+# Variables Definitions                                                 #
 # --------------------------------------------------------------------- #
-pointer 	experimentPointer, scheduleP, datasetP, dsetP, ExperimentName;
-boolean 	ret, bol;
-int 		p, i, j, w, k,v, dimension[8], tauDim, used_t1[14],used_t2[14];
-real 		value, min, max, valRe, valIm, XAbsEncode, percentage;
-char 		buffer[80], units[16], txt[10], string[50],saveCmd[200], path_filename[100], filename[100], cmdString[220];
-int 		current_t1, current_t2, taus[10],state, countXAbs;
-int 		dim, dim1,dim2,count, scheduleDim, dsetDim, current_timing, dummyDim, dimMod, measuredPoints;
+pointer     experimentPointer, scheduleP, datasetP, dsetP, ExperimentName;
+boolean     ret, bol;
+int         p, i, j, w, k,v, dimension[8], tauDim, used_t1[14],used_t2[14];
+real        value, min, max, valRe, valIm, XAbsEncode, percentage;
+char        buffer[80], units[16], txt[10], string[50],saveCmd[200], path_filename[100], filename[200], cmdString[220];
+int         current_t1, current_t2, taus[10], PrimHandle;
+int         dim, dim1,dim2,count, scheduleDim, dsetDim, current_timing, dummyDim, dimMod, measuredPoints;
+
 # --------------------------------------------------------------------- #
-# User Input 															#		
+# User Input                                                            #
 # --------------------------------------------------------------------- #
-# Tau values to be measured	[ns]										#
+# Tau values to be measured	[ns]                                        #
 # (NOTE: In PRODEL language arrays have to be filled element by element #
-#		 starting with index 0. Ex/ taus[0] = 100; taus[1] = 120;...  ) #
-taus[0] = 128; 
-# Number of taus to be measured 										#
+#        starting with index 0. Ex/ taus[0] = 100; taus[1] = 120;...  ) #
+taus[0] = 192; 
+# Number of taus to be measured                                         #
 tauDim = 1;
+# Set a name and path for automatic saving of file upon finishing       #
+strcpy(filename,"D:/Your/Path/Goes/Here/Filename");
 # --------------------------------------------------------------------- #
 # --------------------------------------------------------------------- #
-# PRODEL program (Only touch if you know what you are doing)			#		
+# PRODEL program (Only change if you know what you are doing)           #
 # --------------------------------------------------------------------- #
 # --------------------------------------------------------------------- #
+
 
 # Copy dataset from primary and get its new pointer #
 scheduleP = getCopyOfSecondary;
-#scheduleP = aqGetExpByName(filename);#
-
 ExperimentName = aqGetExpName(scheduleP);
 
 # Get length of measurement schedule #
 scheduleDim = getNrOfPoints(scheduleP,X_ABSC);
 
+# Inform the user that the program has started#
 printLn("------------------------------------------------------------");
 printLn("Non-Uniform Sampled HYSCORE PRODEL Program");
 printLn("------------------------------------------------------------");
@@ -62,8 +70,6 @@ printLn("");
 printLn("------------------------------------------------------------");
 printLn("");
 
-		printLn("scheduleDim = ",scheduleDim);
-printLn("tauDim = ",tauDim);
 # Get number of dummy end-points necessary #
 dimMod = scheduleDim mod 14;
 dummyDim = scheduleDim - 14*(dimMod + 1);
@@ -77,11 +83,10 @@ endwhile;
 
 # Get a pointer to the experiment selected in the current viewport #
 experimentPointer = aqGetSelectedExp(-1);
-#experimentPointer = aqGetExpByName("Experiment(");#
 
 # Ensure it found a correct experiment #
 if (experimentPointer == NIL)
-	printLn("No experiment has been selected for current viewport");
+	printLn("No experiment has been selected for the primary viewport");
 	printLn("------------------------------------------------------------");
 	return(FALSE);
 endif;
@@ -90,13 +95,13 @@ endif;
 ExperimentName = aqGetExpName(experimentPointer);
 
 # --------------------------------------------------------------------- #
-# Start non-uniform sampling of experiment								#
+# Start non-uniform sampling of experiment                              #
 # --------------------------------------------------------------------- #
 
 # Initialize counter for the output dataset index #
 count = 0;
 
-# Construct a string with filepath and tau-values to print on the .DSC file descriptor # 
+# Construct a string with filepath and tau-values to print in the .DSC file descriptor # 
 strcpy(string,"Tau values: |");
 i = 0;
 while (i < tauDim)
@@ -110,20 +115,25 @@ aqSetComment(string);
 # Put acquisition hardware into operation mode #
 aqMbcOperate(experimentPointer);
 
+# --------------------------------------------------------------------- #
+# Dataset preparation                                                   #
+# --------------------------------------------------------------------- #
+
 # Run a first experiment on primary to create a dataset with complete #
 # descriptor on the DSC file. Otherwise manually created files do not #
-# seem to incorporate this descripors when saved. #
+# seem to incorporate these descripors when saved. #
 print("Running dummy measurement...");
 
-# Run experiment and wait until finished #
 aqExpRunAndWait(experimentPointer);
 
 printLn(" done");
 
 # Get a copy of the primary data set and store its pointer #
 dsetP = getCopyOfPrimary;
+
 # Get length of current dataset #
 dsetDim = getNrOfPoints(dsetP,X_ABSC);
+
 # Reset dataset clean by removing all points #
 i = 0;
 while (i<dsetDim)
@@ -135,21 +145,23 @@ endwhile
 setAbscType(dsetP,X_ABSC,IGD);
 
 # At this points we have a clean generated dataset with complete DSC #
-# descriptor as in the usual output .DSC files. 					 #
+# descriptor as in the usual output .DSC files.                      #
 
 # Give the dataset a title to be shown on GUI #
 setTitle(dsetP,"NUS HYSCORE Experiment");
 
 execCmd("vpAutorng vpFulsc");
 
+# ===================================================================== #
+# NUS MEASUREMENT START                                                 #
+# ===================================================================== #
 
 # --------------------------------------------------------------------- #
-# tau-values sweep														#
+# tau-values sweep                                                      #
 # --------------------------------------------------------------------- #
 percentage = 0;
-countXAbs = 0;
-k = 0;
 w = 0;
+k = 0;
 while (k < tauDim)
 
 	# Set tau values to echo sequence timings #
@@ -159,86 +171,12 @@ while (k < tauDim)
 	bol = aqSetStrParValue(experimentPointer, "PlsSPELSetVar", 10, dimension,txt);
 
 	# -------------------------------------------------------------------------------- #
-	# t1/t2-dimension non-uniform sampling											   #
+	# t1/t2-dimension non-uniform sampling                                             #
 	# -------------------------------------------------------------------------------- #
 	
 	j = 0;
-	# Set the first timings in the schedule #
-		p = 4;
-		v = 0;
-		while (p < 31)
-
-			# Set timing of second dimension #
-			strcpy(txt, "d");
-			strcat(txt,p+1);
-			strcat(txt, " =");
-			# Check if all scheduled points have been measured. Else measure a dummy point #
-			if (j<scheduleDim)
-				current_t2 = getValue(scheduleP,j,REAL_ORD);
-			else
-				current_t2 = 0;
-			endif
-			# Store used timing to use later #
-			used_t2[v] = current_t2;
-			strcat(txt, current_t2);
-			# Update value on PulseSPEL via Set PulseSPEL Variable command from XEPR-GUI #
-			bol = aqSetStrParValue(experimentPointer, "PlsSPELSetVar", 10, dimension,txt);
-
-			# Set timing of first dimension #
-			strcpy(txt, "d");
-			strcat(txt,p);
-			strcat(txt, " =");
-			# Check if all scheduled points have been measured. Else measure a dummy point #
-			if (j<scheduleDim)
-				current_t1 = getValue(scheduleP,j,X_ABSC);
-			else
-				current_t1 = 0;
-			endif
-
-			# Store used timing to use later #
-			used_t1[v] = current_t1;
-			strcat(txt, current_t1);
-			# Update value on PulseSPEL via Set PulseSPEL Variable command from XEPR-GUI #	
-			bol = aqSetStrParValue(experimentPointer, "PlsSPELSetVar", 10, dimension,txt);
-			
-			v = v + 1;
-			j = j + 1;
-			p = p + 2;
-			
-		endwhile
-		# Loop over all measured points #
-		p = 0;
-		while (p < 14)
-			
-			measuredPoints = getNrOfPoints(dsetP,X_ABSC);			
-				# Initialize a new point in the true dataset #
-				appendPoint(dsetP);
-				# Encode the current t1 and t2 timings into the X_ABSC parameter #
-				# -------------------------------------------------------------- #
-				# t2-timings: Floor of X_ABSC 									 #
-				# t1-timings: Fractional of X_ABS  								 #
-				# Ex/ X_ABSC = 180.0016  >> t1 = 16ns & t2 = 180ns 				 #
-				# -------------------------------------------------------------- #
-				XAbsEncode = used_t2[p] + used_t1[p]/10000;
-				setValue(dsetP, countXAbs, X_ABSC, XAbsEncode);
-			
-				# Increase counters #
-				countXAbs = countXAbs + 1;
-			p = p + 1;
-		endwhile
-	
-	
 	while (j < scheduleDim)
-
-		# Run PulsSPEL experiment #
-		aqExpRun(experimentPointer);
-
-		# Wait until measurent is really running #
-		while (state <> 5)
-			state = aqGetExpState(experimentPointer);
-		endwhile
-		sleep(10);
-		# Set the next timings in the schedule #
+		# Set the next fourteen timings in the schedule #
 		p = 4;
 		v = 0;
 		while (p < 31)
@@ -248,7 +186,7 @@ while (k < tauDim)
 			strcat(txt,p+1);
 			strcat(txt, " =");
 			# Check if all scheduled points have been measured. Else measure a dummy point #
-			if (j<scheduleDim)
+			if (j < scheduleDim)
 				current_t2 = getValue(scheduleP,j,REAL_ORD);
 			else
 				current_t2 = 0;
@@ -256,7 +194,7 @@ while (k < tauDim)
 			# Store used timing to use later #
 			used_t2[v] = current_t2;
 			strcat(txt, current_t2);
-			# Update value on PulseSPEL via Set PulseSPEL Variable command from XEPR-GUI #
+			# Update value in PulseSPEL via Set PulseSPEL Variable command from XEPR-GUI #
 			bol = aqSetStrParValue(experimentPointer, "PlsSPELSetVar", 10, dimension,txt);
 
 			# Set timing of first dimension #
@@ -264,7 +202,7 @@ while (k < tauDim)
 			strcat(txt,p);
 			strcat(txt, " =");
 			# Check if all scheduled points have been measured. Else measure a dummy point #
-			if (j<scheduleDim)
+			if (j < scheduleDim)
 				current_t1 = getValue(scheduleP,j,X_ABSC);
 			else
 				current_t1 = 0;
@@ -273,7 +211,7 @@ while (k < tauDim)
 			# Store used timing to use later #
 			used_t1[v] = current_t1;
 			strcat(txt, current_t1);
-			# Update value on PulseSPEL via Set PulseSPEL Variable command from XEPR-GUI #	
+			# Update value in PulseSPEL via Set PulseSPEL Variable command from XEPR-GUI #
 			bol = aqSetStrParValue(experimentPointer, "PlsSPELSetVar", 10, dimension,txt);
 			
 			v = v + 1;
@@ -281,71 +219,59 @@ while (k < tauDim)
 			p = p + 2;
 			
 		endwhile
+
 		
-		# Loop over all measured points #
-		p = 0;
-		while (p < 14)
-			measuredPoints = getNrOfPoints(dsetP,X_ABSC);	
-			if (measuredPoints < scheduleDim)
-				appendPoint(dsetP);
-
-				# Initialize a new point in the true dataset #
-				# Encode the current t1 and t2 timings into the X_ABSC parameter #
-				# -------------------------------------------------------------- #
-				# t2-timings: Floor of X_ABSC 									 #
-				# t1-timings: Fractional of X_ABS  								 #
-				# Ex/ X_ABSC = 180.0016  >> t1 = 16ns & t2 = 180ns 				 #
-				# -------------------------------------------------------------- #
-				XAbsEncode = used_t2[p] + used_t1[p]/10000;
-				setValue(dsetP, countXAbs, X_ABSC, XAbsEncode);
-			
-				# Increase counters #
-				countXAbs = countXAbs + 1;
-			endif
-			p = p + 1;
-		endwhile
-
-
-
-		while (state == 5)
-			state = aqGetExpState(experimentPointer);;
-		endwhile
-
-
+		# Run PulsSPEL experiment #
+		aqExpRunAndWait(experimentPointer);
 		# Store results of experiment into dataset #
-		datasetP = getCopyOfPrimary;		
+		datasetP = getCopyOfPrimary;
 
-		# Loop over all measured points #
+		# Loop over all four measured points #
 		p = 0;
 		while (p < 14)
-			# Exctract the measured point from copy of primary	#
+			# Extract the measured point from copy of primary #
 			valRe = getValue(datasetP, p, REAL_ORD);
 			valIm = getValue(datasetP, p, IMAG_ORD);
 
 			# Check if all points have been saved. If dummy, skip saving #
 			measuredPoints = getNrOfPoints(dsetP,REAL_ORD);
-			if (count < scheduleDim)
+			if (measuredPoints < scheduleDim)
 			
 				# Initialize a new point in the true dataset #
+				appendPoint(dsetP);
 				# Set extracted values into newly appended point of true dataset #
 				setValue(dsetP, count, REAL_ORD, valRe);
 				setValue(dsetP, count, IMAG_ORD, valIm);
-
+				# Encode the current t1 and t2 timings into the X_ABSC parameter #
+				# -------------------------------------------------------------- #
+				# t2-timings: Floor of X_ABSC                                    #
+				# t1-timings: Fractional of X_ABS                                #
+				# Ex/ X_ABSC = 180.0016  >> t1 = 16ns & t2 = 180ns               #
+				# -------------------------------------------------------------- #
+				XAbsEncode = used_t2[p] + used_t1[p]/10000;
+				setValue(dsetP, count, X_ABSC, XAbsEncode);
+			
 				# Increase counters #
 				count = count + 1;
 			endif
 			p = p + 1;
 		endwhile
+		
+		# Copy current true dataset to secondary for display on XEPR-GUI #
+		copyDsetToSecondary(dsetP);
+		# Execute full-screen XEPR command on secondary	#
+		execCmd("vpFulsc sec");
 
 		# Update progress status bar on GUI #
 		percentage = ((k)*scheduleDim + j+1)/(scheduleDim*tauDim)*100;
 		workIndex(percentage);
-				
-		# Notify user that current point has been measured and stored #
-if (percentage > w*5)
-		printLn("done. ",w*5,"% complete");
-w = w + 1;
-endif		
+		
+		# Limit the prints because XEPR  print window is limited #
+		if (percentage > w*5)	
+			# Notify user that current point has been measured and stored #
+			printLn("Acquisition: ",percentage,"% complete");
+			w = w + 1;
+		endif
 
 	endwhile
 
@@ -356,22 +282,20 @@ endwhile
 # Copy true data set to primary now that it is complete for saving from GUI #
 copyDsetToPrimary(dsetP);
 
-int PrimHandle;
+# Store a copy of the NUS dataset to the XEPR memory and get handle #
 PrimHandle  = storeCopyOfDset(dsetP);
 
 # Delete data set once copied to free memory #
 destroyDset(dsetP);
 # Set aquisition hardware to standby #
 aqMbcStandby(experimentPointer);
-# Notify user that program has finished and return #
-
-printLn("------------------------------------------------------------");
+# Notify user that program has finished #
+printLn("-----------------------------------------------------");
 printLn("PRODEL program finished and returned ");
-printLn("(NOTE: Data on Primary has to be saved from the XEPR-GUI)");
+printLn("(NOTE: Data on Primary can be saved from the XEPR-GUI)");
 printLn("------------------------------------------------------------");
 
-printLn("PrimHandle = ",PrimHandle);
-strcpy(filename,"/home/epruser/xeprFiles/Data/LUFA/AutoSave_v4_2000points");
+#Automatically save the dataset to the file specified by the user #
 execCmd("ddSaveAs",PrimHandle,filename);
 
 return(TRUE);
