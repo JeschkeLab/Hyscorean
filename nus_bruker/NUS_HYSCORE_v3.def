@@ -20,7 +20,7 @@ pg   = 32      ; integration window
 ;-------------------------------------------------------------
 
 d0   = 424     ; SDI offset time
-d2   = 200       ; Initial delay between the second and third pulses
+d2   = 200     ; Initial delay between the second and third pulses
 d3   = 200     ; Initial delay between the third and fourth pulses
 
 ;-------------------------------------------------------------
@@ -63,18 +63,17 @@ y    = 1       ;
 ; Others
 ;-------------------------------------------------------------
 
-srt  = 500*srtu  ; minimum shot repetition time
+srt  = 500*srtu ; shot repetition time
 
-h    = 1024       ; number of shots/loop                     ( counter: I )
+h    = 1024     ; number of shots/loop                     ( counter: I )
 
-n    = 1       ; number of sweeps to accumulate           ( counter: K )
+n    = 1        ; number of sweeps to accumulate           ( counter: K )
 
-s    = 0       ; Sweep length (n. of data really taken)   ( counter: X )
+s    = 0        ; Sweep length (n. of data really taken)   ( counter: X )
 
-t    = 1       ; second time axsis sweep length           ( counter: Y )
+t    = 1        ; second time axsis sweep length           ( counter: Y )
 
-w    = 800     ; Split point of sweeps (ns) ,i.e. pulse separatrion where TWT
-               ; gate pulse can be split.
-;
+w    = 800      ; Split point of sweeps (ns) 
+
 end defs
 

@@ -74,7 +74,7 @@ if TwoDimensionalFlag
   NUSgrid(end,end) = 1;
 
   a = round(FullSampling * SamplingDensity);
-  [~, i] = mink(Ranks(:), a);
+  i = mink(Ranks(:), a);
   NUSgrid(i) = 1;
 else
   %One-dimensional grid
@@ -92,6 +92,23 @@ else
   NUSgrid(end) = 1;
 
   a = round(FullSampling * SamplingDensity);
-  [~, i] = mink(Ranks(:), a);
+  i = mink(Ranks(:), a);
   NUSgrid(i) = 1;
+end
+
+end
+function [BIndex]= mink(A, k)
+B = 0;
+RestVector = A;
+sumIndex = 1;
+for i=1:k
+  MaxA = min(A);
+  I = A == MaxA;
+  sumI = sum(I); %To find number of Max elements (repeated) 
+  B(sumIndex: sumIndex+sumI-1) = MaxA; % to same max elements in B
+  BIndex(sumIndex: sumIndex+sumI-1) = find(A == MaxA); 
+  sumIndex = sumIndex + sumI; 
+  A(I) = max(A); % exchange the max elements by a smallest value  
+end
+RestVector(BIndex) = [];  % remove largest values
 end

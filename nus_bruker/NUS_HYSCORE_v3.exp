@@ -1,6 +1,6 @@
 ;-------------------------------------------------------------
 ;    PulseSPEL Program for NUS HYSCORE at X/Q-band
-;		(4-point measurement)
+;		(14-point measurement)
 ;-------------------------------------------------------------
 ;  	     Luis Fabregas Ibanez, 2018
 ;-------------------------------------------------------------
@@ -34,10 +34,10 @@ sweep x = 1 to 1
                         d1            ; tau
                         p1[ph0]
                         d2 
-                        d4 		  ; t1-timing set by PRODEL
+                        d4 		      ; t1-timing set by PRODEL
                         p0 [ph1]      
                         d3
-                        d5		  ; t2-timing set by PRODEL
+                        d5		      ; t2-timing set by PRODEL
                         p1 [ph2]
                         d1            ; tau
                         d0
@@ -72,7 +72,7 @@ sweep x = 3 to 3
                         d1            ; tau
                         p1[ph0]
                         d2 
-                        d8 		  ; t1-timing set by PRODEL
+                        d8 		      ; t1-timing set by PRODEL
                         p0 [ph1]      
                         d3
                         d9			  ; t2-timing set by PRODEL
@@ -148,7 +148,7 @@ sweep x= 7 to 7
                         d1            ; tau
                         p1[ph0]
                         d2 
-                        d16		  ; t1-timing set by PRODEL
+                        d16		      ; t1-timing set by PRODEL
                         p0 [ph1]      
                         d3
                         d17			  ; t2-timing set by PRODEL
@@ -244,7 +244,7 @@ sweep x= 12 to 12
                         d1            ; tau
                         p1[ph0]
                         d2 
-                        d26		  ; t1-timing set by PRODEL
+                        d26		  	  ; t1-timing set by PRODEL
                         p0 [ph1]      
                         d3
                         d27			  ; t2-timing set by PRODEL
