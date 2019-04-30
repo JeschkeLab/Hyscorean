@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" href="img/logo64.png">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="stylesheet" href="highlight/matlab.css">
+   <script src="highlight/highlight.pack.js"></script>
+   <script>hljs.initHighlightingOnLoad();</script>
+   <title> Signal Monitoring </title>
+</head>
+
+<body>
+
+<header>
+<ul>
+<li><img src="img/logo64.png", width="80%">
+<li class="header-title">Hyscorean
+</ul>
+<p>
+<br>
+<ul>
+<li><a href="index.html">Documentation</a>
+<li><a href="references.html">Publications</a>
+<li><a href="https://bitbucket.org/luisfabib/hyscorean/src/master/" target="_blank">Repository</a>
+<li><a href="https://bitbucket.org/luisfabib/hyscorean/issues?status=new&status=open" target="_blank">Forum</a>
+</ul>
+<br>
+<br>
+<ul> 
+</ul>
+</p>
+</header>
+
+<section>
+
+<hr>
+<div class="functitle"> Time-domain Signal Monitoring </div>
+<hr>
+
+<p>
+During the processing in Hyscorean, the time-domain signal undergoes several procedures which change it. Of course, ultimately the HYSCORE spectrum contains most of the information the spectroscopist is interested from signal. Nonetheless, monitoring the state of the time-signal during its processing is a good routine to adapt, since it allows a good check of whether information may be lost before obtaining the spectrum.
+</p>
+
+<p>
+After the processing is finished, the processed signal is displayed as a trace in the smaller display next to the HYSCORE spectrum. By default, the traces are shown along the first dimension. However, by pressing the <code>t1<->t2</code> button will invert the display between both dimensions. In both cases the other dimension can be swept by means of the slider next to the display. For complex-valued signals the user can switch the display between the real and imaginary components via the <code>Imaginary</code> checkbox.
+</p>
+
+<center>
+<img src= "img/signalmonitoring1.png", width="70%", class="center">
+</center>
+
+<p>
+For better display and options, the time-domain signal can be monitored from a detached window by pressing the <code>detach</code> icon button on the display. This will prompt a new GUI to open with a similar structure to the one in the main window:
+</p>
+
+<p>
+This new window works basically as described above with the addition that the signal at different states can be displayed/monitored by activating them via the highlighted buttons: 
+</p>
+
+<ul>
+<li> <code>Processed Signal</code> 
+<p>
+The fully processed signal from which the HYSCORE spectrum is obtained. The same signal that is automatically displayed on the main window display. The appended zeros by zero-filling can be displayed by activating the corresponding <code>Zero-Filling</code> check box.
+</p>
+<center>
+<img src= "img/signalmonitoring2.png", width="80%", class="center">
+</center>
+
+<li> <code>Apodization</code> 
+<p>
+ The apodization window function employed on the pre-processed signal at the current dimension is displayed as a green line (can also be displayed on the main window).
+</p>
+<center>
+<img src= "img/signalmonitoring3.png", width="80%", class="center">
+</center>
+
+
+<li> <code>First/Second Background Correction</code> 
+<p>
+ Displays the signal before the first/second background correction overlaid with the corresponding fitted background (dashed line). A vertical dashed line marks the point at which the background starts to be fitted with and additional tag indicating the exact time. 
+</p>
+<center>
+<img src= "img/signalmonitoring4.png", width="80%", class="center">
+<img src= "img/signalmonitoring6.png", width="80%", class="center">
+</center>
+
+<hr>
+<p>
+NOTE: 
+<br>
+Due to the background correction being performed individually for each dimension, trying to change the dimension via the <code>t1<->t2</code> button will not have any effect on these displays.
+</p>
+<hr>
+<br>
+
+<li> <code>Background corrected</code> 
+<p> 
+The signal right after the pre-processing displayed as a red line (can also be displayed in the main window). 
+</p>
+<center>
+<img src= "img/signalmonitoring5.png", width="80%", class="center">
+</center>
+
+<li> <code>Real/Imaginary</code> 
+<p>
+ Switches between the real and imaginary components of the signals currently being displayed. The fitted backgrounds also are adapted to the component of choice.
+</p>
+</ul>
+
+<p>
+All these displays can be enabled and disabled at the same time so that the user may compare the signal at different stages of the processing, e.g. check the fitted background during the background corrections. This detached window can be left open and should the user process the signal with new settings, Hyscorean will recognize that this window is open and update it automatically without the need to close and open it again.
+</p>
+
+<p>
+For non-uniform sampled signals, all displayed signals except the processed signal will be automatically displayed as single points instead of lines. This allows to better visualize sparsely sampled signals and to better compare the experimental data to the reconstructed signal.
+</p>
+
+<hr>
+<p>
+NOTE: <br>
+This signal monitoring window sets MATLAB under a uiwait state. This means that as long as the window is open, MATLAB will not be able to open any files. To open files, the signal monitoring window needs to be closed.
+</p>
+<hr>
+
+<!-- =========================================================== -->
+ <a href="postprocessing.html" class="previous", align="left">&laquo; Previous</a>
+&emsp;
+<a href="blindspotssimulator.html" class="next", style="text-align:right">Next &raquo;</a>
+
+
+
+<hr>
+</section>
+
+
+<footer>
+Hyscorean Documentation - Luis Fábregas Ibáñez  2019 - ETH Zurich - Released under the GNU Lesser General Public License (LGPL 3.0).
+</footer>
+
+</body>
+</html>

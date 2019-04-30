@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" href="img/logo64.png">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="stylesheet" href="highlight/matlab.css">
+   <script src="highlight/highlight.pack.js"></script>
+   <script>hljs.initHighlightingOnLoad();</script>
+   <title>Loading data</title>
+</head>
+
+<body>
+
+<header>
+<ul>
+<li><img src="img/logo64.png", width="80%">
+<li class="header-title">Hyscorean
+</ul>
+<p>
+<br>
+<ul>
+<li><a href="index.html">Documentation</a>
+<li><a href="references.html">Publications</a>
+<li><a href="https://bitbucket.org/luisfabib/hyscorean/src/master/" target="_blank">Repository</a>
+<li><a href="https://bitbucket.org/luisfabib/hyscorean/issues?status=new&status=open" target="_blank">Forum</a>
+</ul>
+<br>
+<br>
+<ul> 
+</ul>
+</p>
+</header>
+
+<section>
+
+<hr>
+<div class="functitle">Mounting HYSCORE Data</div>
+<hr>
+
+<p>
+Once the files are loaded the program automatically will start to mount the data into MATLAB variables which the program will manipulate from that point on. The protocol for mounting the data is different for all the file extensions. In the following a short description of the different mounting protocols will be presented. For a description of the mounting of NUS data files see <a href="mountingNUSdata.html">here</a>. 
+</p>
+<hr>
+<p>
+NOTE: <br>
+Once the data has been mounted (for all file formats), the program will automatically set the zero-filling and apodization window lengths in the <code>Processing</code> panel to the corresponding dimensions of the mounted signal.
+</p>
+<hr>
+
+
+<div class="subtitle"> Mounting Bruker BES3T Data </div>
+
+<p>
+Data obtained from commercial Bruker spectrometers is mounted by loading the .DSC or .DTA files. All experimental parameters and sweep axes are extracted from the descriptors on those files. 
+</p>
+
+<p>
+Due to the convenience of saving all τ-values employed in the HYSCORE experiments into one file, Hyscorean expects the an NxNM data grid where N is the dimension of the HYSCORE signal and M is the number of τ-values measured during the experiment.  Therefore, the .DSC and .DTA files are expected to have the following structure: 
+</p>
+
+<center>
+<img src= "img/mounting1.png", width="50%", class="center">
+</center>
+
+<p>
+The τ-values employed during the experiments are then extracted from the PulseSPEL program stored into the descriptors. It is important that the τ-values defined in the PulseSPEL program are stored in the delay <code>d1</code> (the default delay variable used by XEPR). Hyscorean also automatically detects the number of folded experiments (i.e. number of τ-values employed) without any further input from the user.
+</p>
+
+<p>
+Once the data has been mounted, all different τ-values and their possible combinations will be updated for the user to choose from the <code>Tau-selection</code> list box:
+</p>
+
+<center>
+<img src= "img/mounting2.png", width="40%", class="center">
+</center>
+
+<hr>
+<p>
+NOTE: <br>
+The τ -values combination determines which of the measured HYSCORE signals are added (in time-domain) together prior signal processing. Thus, choosing a different combination will restart the processing from the beginning (see later).
+</p>
+<hr>
+
+<p>
+At this point the different parameters for processing of the HYSCORE signal can be selected and the processing started as described <a href="basicprocessing.html">here</a>.
+</p>
+
+<div class="subtitle"> Mounting ASCII Data </div>
+
+<p>
+If the user has HYSCORE data files to process via Hyscorean, which do not pertain to any of the above described formats, these can still be loaded via ASCII formatted files. The program will consider all lines starting with % as comments and ignore them. 
+</p>
+
+<p>
+The files must contain five columns and a row per measured point. For each point the corresponding t1 and t2 times must be given in the <code>first</code> and <code>second</code> column in nanoseconds, respectively. The real and imaginary part of the data point are then given in the <code>third</code> and <code>fourth</code> column. Should the data contain only real values, the <code>fourth</code> column must be set to zeroes. The τ-value employed for the experiment to which the data point belongs must be then given as the <code>fifth</code> column in nanoseconds. Summarizing, the ASCII file should have the following format:
+</p>
+
+<pre>
+ %---------------------------------------------------------------------------------
+ % t1-Timings[ns] t2-Timings[ns]   Real Signal    Imag Signal  Tau-Values[ns]   
+ %---------------------------------------------------------------------------------
+3200		2782		-27784		-11212		128
+3200		2798		-31112		-18688		128
+3200		2814		-20220		-14740		128
+3200		2830		-8132		-2292		128
+3200		2846		-1072		 3768		128
+3200		2862		 2624		 10380		128
+3200		2878		 3300		 11832		128
+3200		2894		-692		 10684		128
+3200		2911		-10764		 5592		128
+3200		2927		-30208		-5752		128
+3200		2943		-46836		-12508		128
+3200		2959		-54712		-14696		128
+3200		2975		-49192		-7840		128
+3200		2991		-40796		 752		128
+3200		3007		-35592		 10012		128
+3200		3023		-24184		 14036		128
+3200		3039		-13828		 14624		128
+...		...		 ...		 ...		...
+
+</pre>
+
+<p>
+Using this ASCII format, all data corresponding to HYSCORE experiments measured at different tau-values can be given as input in a single compact file. As in the previous sections, the program automatically mounts the HYSCORE signals by their corresponding τ-values and their possible combinations are updated for the user to choose from the <code>Tau-selection</code> list box.
+</p>
+
+<p>
+The mounting protocol also automatically checks the uniformity of the input data to check whether the experiment was performed under non-uniform sampling conditions. For cases where the data is non-uniform see <a href="mountingNUSdata.html">here</a> for further details.
+</p>
+
+
+<div class="subtitle"> Mounting EPR@ETH AWG data</div>
+
+<p>
+ Data obtained from this home-built spectrometer is stored in multiple files, each of them containing a single sweep along one dimension. Therefore, all files must be loaded to mount all of them into a single variable. In contrast to commercial Bruker spectrometers, the data contains the raw echoes and not the integral. First the echoes are extracted from the output files and mounted. This starts with a control protocol where the consistency between all loaded files of the size of the echo arrays is checked. This procedure is reported via the status display:
+ </p>
+<center>
+<img src= "img/mounting3.png", width="25%", class="center">
+</center>
+<p>
+The echoes are then mounted. This procedure can be rather long due to the need to pre-process each echo prior to mounting. The user can monitor the progress again via the status display:
+</p>
+<center>
+<img src= "img/mounting4.png", width="25%", class="center">
+</center>
+<p>
+Next, the echoes are integrated according to the following procedure: 
+</p>
+
+<ol>
+<li>	A Gaussian function if fitted to the absolute intensity of the first echo of the mounted data.
+<li>	The fitted function is employed as a window and applied to each echo (as a matched filter)
+<li>	The filtered echoes are integrated
+</ol>
+
+
+<center>
+<img src= "img/mounting6.png", width="35%", class="center">
+</center>
+
+<hr>
+<p>
+NOTE: <br>
+The Gaussian matched filtering can be changed in the MATLAB function integrateEcho.m to boxcar integration.
+</p>
+<hr>
+
+<p>
+This procedure can also be monitored via the status bar:
+</p>
+
+<center>
+<img src= "img/mounting5.png", width="25%", class="center">
+</center>
+
+<p>
+The τ-values are extracted from the experimental data structure and all their combination again displayed in the <code>Tau-selection</code> list box for the user to choose.  
+</p>
+
+
+<!-- =========================================================== -->
+<hr>
+<a href="loadingdata.html" class="previous", align="left">&laquo; Previous</a>
+&emsp;
+<a href="basicprocessing.html" class="next", style="text-align:right">Next &raquo;</a>
+<hr>
+</section>
+
+
+<footer>
+Hyscorean Documentation - Luis Fábregas Ibáñez  2019 - ETH Zurich - Released under the GNU Lesser General Public License (LGPL 3.0).
+</footer>
+
+</body>
+</html>
+

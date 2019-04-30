@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" href="img/logo64.png">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="stylesheet" href="highlight/matlab.css">
+   <script src="highlight/highlight.pack.js"></script>
+   <script>hljs.initHighlightingOnLoad();</script>
+   <title>Starting Fitting Module</title>
+</head>
+
+<body>
+
+<header>
+<ul>
+<li><img src="img/logo64.png", width="80%">
+<li class="header-title">Hyscorean
+</ul>
+<p>
+<br>
+<ul>
+<li><a href="index.html">Documentation</a>
+<li><a href="references.html">Publications</a>
+<li><a href="https://bitbucket.org/luisfabib/hyscorean/src/master/" target="_blank">Repository</a>
+<li><a href="https://bitbucket.org/luisfabib/hyscorean/issues?status=new&status=open" target="_blank">Forum</a>
+</ul>
+<br>
+<br>
+<ul> 
+</ul>
+</p>
+</header>
+
+<section>
+
+<hr>
+<div class="functitle">Starting the Fitting Module</div>
+<hr>
+
+<p>
+Hyscorean’s EasySpin fitting module is a revamped version of the well-known EasySpin esfit function adapted for HYSCORE spectra. However, a big difference to EasySpin (besides the display) is the fact that each simulation performed by EasySpin to fit the HYSCORE spectra is processed the same as the experimental spectrum in Hyscorean (with exception of the background correction which is performed differently). This can make big differences in the RMSD-based fit of EasySpin when using processing techniques such as the Lorentz-Gauss transformation or some apodization windows.
+</p>
+
+<!-- =========================================================== -->
+<div class="subtitle">Loading Single Spectra</div>
+<p>
+
+<p>
+The most straightforward way to start the fitting module is directly from the Hyscorean main window by pressing the <code>Fitting Module</code> button.
+</p>
+<center>
+<img src= "img/startingmodule1.png",  width="15%", class="center">
+</center>
+
+<p>
+This will open the fitting module GUI and load all required data for the fit: spectrum and axis, processing settings, experimental values (e.g. magnetic field and offset, τ-values, time-sweeps steps,…) and construct all corresponding EasySpin structures.
+</p>
+
+
+<!-- =========================================================== -->
+<div class="subtitle">Loading Multiple Spectra</div>
+<p>
+
+<p>
+It may be of interest for the user to fit several HYSCORE spectra of a same system measured at different magnetic field positions. Hyscorean’s fitting module allows the simultaneous fitting of several spectra at the same time via the same interface as for single spectra.  This, however, is started in a different way although with minimal effort for the user:
+</p>
+
+<ol>
+	<li>
+	<p>
+	Process all HYSCORE spectra in Hyscorean
+	</p>
+	
+	<li>
+	<p>
+	Save them individually via the <code>Save&Report </code> button. As described <a href="savingsession.html">here</a>. this will create an output file with the suffix <code>DataForFitting.mat</code> containing all necessary input for the fitting module. 
+	</p>
+	
+	<li>
+	<p>
+	Create a MATLAB script which defines a variable containing the paths and filenames of those files and call the validation module as a standalone GUI via the <code>launch_Hyscorean_fit</code> function. The script should look as follows:
+	</p>
+	
+	<pre class="matlab">
+	clear Files
+	 
+	Path = 'D:\This\Is\An\Example\Path';
+	Files{1} = '20181206_FieldPosition1_DataForFitting';
+	Files{2} = '20181206_ FieldPosition2_DataForFitting';
+	Files{3} = '20181206_ FieldPosition3_DataForFitting_2';
+
+	launch_Hyscorean_fit(Files,Path)	</pre>
+	<li>
+	<p>
+	By running the script, the fitting module will be started, and all the spectra will be loaded along their individual experimental and processing parameters.
+	</p>
+</ol>
+
+<!-- =========================================================== -->
+<hr>
+<a href="auxiliarylines.html" class="previous", align="left">&laquo; Previous</a>
+&emsp;
+<a href="fittingspectra.html" class="next", style="text-align:right">Next &raquo;</a>
+<hr>
+</section>
+
+
+<footer>
+Hyscorean Documentation - Luis Fábregas Ibáñez  2019 - ETH Zurich - Released under the GNU Lesser General Public License (LGPL 3.0).
+</footer>
+
+</body>
+</html>
