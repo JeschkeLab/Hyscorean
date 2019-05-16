@@ -66,8 +66,8 @@ if handles.RawData.NUSflag
       set(handles.BackgroundParameter_Check,'enable','on')
     otherwise
       set(handles.ThresholdParameter_Check,'enable','off')
-      set(handles.LagrangeMultiplier_Check,'enable','oon')
-      set(handles.BackgroundParameter_Check,'enable','oon')
+      set(handles.LagrangeMultiplier_Check,'enable','on')
+      set(handles.BackgroundParameter_Check,'enable','on')
   end
 else
   set(handles.NoiseLevel_Check,'enable','off')
@@ -645,6 +645,12 @@ CustomColormap = load(fullfile(HyscoreanPath,'bin', 'RedWhiteColorMap_old.mat'))
 CustomColormap = CustomColormap.mycmap;
 CustomColormap = fliplr(CustomColormap(1:end-2,:)')';
 CustomColormap(1,:) = [1 1 1];
+% CustomColormap(2,:) = [1 1 1];
+% CustomColormap(3,:) = [1 1 1];
+
+% CustomColormap(:,1) = 1;
+% CustomColormap(:,2) = 0;
+% CustomColormap(:,3) = 0;
 
 %Clear current display in axes
 cla(handles.ValidationMainPlot)
@@ -658,16 +664,6 @@ minContourLevel = min(min(Defaults.MinimalContourLevel/100*abs((MeanReconstructi
 maxContourLevel = max(max(Defaults.MaximalContourLevel/100*abs((MeanReconstruction))));
 ContourLevels = linspace(minContourLevel,maxContourLevel,ContourLevels);
 
-%Display mean validation spectrum as black contour plot with custom contour levels
-contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((MeanReconstruction)),ContourLevels,'k','LineWidth',1)
-
-%Configure axis
-set(handles.ValidationMainPlot,'YLim',[0 Defaults.XUpperLimit],'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
-grid(handles.ValidationMainPlot,'on')
-xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
-hold(handles.ValidationMainPlot,'on')
-ticks = xticks(handles.ValidationMainPlot);
-set(handles.ValidationMainPlot,'ytick',ticks)
 %Select the validation results chosen by the user to display
 switch handles.DisplayRadioStatus
   case 'lower'
@@ -677,19 +673,59 @@ switch handles.DisplayRadioStatus
     Display = UpperBound;
     colormap(handles.ValidationMainPlot,CustomColormap)
   case 'uncertainty'
-    Display = 2*Uncertainty;
+    Display = Uncertainty;
 end
+
+if get(handles.superimpose_Check,'value')
+
+%Display mean validation spectrum as black contour plot with custom contour levels
+contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((MeanReconstruction)),ContourLevels,'k','LineWidth',1)
+colormap(handles.ValidationMainPlot,'jet')
+
+
+%Configure axis
+set(handles.ValidationMainPlot,'YLim',[0 Defaults.XUpperLimit],'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
+grid(handles.ValidationMainPlot,'on')
+xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPlot,'\nu_2 [MHz]')
+hold(handles.ValidationMainPlot,'on')
+ticks = xticks(handles.ValidationMainPlot);
+set(handles.ValidationMainPlot,'ytick',ticks)
+set(handles.ValidationMainPlot,'FontSize',13)
+
 %Display it as a colormap 
+ZDisplacement = -0.2;
+
+% h = surf(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,ZDisplacement+Display);
 h = pcolor(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display);
-%Set transparency to see the contour plot below
-h.FaceAlpha  = 0.7;
+
+% caxis(handles.ValidationMainPlot,[min(min(ZDisplacement+Display)),max(max(ZDisplacement+Display))])% 
+% h.AlphaData  = Display*0 + 0.7;
+h.FaceAlpha  = 0.65;
+% cmp = cbrewer('div','RdBu',2*Defaults.Levels);
+% cmp = flipud(cmp(1:size(cmp,1)/2,:));
+% cmp(1,:) = [1 1 1];
 colormap(handles.ValidationMainPlot,CustomColormap)
+% rotate3d(handles.ValidationMainPlot,'on')
+% rotate3d(new_handle,'on')
 
 %Further configure the axes
 grid(handles.ValidationMainPlot,'on')
 shading(handles.ValidationMainPlot,'interp')
-caxis(handles.ValidationMainPlot,[Defaults.MinimalContourLevel/100 Defaults.MaximalContourLevel/100])
-% caxis(handles.ValidationMainPlot,[min(min(Display)) max(max(Display))])
+caxis(handles.ValidationMainPlot,[0 max(max(abs(MeanReconstruction)))])
+% handles.Link = linkprop([handles.ValidationMainPlot,new_handle],{'CameraUpVector', 'CameraPosition', 'CameraTarget', 'XLim', 'YLim', 'ZLim'});
+% new_handle.Visible = 'off';
+% handles.ValidationMainPlot = 'off';
+
+% zlim(new_handle,[min(min(ZDisplacement+Display)) max(max(max(ZDisplacement+Display)),0)])
+% uistack(handles.ValidationMainPlot,'top')
+% new_handle.Tag = 'GhostAxis';
+else
+ 
+  Display = Display/max(max(Display));
+contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((Display)),ContourLevels,'LineWidth',1)
+colormap(handles.ValidationMainPlot,'parula')
+  
+end
 
 hold(handles.ValidationMainPlot,'off')
 
@@ -698,29 +734,40 @@ cla(handles.ValidationInset1)
 
 QuadrantCutoff = round(length(FrequencyAxis1)/2);
 
-%Get projection of mean spectrum
-MeanInset = max(MeanReconstruction(:,QuadrantCutoff:end),[],2)';
-plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
-hold(handles.ValidationInset1,'on')
+if get(handles.superimpose_Check,'value')
+  %Get projection of mean spectrum
+  MeanInset = max(MeanReconstruction(:,QuadrantCutoff:end),[],2)';
+  plot(handles.ValidationInset1,FrequencyAxis1,MeanInset,'k')
+  hold(handles.ValidationInset1,'on')
+  Color = 'r';
+else
+  Color = 'k';
+end
 %Get projection of validation result
 switch handles.DisplayRadioStatus
   case 'uncertainty'
-    Upper = MeanReconstruction(QuadrantCutoff:end,:) + 2*Uncertainty(QuadrantCutoff:end,:);
-    Lower = MeanReconstruction(QuadrantCutoff:end,:) - 2*Uncertainty(QuadrantCutoff:end,:);
+    if get(handles.superimpose_Check,'value')
+    Upper = abs(MeanReconstruction(QuadrantCutoff:end,:)) + 2*abs(Uncertainty(QuadrantCutoff:end,:));
+    Lower = MeanReconstruction(QuadrantCutoff:end,:) - 2*abs(Uncertainty(QuadrantCutoff:end,:));
     LowerInset =  max(Lower/max(max(Lower)));
     UpperInset =  max(Upper/max(max(Upper)));
     a1 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ LowerInset  fliplr(MeanInset) ], 'r','LineStyle','none');
     a2 = fill(handles.ValidationInset1,[FrequencyAxis1 fliplr(FrequencyAxis1)], [ MeanInset fliplr(UpperInset)  ], 'r','LineStyle','none');
     a1.FaceAlpha = 0.5;
     a2.FaceAlpha = 0.5;
+    else
+      Inset = MeanReconstruction(QuadrantCutoff:end,:);
+      Inset =  max(Inset/max(max(Inset)));
+      plot(handles.ValidationInset1,FrequencyAxis1,Inset,Color,'LineWidth',1.5)
+    end
   case 'upper'
     Upper = UpperBound(QuadrantCutoff:end,:);
     UpperInset =  max(Upper/max(max(Upper)));
-    plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,'r','LineWidth',1.5)
+    plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,Color,'LineWidth',1.5)
   case 'lower'
     Lower = LowerBound(QuadrantCutoff:end,:);
     LowerInset =  max(Lower/max(max(Lower)));
-    plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,'r','LineWidth',1.5)
+    plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,Color,'LineWidth',1.5)
 end
 %Configure the inset axes
 set(handles.ValidationInset1,'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
@@ -731,29 +778,41 @@ hold(handles.ValidationInset2,'off')
 %Clear the side inset
 cla(handles.ValidationInset2)
 
-%Get projection of mean spectrum
-MeanInset = max(MeanReconstruction);
-plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
-hold(handles.ValidationInset2,'on')
+if get(handles.superimpose_Check,'value')
+  %Get projection of mean spectrum
+  MeanInset = max(MeanReconstruction);
+  plot(handles.ValidationInset2,MeanInset,FrequencyAxis1,'k')
+  hold(handles.ValidationInset2,'on')
+  Color = 'r';
+else
+  Color = 'k';
+end
+
 %Get projection of validation result
 switch handles.DisplayRadioStatus
   case 'uncertainty'
-    Upper = MeanReconstruction + Uncertainty;
-    Lower = MeanReconstruction - Uncertainty;
-    LowerInset =  max(Lower/max(max(Lower)));
-    UpperInset =  max(Upper/max(max(Upper)));
-    a1 = fill(handles.ValidationInset2, [LowerInset  fliplr(MeanInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
-    a2 = fill(handles.ValidationInset2, [MeanInset fliplr(UpperInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
-    a1.FaceAlpha = 0.5;
-    a2.FaceAlpha = 0.5;
+    if get(handles.superimpose_Check,'value')
+      Upper = MeanReconstruction + 2*Uncertainty;
+      Lower = MeanReconstruction - 2*Uncertainty;
+      LowerInset =  max(Lower/max(max(Lower)));
+      UpperInset =  max(Upper/max(max(Upper)));
+      a1 = fill(handles.ValidationInset2, [LowerInset  fliplr(MeanInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
+      a2 = fill(handles.ValidationInset2, [MeanInset fliplr(UpperInset)],[FrequencyAxis1 fliplr(FrequencyAxis1)], 'r','LineStyle','none');
+      a1.FaceAlpha = 0.5;
+      a2.FaceAlpha = 0.5;
+    else
+      Inset = MeanReconstruction;
+      Inset =  max(Inset/max(max(Inset)));
+      plot(handles.ValidationInset2,Inset,FrequencyAxis1,Color,'LineWidth',1.5)
+    end
   case 'upper'
     Upper = UpperBound;
     UpperInset =  max(Upper/max(max(Upper)));
-    plot(handles.ValidationInset2,UpperInset,FrequencyAxis1,'r')
+    plot(handles.ValidationInset2,UpperInset,FrequencyAxis1,Color,'LineWidth',1.5)
   case 'lower'
     Lower = LowerBound;
     LowerInset =  max(Lower/max(max(Lower)));
-    plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,'r')
+    plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,Color,'LineWidth',1.5)
 end
 %Configure the inset axes
 set(handles.ValidationInset2,'YLim',[0 Defaults.XUpperLimit])
@@ -763,6 +822,8 @@ hold(handles.ValidationInset2,'off')
 
 %Inform user that the graphics are rendered
 set(handles.ValidationStatus,'string','Ready'),drawnow;
+
+guidata(handles.ValidationMainPlot, handles);
 
 return
 %------------------------------------------------------------------------------
@@ -972,6 +1033,7 @@ ExternalHandles.DisplayRadioStatus = handles.DisplayRadioStatus;
 ExternalHandles.SetParameterSet_Button = handles.SetParameterSet_Button;
 ExternalHandles.RawData = handles.RawData;
 ExternalHandles.Defaults = handles.Defaults;
+ExternalHandles.superimpose_Check = handles.superimpose_Check;
 %Update the graphics in the detached figure
 
 if get(handles.DisplayMean_Radio,'value')
@@ -1057,6 +1119,16 @@ MeanReconstruction = mean(ReconstructedSpectra,3);
 MeanReconstruction = MeanReconstruction/max(max(MeanReconstruction));
 Uncertainty = std(ReconstructedSpectra,0,3);
 
+Properties = whos('ReconstructedSpectra');
+ExpectedFileSize = Properties.bytes/1e9;
+
+if ExpectedFileSize>1
+    Answer = questdlg(sprintf('The data file size to be exported is %.2f GB. Do you still want to export it? ',ExpectedFileSize), ...
+	'Large data export', 'Yes','No','No');
+else
+  Answer = 'Yes';
+end
+ 
 %Save them to an output structure
 ValidationResults.ParameterSets = handles.ParameterSets;
 for i=1:length(ValidationResults.ParameterSets)
@@ -1081,6 +1153,7 @@ FrequencyAxis2 = linspace(-1/(2*TimeStep2),1/(2*TimeStep2),Dimension2);
 ValidationResults.FrequencyAxis1 = FrequencyAxis1;
 ValidationResults.FrequencyAxis2 = FrequencyAxis2;
 
+if strcmp(Answer,'Yes')
 %Format savename until it is different from the rest in the folder
 SaveName = sprintf('%s_%s_ValidationData.mat',Date,Identifier);
 CopyIndex = 1;
@@ -1097,6 +1170,7 @@ end
 
 %Save settings to file
 save(fullfile(FullPath,SaveName),'ValidationResults');
+end
 
 %Update the graphics in the detached figure
 ExternalHandles.ReconstructedSpectra = ReconstructedSpectra;
@@ -1113,7 +1187,7 @@ ExternalHandles.ValidationMainPlot = axes('Units','Normalized','Parent',FigureHa
 ExternalHandles.ValidationInset1 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.08 0.75 0.7 0.2]);
 ExternalHandles.ValidationInset2 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.8 0.12 0.15 0.6]);
 ExternalHandles.ValidationStatus = uicontrol('Parent',FigureHandle,'Style','text','Visible','off','Position',[0.8 0.12 0.15 0.6]);
-
+ExternalHandles.superimpose_Check = handles.superimpose_Check;
 %Plot uncertainty and save
 ExternalHandles.DisplayRadioStatus = 'uncertainty';
 updateValidationPlots(ExternalHandles)
@@ -1200,5 +1274,12 @@ end
 
 close(f)
 
+return
+%------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------
+function superimpose_Check_Callback(hObject, eventdata, handles)
+updateValidationPlots(handles)
+guidata(hObject, handles);
 return
 %------------------------------------------------------------------------------
