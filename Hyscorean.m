@@ -732,12 +732,17 @@ function AddHelpLine_Callback(hObject, eventdata, handles)
 %Get gyromagnetic ratio from selected nuclei
 gyromagneticRatio = getgyro_Hyscorean(get(handles.AddTagList,'Value'));
 %Get center field in gauss
-if isfield(handles.Data,'BrukerParameters')
-  CenterField = handles.Data.BrukerParameters.CenterField;
-  %Remove units character and convert to double
-  CenterField = str2double(CenterField(1:end-2));
-elseif isfield(handles.Data,'AWG_Parameters')
-  CenterField = handles.Data.AWG_Parameters.B;
+try
+  if isfield(handles.Data,'BrukerParameters')
+    CenterField = handles.Data.BrukerParameters.CenterField;
+    %Remove units character and convert to double
+    CenterField = str2double(CenterField(1:end-2));
+  elseif isfield(handles.Data,'AWG_Parameters')
+    CenterField = handles.Data.AWG_Parameters.B;
+  end
+  
+catch
+  errordlg('The experimental parameters could not be extracted from the loaded file.','File Error');
 end
 %convert to tesla
 CenterField = CenterField*1e-4;
