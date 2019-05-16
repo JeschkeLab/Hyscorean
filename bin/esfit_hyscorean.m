@@ -674,8 +674,8 @@ if FitData.GUI
   set(hsubAx2,'XLim',[0 1]);
   
   %Set labels of main axis
-  xlabel(hAx,'\omega_1 [MHz]');
-  ylabel(hAx,'\omega_2 [MHz]');
+  xlabel(hAx,'\nu_1 [MHz]');
+  ylabel(hAx,'\nu_2 [MHz]');
   
   %Remove all ticks in the insets
   set(hsubAx1,'XTickLabel',[],'YTickLabel',[]);
