@@ -573,8 +573,10 @@ Position(1) = Position(1)+500;
 Position(2) = Position(2)+60;
 %Copy object as it is
 AxesHandles = copyobj(handles.mainPlot,Figure);
+GraphicalSettings = getpref('hyscorean','graphicalsettings');
 set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE Spectrum','Units','pixels','Position',[Position(1) Position(2) 776 415]);
 set(AxesHandles,'Position',[0.07 0.12 0.9 0.85]);
+colormap(AxesHandles,GraphicalSettings.ColormapName)
 
 %If the blindspots are being superimposed then switch to the hot colormap
 if get(handles.ImposeBlindSpots,'value')

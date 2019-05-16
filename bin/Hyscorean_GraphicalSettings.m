@@ -69,6 +69,8 @@ return
 function Colormap_Callback(hObject, eventdata, handles)
 %Update graphicsl settings structure in handles
 handles.GraphicalSettings.Colormap = (get(hObject,'value'));
+List =get(hObject,'string');
+handles.GraphicalSettings.ColormapName = List{handles.GraphicalSettings.Colormap};
 guidata(hObject, handles);
 return
 %==========================================================================
