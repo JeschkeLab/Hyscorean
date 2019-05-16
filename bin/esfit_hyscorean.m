@@ -1518,8 +1518,9 @@ if FitData.GUI%&& ((UserCommand~=99) )
     CurrentExpSpec = ExpSpec{FitData.CurrentSpectrumDisplay};
     CurrentSimSpec = simspec{FitData.CurrentSpectrumDisplay};
     FitData.CurrentSimSpec = simspec;
+    if isfield(FitData,'bestspec')
     CurrentBestSpec = FitData.bestspec{FitData.CurrentSpectrumDisplay};
-
+    end
 if FitOpts.MethodID<7
   % update contour graph  
   %       set(findobj('Tag','expdata'),'XData',FrequencyAxis,'YData',FrequencyAxis,'ZData',CurrentExpSpec);
@@ -2913,6 +2914,10 @@ global FitData FitOpts
 %Ask the user to select the ORCA file
 [Filename,Path] = uigetfile('.prop','Load ORCA data');
 
+if Filename == 0
+  return
+end
+
 %Convert the ORCA output to EasySpin structure
 ORCA_Sys = orca2easyspin(fullfile(Path,Filename));
 
@@ -2958,6 +2963,7 @@ List{i+1} = sprintf('<HTML>#%i <SUP> %s </SUP> %s </HTML>',i+1,IsotopeNumber,Nuc
 %Store hte current Sys and Vary structurers into temporary variables
 Temp = FitData.Sys0;
 Temp2 = FitData.Vary;
+Temp3 = FitData.Exp;
 
 if Answered
   try
@@ -3020,6 +3026,14 @@ if Answered
       fitspc = FitData.ExpSpecScaled;
     end
     
+    %If user wants to simulate more than 3 nuclei, use product rule for speed
+    if numel(N)>2
+      FitData.SimOpt{1}.ProductRule = 1;
+    else
+      FitData.SimOpt{1}.ProductRule = 0;
+    end
+      FitData.Exp{1} = rmfield(FitData.Exp{1},'ExciteWidth');
+      FitData.Exp{1} = rmfield(FitData.Exp{1},'mwFreq');
     FitData.Sys0 = {ORCASys};
     %Set a dummy for vary for asses to work
     Dummy.A = 1;
@@ -3034,7 +3048,8 @@ if Answered
     %Once simulation finished restore the Sys and Vary as they were before
     FitData.Sys0 = Temp;
     FitData.Vary = Temp2;
-    
+    FitData.Exp = Temp3;
+
     close(f)
     
   catch Error
@@ -3043,6 +3058,7 @@ if Answered
     %If crashes restore the Sys and Vary as they were before
     FitData.Sys0 = Temp;
     FitData.Vary = Temp2;
+    FitData.Exp = Temp3;
     %And warn the user about the error
     f = errordlg(sprintf('Simulaton failed due to errors: \n\n %s \n\n ',getReport(Error,'extended','hyperlinks','off')),'Error','modal');
     
