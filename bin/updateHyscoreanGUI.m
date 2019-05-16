@@ -175,7 +175,7 @@ xlabel(handles.mainPlot,'\nu_1 [MHz]');
 ylabel(handles.mainPlot,'\nu_2 [MHz]');
 currentXTicks = xticks(handles.mainPlot);
 yticks(handles.mainPlot,currentXTicks(currentXTicks>=0))
-set(handles.mainPlot,'yticklabel',currentXTicks(currentXTicks>=0),'xticklabel',currentXTicks)
+% set(handles.mainPlot,'yticklabel',currentXTicks(currentXTicks>=0),'xticklabel',currentXTicks)
 
 
 % Finish & Exit
