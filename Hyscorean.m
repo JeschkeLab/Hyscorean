@@ -638,6 +638,8 @@ options.levels=handles.GraphicalSettings.Levels;
 options.Linewidth=handles.GraphicalSettings.LineWidth;
 options.nonewfig = true;
 options.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
+options.MaximalContourLevel = str2double(get(handles.MaximalContourLevel,'string'));
+
 colormap(handles.GraphicalSettings.ColormapName)
 if handles.GraphicalSettings.Absolute
   spectrum2 = abs(handles.Processed.spectrum);

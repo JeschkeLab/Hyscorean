@@ -120,12 +120,14 @@ elseif strcmp(options.type,'real')
 elseif strcmp(options.type,'imag')
     plotarea = imag(y');
 end
-
+%Transpose to be according with Hyscorean display
+plotarea = plotarea';
 %Compute contour levels according to minimal contour level given by user
 Levels=levels;
 MinimalContourLevel = options.MinimalContourLevel;
-MaximalContourLevel = max(max(plotarea));
-MinimalContourLevel = MaximalContourLevel*MinimalContourLevel/100;
+MaximalContourLevel = options.MaximalContourLevel;
+MinimalContourLevel = max(max(plotarea))*MinimalContourLevel/100;
+MaximalContourLevel =  max(max(plotarea))*MaximalContourLevel/100;
 ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
 ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
 
