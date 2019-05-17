@@ -673,15 +673,12 @@ switch handles.DisplayRadioStatus
     Display = UpperBound;
     colormap(handles.ValidationMainPlot,CustomColormap)
   case 'uncertainty'
+    if get(handles.superimpose_Check,'value')
     Display = Uncertainty;
+    else
+    Display = MeanReconstruction;
+    end
 end
-
-if get(handles.superimpose_Check,'value')
-
-%Display mean validation spectrum as black contour plot with custom contour levels
-contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((MeanReconstruction)),ContourLevels,'k','LineWidth',1)
-colormap(handles.ValidationMainPlot,'jet')
-
 
 %Configure axis
 set(handles.ValidationMainPlot,'YLim',[0 Defaults.XUpperLimit],'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
@@ -692,8 +689,11 @@ ticks = xticks(handles.ValidationMainPlot);
 set(handles.ValidationMainPlot,'ytick',ticks)
 set(handles.ValidationMainPlot,'FontSize',13)
 
-%Display it as a colormap 
-ZDisplacement = -0.2;
+if get(handles.superimpose_Check,'value')
+
+%Display mean validation spectrum as black contour plot with custom contour levels
+contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((MeanReconstruction)),ContourLevels,'k','LineWidth',1)
+colormap(handles.ValidationMainPlot,'jet')
 
 % h = surf(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,ZDisplacement+Display);
 h = pcolor(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,Display);
@@ -721,7 +721,7 @@ caxis(handles.ValidationMainPlot,[0 max(max(abs(MeanReconstruction)))])
 % new_handle.Tag = 'GhostAxis';
 else
  
-  Display = Display/max(max(Display));
+% Display = Display/max(max(Display));
 contour(handles.ValidationMainPlot,FrequencyAxis1,FrequencyAxis2,abs((Display)),ContourLevels,'LineWidth',1)
 colormap(handles.ValidationMainPlot,'parula')
   
@@ -757,17 +757,20 @@ switch handles.DisplayRadioStatus
     a2.FaceAlpha = 0.5;
     else
       Inset = MeanReconstruction(QuadrantCutoff:end,:);
-      Inset =  max(Inset/max(max(Inset)));
-      plot(handles.ValidationInset1,FrequencyAxis1,Inset,Color,'LineWidth',1.5)
+%       Inset =  max(Inset/max(max(Inset)));
+      Inset =  max(Inset);
+      plot(handles.ValidationInset1,FrequencyAxis1,Inset,Color,'LineWidth',1)
     end
   case 'upper'
     Upper = UpperBound(QuadrantCutoff:end,:);
-    UpperInset =  max(Upper/max(max(Upper)));
-    plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,Color,'LineWidth',1.5)
+%     UpperInset =  max(Upper/max(max(Upper)));
+    UpperInset =  max(Upper);
+    plot(handles.ValidationInset1,FrequencyAxis1,UpperInset,Color,'LineWidth',1)
   case 'lower'
     Lower = LowerBound(QuadrantCutoff:end,:);
-    LowerInset =  max(Lower/max(max(Lower)));
-    plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,Color,'LineWidth',1.5)
+%     LowerInset =  max(Lower/max(max(Lower)));
+    LowerInset =   max(Lower);
+    plot(handles.ValidationInset1,FrequencyAxis1,LowerInset,Color,'LineWidth',1)
 end
 %Configure the inset axes
 set(handles.ValidationInset1,'XLim',[-Defaults.XUpperLimit Defaults.XUpperLimit])
@@ -802,17 +805,20 @@ switch handles.DisplayRadioStatus
       a2.FaceAlpha = 0.5;
     else
       Inset = MeanReconstruction;
-      Inset =  max(Inset/max(max(Inset)));
-      plot(handles.ValidationInset2,Inset,FrequencyAxis1,Color,'LineWidth',1.5)
+%       Inset =  max(Inset/max(max(Inset)));
+      Inset =  max(Inset);
+      plot(handles.ValidationInset2,Inset,FrequencyAxis1,Color,'LineWidth',1)
     end
   case 'upper'
     Upper = UpperBound;
-    UpperInset =  max(Upper/max(max(Upper)));
-    plot(handles.ValidationInset2,UpperInset,FrequencyAxis1,Color,'LineWidth',1.5)
+%     UpperInset =  max(Upper/max(max(Upper)));
+    UpperInset =  max(Upper);
+    plot(handles.ValidationInset2,UpperInset,FrequencyAxis1,Color,'LineWidth',1)
   case 'lower'
     Lower = LowerBound;
-    LowerInset =  max(Lower/max(max(Lower)));
-    plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,Color,'LineWidth',1.5)
+%     LowerInset =  max(Lower/max(max(Lower)));
+    LowerInset =   max(Lower);
+    plot(handles.ValidationInset2,LowerInset,FrequencyAxis1,Color,'LineWidth',1)
 end
 %Configure the inset axes
 set(handles.ValidationInset2,'YLim',[0 Defaults.XUpperLimit])
@@ -911,6 +917,7 @@ xlabel(handles.ValidationMainPlot,'\nu_1 [MHz]'),ylabel(handles.ValidationMainPl
 colormap(handles.ValidationMainPlot,'parula')
 ticks = xticks(handles.ValidationMainPlot);
 set(handles.ValidationMainPlot,'ytick',ticks)
+set(handles.ValidationMainPlot,'FontSize',13)
 
 %Set the upper inset
 cla(handles.ValidationInset1)
@@ -1279,6 +1286,13 @@ return
 
 %------------------------------------------------------------------------------
 function superimpose_Check_Callback(hObject, eventdata, handles)
+
+if get(hObject,'Value')
+  set(handles.DisplayUncertainty_Radio,'String','Uncertainty')
+else
+  set(handles.DisplayUncertainty_Radio,'String','Mean')
+end
+
 updateValidationPlots(handles)
 guidata(hObject, handles);
 return
