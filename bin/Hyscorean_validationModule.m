@@ -299,7 +299,7 @@ IntegerTrials = floor(handles.NumberTrialsVector(2));
 set(hObject,'string',IntegerTrials);
 MaxValue = str2double(get(handles.BackgroundDimension1_Max,'string'));
 MinValue = str2double(get(handles.BackgroundDimension1_Min,'string'));
-PossibleIntegers = length(MinValue:1:MaxValue);
+PossibleIntegers = length(MinValue:IntegerTrials:MaxValue);
 if IntegerTrials>PossibleIntegers
   handles.NumberTrialsVector(2) = PossibleIntegers;
   set(hObject,'string',PossibleIntegers);
@@ -315,7 +315,7 @@ IntegerTrials = floor(handles.NumberTrialsVector(3));
 set(hObject,'string',IntegerTrials);
 MaxValue = str2double(get(handles.BackgroundStart2_Max,'string'));
 MinValue = str2double(get(handles.BackgroundStart2_Min,'string'));
-PossibleIntegers = length(MinValue:1:MaxValue);
+PossibleIntegers = length(MinValue:IntegerTrials:MaxValue);
 if IntegerTrials>PossibleIntegers
   handles.NumberTrialsVector(3) = PossibleIntegers;
   set(hObject,'string',PossibleIntegers);
@@ -501,6 +501,7 @@ if get(handles.BackgroundDimension1_Check,'value')
   BackgroundDimension1_Max = str2double(get(handles.BackgroundDimension1_Max,'string'));
   BackgroundDimension1_Trials = str2double(get(handles.BackgroundDimension1_Trials,'string'));
   BackgroundDimension1_Vector  = linspace(BackgroundDimension1_Min,BackgroundDimension1_Max,BackgroundDimension1_Trials);
+  BackgroundDimension1_Vector = round(BackgroundDimension1_Vector);
 else
   BackgroundDimension1_Vector = Defaults.BackgroundDimension1;
 end
@@ -509,6 +510,7 @@ if get(handles.BackgroundDimension2_Check,'value')
   BackgroundDimension2_Max = str2double(get(handles.BackgroundDimension2_Max,'string'));
   BackgroundDimension2_Trials = str2double(get(handles.BackgroundDimension2_Trials,'string'));
   BackgroundDimension2_Vector  = linspace(BackgroundDimension2_Min,BackgroundDimension2_Max,BackgroundDimension2_Trials);
+  BackgroundDimension2_Vector = round(BackgroundDimension2_Vector);
 else
   BackgroundDimension2_Vector = Defaults.BackgroundDimension2;
 end
