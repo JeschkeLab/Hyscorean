@@ -441,18 +441,21 @@ function BackgroundMethod1_Callback(hObject, eventdata, handles)
 switch get(hObject,'Value')
   case 1
     set(handles.BackgroundParameterText1,'String','')
-    set(handles.BackgroundParameter1,'enable','off')
+    set(handles.BackgroundParameter1,'visible','off')
   case 2
     set(handles.BackgroundParameterText1,'String','Fractal Dimension')
+    set(handles.BackgroundParameter1,'visible','on')
     set(handles.BackgroundParameter1,'enable','on')
     set(handles.BackgroundParameter1,'String','1')
   case 3
     set(handles.BackgroundParameterText1,'String','Polynomial Order')
     set(handles.BackgroundParameter1,'String','1')
+    set(handles.BackgroundParameter1,'visible','on')
     set(handles.BackgroundParameter1,'enable','on')
   case 4
     set(handles.BackgroundParameterText1,'String','Exponential Order')
     set(handles.BackgroundParameter1,'enable','on')
+    set(handles.BackgroundParameter1,'visible','on')
     set(handles.BackgroundParameter1,'String','1')
 end
 handles.backgroundCorrectionSwitch = true;
@@ -468,18 +471,21 @@ function BackgroundMethod2_Callback(hObject, eventdata, handles)
 switch get(hObject,'Value')
   case 1
     set(handles.BackgroundParameterText2,'String','')
-    set(handles.BackgroundParameter2,'enable','off')
+    set(handles.BackgroundParameter2,'visible','off')
   case 2
     set(handles.BackgroundParameterText2,'String','Fractal Dimension')
     set(handles.BackgroundParameter2,'enable','on')
+    set(handles.BackgroundParameter2,'visible','on')
     set(handles.BackgroundParameter2,'String','1')
   case 3
     set(handles.BackgroundParameterText2,'String','Polynomial Order')
     set(handles.BackgroundParameter2,'String','1')
+    set(handles.BackgroundParameter2,'visible','on')
     set(handles.BackgroundParameter2,'enable','on')
   case 4
     set(handles.BackgroundParameterText2,'String','Exponential Order')
     set(handles.BackgroundParameter2,'enable','on')
+    set(handles.BackgroundParameter2,'visible','on')
     set(handles.BackgroundParameter2,'String','1')
 end
 handles.backgroundCorrectionSwitch = true;
