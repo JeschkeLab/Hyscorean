@@ -1,4 +1,4 @@
-function Blindspot_simulator(FrequencyAxis,Spectrum,SpecLim)
+function Blindspot_simulator(FrequencyAxis1,FrequencyAxis2,Spectrum,SpecLim)
 %==========================================================================
 % HYSCORE blind spot simulator
 %==========================================================================
@@ -18,18 +18,19 @@ function Blindspot_simulator(FrequencyAxis,Spectrum,SpecLim)
 %==========================================================================
 %Check inputs
 if nargin<2
-  Spectrum = nan(length(FrequencyAxis));
+  Spectrum = nan(length(FrequencyAxis1),length(FrequencyAxis2));
   warning('off','all')
 end
 if nargin<3
-  SpecLim = max(FrequencyAxis);
+  SpecLim = max(FrequencyAxis1);
 end
 TauValues = []; 
 
 %Use a global variable to pass inputs between all callbacks more easily
 clear global;
 global SimData
-SimData.FrequencyAxis = FrequencyAxis;
+SimData.FrequencyAxis1 = FrequencyAxis1;
+SimData.FrequencyAxis2 = FrequencyAxis2;
 SimData.Spectrum = abs(Spectrum/max(max(abs(Spectrum))));
 SimData.TauValues = TauValues;
 SimData.SpecLim = SpecLim;
@@ -57,14 +58,13 @@ uicontrol('units','normalized','string','Overlap experimental spectrum','positio
           'Style','checkbox','Tag','displaySpectrum','callback',{@BlindspotsSpoter,SliderHandle});        
       
 %Plot the experimental contour spectrum already and just make it (in)-visible later
-[~,ContourHandle] = contour(SimData.FrequencyAxis,SimData.FrequencyAxis,SimData.Spectrum,40,'LineWidth',1,'Color','k');
+[~,ContourHandle] = contour(SimData.FrequencyAxis1,SimData.FrequencyAxis2,SimData.Spectrum,40,'LineWidth',1,'Color','k');
 SimData.ConoturHandle =  ContourHandle;
 
 %Plot with lowest tau value to construct and initialize the plot
 FirstTauValue = 100/1000;
-Axis = linspace(min(SimData.FrequencyAxis),max(SimData.FrequencyAxis),50);
-BlindSpotsAxis1  = Axis;
-BlindSpotsAxis2  = Axis;
+BlindSpotsAxis1 = linspace(min(SimData.FrequencyAxis1),max(SimData.FrequencyAxis1),80);
+BlindSpotsAxis2 = linspace(min(SimData.FrequencyAxis2),max(SimData.FrequencyAxis2),80);
 Dimension1 = length(BlindSpotsAxis1);
 Dimension2 = length(BlindSpotsAxis2);
 BlinSpotsMap = zeros(Dimension1,Dimension2);
@@ -91,9 +91,8 @@ CurrentTau = SimData.TauValues;
 TauValue = get(findobj('tag','slider'),'value');
 TauValues = [CurrentTau TauValue]/1000;
 %Compute blindspots
-Axis = linspace(min(SimData.FrequencyAxis),max(SimData.FrequencyAxis),200);
-BlindSpotsAxis1  = Axis;
-BlindSpotsAxis2  = Axis;
+BlindSpotsAxis1 = linspace(min(SimData.FrequencyAxis1),max(SimData.FrequencyAxis1),80);
+BlindSpotsAxis2 = linspace(min(SimData.FrequencyAxis2),max(SimData.FrequencyAxis2),80);
 Dimension1 = length(BlindSpotsAxis1);
 Dimension2 = length(BlindSpotsAxis2);
 BlinSpotsMap = zeros(Dimension1,Dimension2);

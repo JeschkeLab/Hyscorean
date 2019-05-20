@@ -1034,7 +1034,7 @@ return
 
 %==========================================================================
 function BlindSpotsSimulator_Callback(hObject, eventdata, handles)
-Blindspot_simulator(handles.Processed.axis1,handles.Processed.spectrum,str2double(get(handles.XUpperLimit,'string')))
+Blindspot_simulator(handles.Processed.axis1,handles.Processed.axis2,handles.Processed.spectrum,str2double(get(handles.XUpperLimit,'string')))
 return
 %==========================================================================
 
