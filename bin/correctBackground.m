@@ -236,14 +236,14 @@ else
     %If complex then fit real/imaginary separately
     if isComplex
       RealBackground1 = fitBackground2D(real(RawSignal),Parameters);
-      RealIntegral = real(RawSignal)-RealBackground1;
+      RealIntegral = real(RawSignal) - RealBackground1;
       ImagBackground1 = fitBackground2D(imag(RawSignal),Parameters);
-      ImagIntegral = imag(RawSignal)-ImagBackground1;
+      ImagIntegral = imag(RawSignal) - ImagBackground1;
       RawSignal = RealIntegral + 1i*ImagIntegral;
       Background1 = RealBackground1 +  1i*ImagBackground1;
     else
       Background1 = fitBackground2D(RawSignal,Parameters);
-      RawSignal = (RawSignal)-Background1;
+      RawSignal = (RawSignal) - Background1;
     end
     Data.FirstBackgroundCorrected = RawSignal;
     
@@ -264,9 +264,9 @@ else
     %If complex then fit real/imaginary separately
     if isComplex
       RealBackground2 = fitBackground2D(real(RawSignal),Parameters);
-      RealIntegral = real(RawSignal)-RealBackground2;
+      RealIntegral = real(RawSignal) - RealBackground2;
       ImagBackground2 = fitBackground2D(imag(RawSignal),Parameters);
-      ImagIntegral = imag(RawSignal)-ImagBackground2;
+      ImagIntegral = imag(RawSignal) - ImagBackground2;
       RawSignal = RealIntegral + 1i*ImagIntegral;
       Background2 = RealBackground2 +  1i*ImagBackground2;
     else
@@ -293,7 +293,7 @@ if options.SavitzkyGolayFiltering
 end
 
 %Normalize the signal
-RawSignal = RawSignal/max(max(RawSignal));
+RawSignal = RawSignal/max(max(real(RawSignal)));
 
 %Save everything back to the input structure and return it
 Data.NonCorrectedIntegral = NonCorrectedIntegral(TimeIndex1:end,TimeIndex2:end);
