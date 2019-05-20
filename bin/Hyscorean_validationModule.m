@@ -1029,9 +1029,11 @@ else
   figure(FigureHandle);
   clf(FigureHandle);
 end
+
 %Set the figure and axis position and size
 set(FigureHandle,'Position',[-1364 463 997 623])
 ExternalHandles.ValidationMainPlot = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.08 0.12 0.7 0.6]);
+box(ExternalHandles.ValidationMainPlot,'on');
 ExternalHandles.ValidationInset1 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.08 0.75 0.7 0.2]);
 ExternalHandles.ValidationInset2 = axes('Units','Normalized','Parent',FigureHandle,'Position',[0.8 0.12 0.15 0.6]);
 ExternalHandles.ValidationStatus = uicontrol('Parent',FigureHandle,'Style','text','Visible','off','Position',[0.8 0.12 0.15 0.6]);
@@ -1043,8 +1045,8 @@ ExternalHandles.SetParameterSet_Button = handles.SetParameterSet_Button;
 ExternalHandles.RawData = handles.RawData;
 ExternalHandles.Defaults = handles.Defaults;
 ExternalHandles.superimpose_Check = handles.superimpose_Check;
-%Update the graphics in the detached figure
 
+%Update the graphics in the detached figure
 if get(handles.DisplayMean_Radio,'value')
   updateValidationPlots(ExternalHandles)
 else
@@ -1288,7 +1290,6 @@ return
 
 %------------------------------------------------------------------------------
 function superimpose_Check_Callback(hObject, eventdata, handles)
-
 if get(hObject,'Value')
   set(handles.DisplayUncertainty_Radio,'String','Uncertainty')
 else
