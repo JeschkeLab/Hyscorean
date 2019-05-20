@@ -153,7 +153,7 @@ if get(handles.NonCorrectedTrace,'value')
     Mean = 0;
   end
   SignalTrace = SignalTrace - Mean;
-          SignalTrace = SignalTrace/max(max(abs(handles.Data.NonCorrectedIntegral)));
+          SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
 
   
   %Construct axis and plot
