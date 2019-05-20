@@ -109,7 +109,7 @@ if handles.PlotProcessedSignal
       end
   end
   
-  ProcessedSignalTrace = ProcessedSignalTrace/max(max(Processed.Signal));
+  ProcessedSignalTrace = ProcessedSignalTrace/max(max(real(Processed.Signal)));
   
 %   ProcessedSignalTrace = ProcessedSignalTrace/max(max(abs(Processed.Signal)));
       if PlotImaginarySignal
@@ -186,18 +186,18 @@ if PlotSecondCorrection
   %Check if the correction order has been inverted
   if get(handles.InvertCorrection,'Value')
     if PlotImaginarySignal
-      SignalTrace = imag(handles.Data.FirstBackgroundCorrected(SliderPosition,:));
+      SignalTrace = imag(handles.Data.FirstBackgroundCorrected(:,SliderPosition));
       Background2Trace = imag(handles.Data.Background2(:,SliderPosition));
     else
-      SignalTrace = real(handles.Data.FirstBackgroundCorrected(SliderPosition,:));
+      SignalTrace = real(handles.Data.FirstBackgroundCorrected(:,SliderPosition));
       Background2Trace = real(handles.Data.Background2(:,SliderPosition));
     end
   else
     if PlotImaginarySignal
-      SignalTrace = imag(handles.Data.FirstBackgroundCorrected(:,SliderPosition));
+      SignalTrace = imag(handles.Data.FirstBackgroundCorrected(SliderPosition,:));
       Background2Trace = imag(handles.Data.Background2(SliderPosition,:));
     else
-      SignalTrace = real(handles.Data.FirstBackgroundCorrected(:,SliderPosition));
+      SignalTrace = real(handles.Data.FirstBackgroundCorrected(SliderPosition,:));
       Background2Trace = real(handles.Data.Background2(SliderPosition,:));
     end
   end
