@@ -1245,12 +1245,19 @@ if FitData.GUI
   
 end
 
-%===================================================================
-% Final stage: simulate the best spectrum again
-%===================================================================
+%Initiallize some variables
+numSpec = length(FitData.Exp);
+rmsd = 0;
 
 %Compile best-fit system structures
 [FinalSys,bestvalues] = getSystems(FitData.Sys0,FitData.Vary,bestx);
+
+%If not manual single run, then re-simulate the best fit again
+if FitOpts.MethodID~=7
+
+%===================================================================
+% Final stage: simulate the best spectrum again
+%===================================================================
 
 %Simulate best-fit spectrum
 if numel(FinalSys)==1
@@ -1259,18 +1266,15 @@ else
   fs = FinalSys;
 end
 
-numSpec = length(FitData.Exp);
 
 %initialize rmsd to allow recursive summation
-rmsd = 0;
 BestSpec = cell(numSpec,1);
 BestSpecScaled = cell(numSpec,1);
 Residuals = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
 
 %Loop over all field positions (i.e. different files/spectra)
-% parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
-for Index = 1:numSpec
+parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
 
   %Run saffron for a given field position
   [t1,t2,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
@@ -1322,6 +1326,18 @@ for Index = 1:numSpec
   rmsd_individual{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index})/sqrt(numel(FitData.ExpSpec{Index}));
   rmsd = rmsd + rmsd_individual{Index};
   
+end
+
+else
+  for Index = 1:numSpec
+    rmsd_individual{Index} = norm(FitData.CurrentSimSpec{Index} - FitData.ExpSpec{Index})/sqrt(numel(FitData.ExpSpec{Index}));
+    rmsd = rmsd + rmsd_individual{Index};
+    Residuals{Index} = norm(FitData.CurrentSimSpec{Index} - FitData.ExpSpec{Index});
+    BestSpecScaled{Index} = rescale_mod(FitData.CurrentSimSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
+    if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
+      BestSpecScaled{Index} = reshape(BestSpecScaled{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
+    end
+  end
 end
 
 if ~FitData.GUI
