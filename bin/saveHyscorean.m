@@ -150,7 +150,7 @@ savefig(GhostFigure2,fullfile(FullPath,[SaveName '.fig']), 'compact');
 if exist('export_fig','file')
 export_fig(fullfile(FullPath,SaveName),'-pdf','-transparent',GhostFigure2)
 else
-print(GhostFigure,fullfile(FullPath,SaveName),'-dpdf')
+print(GhostFigure2,fullfile(FullPath,SaveName),'-dpdf')
 end
 %Delete the ghost figure
 delete(GhostFigure2);
@@ -350,7 +350,7 @@ set(handles.ProcessingInfo, 'String', 'Status: Saving session 80%'); drawnow;
 % Save data for Easyspin fitting
 %==========================================================================  
 
-
+try
 %Collect necessary data for the fitting module
 DataForFitting.Spectrum = handles.Processed.spectrum;
 DataForFitting.TauValues = handles.Data.TauValues/1000; 
@@ -397,7 +397,9 @@ save(fullfile(FullPath,SaveName),'DataForFitting');
 
 %Remove structure from base workspace
 evalin('base','clear DataForFitting');
-
+catch
+  warning('An error ocurred and the data for fitting could not be generated.')
+end
 
 %Inform user that saving is finished
  set(handles.ProcessingInfo, 'String', 'Status: Session saved'); drawnow;
