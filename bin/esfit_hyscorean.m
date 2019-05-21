@@ -1456,8 +1456,8 @@ nOutArguments = FitData.nOutArguments;
 SimFcnHandel = FitData.SimFcn;
 ScalingOption = FitOpt.Scaling;
 %Loop over all field positions (i.e. different files/spectra)
-% parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
-for Index = 1:numSpec
+parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
+% for Index = 1:numSpec
   
   if numel(SimSystems)==1
     [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
