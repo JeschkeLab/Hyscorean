@@ -318,22 +318,26 @@ if get(handles.PlotApodizationWindow,'value')
     if ~get(handles.ChangeSignalPlotDimension,'Value')
       Window = Window1;
       WindowDecay = WindowDecay1;
+      TimeAxis = TimeAxis1;
     else
       Window = Window2;
       WindowDecay = WindowDecay2;
+      TimeAxis = TimeAxis2;
     end
   
   %Adjust window to current axis
   Window = ylimMax*Window/max(Window);
-%   Window = Window';
-  if WindowDecay>=length(TimeAxis1)
-    Window=Window(1:length(TimeAxis1));
+  if WindowDecay>=length(TimeAxis)
+    Window=Window(1:length(TimeAxis));
   end
-  if WindowDecay<length(TimeAxis1)
-    Window=[Window Window(end)+zeros(1,length(TimeAxis1)-WindowDecay)];
+  if WindowDecay<length(TimeAxis)
+    if iscolumn(Window)
+      Window = Window';
+    end
+    Window=[Window Window(end)+zeros(1,length(TimeAxis)-WindowDecay)];
   end
   %Plot and hold
-  plot(handles.signal_t1,TimeAxis1,Window,'Color',[0.1 0.7 0.1])
+  plot(handles.signal_t1,TimeAxis,Window,'Color',[0.1 0.7 0.1])
   hold(handles.signal_t1,'on')
   
 end
