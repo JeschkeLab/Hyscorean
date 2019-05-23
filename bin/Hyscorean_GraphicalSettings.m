@@ -36,6 +36,17 @@ end
 
 %==========================================================================
 function Hyscorean_GraphicalSettings_OpeningFcn(hObject, eventdata, handles, varargin)
+
+handles.output = hObject;
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(hObject,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+handles.output = hObject;
+warning('on','all')
+guidata(hObject, handles);
+
 handles.output = hObject;
 %Load default settings set on Hyscorean preference
 GraphicalSettings = getpref('hyscorean','graphicalsettings');

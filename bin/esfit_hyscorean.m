@@ -495,6 +495,14 @@ if FitData.GUI
     clf(hFig);
   end
   
+  warning('off','all')
+  Path =  fileparts(which('Hyscorean'));
+  jFrame=get(hFig,'javaframe');
+  jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+  jFrame.setFigureIcon(jicon);
+  warning('on','all')
+
+  
   %Set main window properties
   sz = [1410 600]; %Figure size
   screensize = get(0,'ScreenSize'); %Get screensize
