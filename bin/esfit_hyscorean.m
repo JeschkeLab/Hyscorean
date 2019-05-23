@@ -2183,17 +2183,17 @@ if ~isempty(str)
     drawnow
   end
 else
-  h = findobj('Tag','bestsimdata');
-  switch FitOpts.GraphicalSettings.FitSpectraTypeString
-    case 'colormap'
-      set(h,'CData',get(h,'CData')*NaN);
-    case 'contour'
-    set(h,'ZData',get(h,'ZData')*NaN);
-  end
-  h = findobj('Tag','bestsimdata_projection1');
-  set(h,'YData',get(h,'YData')*NaN);
-  h = findobj('Tag','bestsimdata_projection2');
-  set(h,'YData',get(h,'XData')*NaN);
+%   h = findobj('Tag','bestsimdata');
+%   switch FitOpts.GraphicalSettings.FitSpectraTypeString
+%     case 'colormap'
+%       set(h,'CData',get(h,'CData')*NaN);
+%     case 'contour'
+%     set(h,'ZData',get(h,'ZData')*NaN);
+%   end
+%   h = findobj('Tag','bestsimdata_projection1');
+%   set(h,'YData',get(h,'YData')*NaN);
+%   h = findobj('Tag','bestsimdata_projection2');
+%   set(h,'YData',get(h,'XData')*NaN);
 
   drawnow;
 end
@@ -3232,8 +3232,8 @@ ParentExp = h.Parent;
 %Now get the parent of the fit spectra...
 Parent = findobj('Tag','dataaxes');
 %.. and the handles of the best and current fit spectra
-h3 = Parent.Children(1);
-h2 = Parent.Children(2);
+h3 = findobj('Tag','bestsimdata');
+h2 = findobj('Tag','currsimdata');
 
 %Get the limits informations on the parent as well as the frequency axis
 xlims = h.Parent.XLim;
@@ -3241,6 +3241,8 @@ ylims = h.Parent.YLim;
 FrequencyAxis = h.XData;
 %And set them to the experimental parent 
 set(ParentExp,'XLim',xlims,'YLim',ylims);
+set(h3.Parent,'XLim',xlims,'YLim',ylims);
+
 %Now link the parent axis together again 
 linkaxes([ParentExp,Parent])
 
@@ -3274,6 +3276,14 @@ if isprop(h3,'CData')
 else
   ColorData = h3.ZData;
 end
+%Get the spectrum currently plotted as current fit
+if isprop(h2,'CData')
+  ColorData2 = h2.CData;
+else
+  ColorData2 = h2.ZData;
+end
+%Delete the old plot
+delete(h2)
 %Delete the old plot
 delete(h3)
 
@@ -3294,25 +3304,18 @@ set(Parent,'XLim',xlims,'YLim',ylims);
 set(h3,'Tag','bestsimdata');
 shading(Parent,'interp')
 
-%Get the spectrum currently plotted as current fit
-if isprop(h2,'CData')
-  ColorData = h2.CData;
-else
-  ColorData = h2.ZData;
-end
-%Delete the old plot
-delete(h2)
+
 
 %Reconstruct the new current fit plot with current settings
 switch   FitOpts.GraphicalSettings.FitSpectraTypeString
   case 'contour'
-    [~,h2] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData,...
+    [~,h2] = contour(Parent,FrequencyAxis,FrequencyAxis,ColorData2,...
       FitOpts.GraphicalSettings.ContourLevels,...
       'LineWidth',FitOpts.GraphicalSettings.LineWidth);
   case 'colormap'
-    [h2] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData);
+    [h2] = pcolor(Parent,FrequencyAxis,FrequencyAxis,ColorData2);
   case 'filledcontour'
-    [~,h2] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData,'LineStyle','none',...
+    [~,h2] = contourf(Parent,FrequencyAxis,FrequencyAxis,ColorData2,'LineStyle','none',...
       'LevelList',linspace(0,1,FitOpts.GraphicalSettings.ContourLevels));
 end
 %Give the new plot its old tag
@@ -3356,7 +3359,7 @@ if get(object,'value')
   RectY2 = RectY1 + rect(3);
   
   hold(haxes,'on')
-  rectHandle = rectangle(haxes,'Position',rect);
+  rectHandle = rectangle(haxes,'Position',rect,'LineWidth',2,'EdgeColor','b','LineStyle','--');
   set(rectHandle,'Tag','confinementRectangle')
   hold(haxes,'off')
   
@@ -3419,6 +3422,19 @@ if get(object,'value')
     h3.ZData = ExperimentalSpectrum_cut;
   end
   
+  if isfield(FitData,'ExcludedSpecctra')
+    ExcludedExperimentalSpectrum = FitData.ExcludedSpecctra.ExperimentalSpectrum;
+    ExcludedBestSpectrum = FitData.ExcludedSpecctra.BestSpectrum;
+    ExcludedCurrentSpectrum = FitData.ExcludedSpecctra.CurrentSpectrum;
+    EPosX1  = FitData.Exclude(1);
+    EPosX2  = FitData.Exclude(2);
+    EPosY1  = FitData.Exclude(3);
+    EPosY2  = FitData.Exclude(4);
+    ExperimentalSpectrum(EPosX1:EPosX2,EPosY1:EPosY2) = ExcludedExperimentalSpectrum(EPosX1:EPosX2,EPosY1:EPosY2);
+    BestSpectrum(EPosX1:EPosX2,EPosY1:EPosY2) = ExcludedBestSpectrum(EPosX1:EPosX2,EPosY1:EPosY2);
+    CurrentSpectrum(EPosX1:EPosX2,EPosY1:EPosY2) = ExcludedCurrentSpectrum(EPosX1:EPosX2,EPosY1:EPosY2);
+  end
+  
   FitData.UnconfinedSpecctra.ExperimentalSpectrum = ExperimentalSpectrum;
   FitData.UnconfinedSpecctra.BestSpectrum = BestSpectrum;
   FitData.UnconfinedSpecctra.CurrentSpectrum = CurrentSpectrum;
@@ -3457,6 +3473,14 @@ else
   CurrentSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum;
   BestSpectrum = FitData.UnconfinedSpecctra.BestSpectrum;
   ExperimentalSpectrum = FitData.UnconfinedSpecctra.ExperimentalSpectrum;
+  
+  %If spectrum is also excluded, then recover that part too
+  if isfield(FitData,'ExcludedSpecctra')
+    rectHandle = findobj('Tag','exclusionRectangle');
+    delete(rectHandle);
+    ExclusionButtonHandle = findobj('String','Include');
+    set(ExclusionButtonHandle,'value',0,'string','Exclude');
+  end
   
   h1 = findobj('Tag','currsimdata');
   if isprop(h1,'CData')
@@ -3543,7 +3567,7 @@ if get(object,'value')
   RectY2 = RectY1 + rect(3);
   
   hold(haxes,'on')
-  rectHandle = rectangle(haxes,'Position',rect);
+  rectHandle = rectangle(haxes,'Position',rect,'LineWidth',2,'EdgeColor','r','LineStyle','--');
   set(rectHandle,'Tag','exclusionRectangle')
   hold(haxes,'off')
   
