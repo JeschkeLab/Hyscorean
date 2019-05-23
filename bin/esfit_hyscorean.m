@@ -1288,6 +1288,7 @@ BestSpec = cell(numSpec,1);
 BestSpecScaled = cell(numSpec,1);
 Residuals = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
+ScalingOption = FitOpts.Scaling;
 
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
@@ -1346,10 +1347,16 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     BestSpec{Index} = reshape(BestSpec{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
   end
   
+  BestSpec{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},ScalingOption);
+  BestSpec{Index}  = reshape(BestSpec{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
+  
+  ExpSpec{Index} = FitData.ExpSpecScaled{Index};
+  
+  
   %Compute the residual
-  Residuals{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index});
+  Residuals{Index} = norm(BestSpec{Index} - ExpSpec{Index});
   %Compute the individual and total RMSD
-  rmsd_individual{Index} = norm(BestSpec{Index} - FitData.ExpSpec{Index})/sqrt(numel(FitData.ExpSpec{Index}));
+  rmsd_individual{Index} = norm(BestSpec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
   rmsd = rmsd + rmsd_individual{Index};
   
 end
