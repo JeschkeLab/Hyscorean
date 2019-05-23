@@ -982,6 +982,14 @@ uicontrol('Style','togglebutton',...
   'BackgroundColor',get(gcf,'Color'),...
   'HorizontalAl','left');
 
+uicontrol('Style','togglebutton',...
+  'String','Exclude',...
+  'Position',[x0+58 y0-2 58 23],...
+  'Callback',@excludeCallBack,...
+  'HorizontalAlignment','center',...
+  'BackgroundColor',get(gcf,'Color'),...
+  'HorizontalAl','left');
+
 IconData = imread(fullfile(Path2Hyscorean,'bin','detach_icon.png'));
 uicontrol('Style','pushbutton','Tag','detachButton',...
   'Position',[927 446 22 22],'CData',IconData,...
@@ -1289,7 +1297,7 @@ BestSpecScaled = cell(numSpec,1);
 Residuals = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
 ScalingOption = FitOpts.Scaling;
-
+ExpSpec = FitData.ExpSpec;
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
 
@@ -1326,16 +1334,37 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
       Spectrum = (Spectrum.*Spectrum').^0.5;
       Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
   end
+  
   if isfield(FitData,'Confiment')
-    Spectrum_cut = 0*Spectrum;
     PosX1 = FitData.Confiment(1);
     PosX2 = FitData.Confiment(2);
     PosY1 = FitData.Confiment(3);
     PosY2 = FitData.Confiment(4);
+    Spectrum_cut = 0*Spectrum;
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = Spectrum(PosX1:PosX2,PosY1:PosY2);
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
-    Spectrum = Spectrum_cut;
+    tmp = FitData.ExpSpecScaled{Index};
+    Spectrum_cut = 0*tmp;
+    Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = tmp(PosX1:PosX2,PosY1:PosY2);
+    Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+    ExpSpec{Index}  = Spectrum_cut;
   end
+  
+  if isfield(FitData,'Exclude')
+    PosX1 = FitData.Exclude(1);
+    PosX2 = FitData.Exclude(2);
+    PosY1 = FitData.Exclude(3);
+    PosY2 = FitData.Exclude(4);
+    Spectrum_cut = Spectrum;
+    Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = 0;
+    Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+    Spectrum = Spectrum_cut;
+    Spectrum_cut = FitData.ExpSpecScaled{Index};
+    Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = 0;
+    Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+    ExpSpec{Index} = Spectrum_cut;
+  end
+  
    BestSpec{Index} = Spectrum;
   % (SimSystems{s}.weight is taken into account in the simulation function)
   BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
@@ -1349,9 +1378,9 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   
   BestSpec{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},ScalingOption);
   BestSpec{Index}  = reshape(BestSpec{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
-  
-  ExpSpec{Index} = FitData.ExpSpecScaled{Index};
-  
+   
+  ExpSpec{Index} = rescale_mod(ExpSpec{Index},FitData.ExpSpecScaled{Index},ScalingOption);
+  ExpSpec{Index}  = reshape(ExpSpec{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));  
   
   %Compute the residual
   Residuals{Index} = norm(BestSpec{Index} - ExpSpec{Index});
@@ -1501,9 +1530,22 @@ else
   PosY1 = NaN;
   PosY2 = NaN;
 end
+isExcluded = isfield(FitData,'Exclude');
+if isExcluded
+  EPosX1 = FitData.Exclude(1);
+  EPosX2 = FitData.Exclude(2);
+  EPosY1 = FitData.Exclude(3);
+  EPosY2 = FitData.Exclude(4);
+else
+  %These variables need to be defined in order to be sliced correctly
+  EPosX1 = NaN;
+  EPosX2 = NaN;
+  EPosY1 = NaN;
+  EPosY2 = NaN;
+end
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
-
+% for Index = 1:numSpec
   if numel(SimSystems)==1
     [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
   else
@@ -1546,6 +1588,22 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = Spectrum(PosX1:PosX2,PosY1:PosY2);
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
     Spectrum = Spectrum_cut;
+    Spectrum_cut = 0*ExpSpec{Index};
+    tmp = ExpSpec{Index};
+    Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = tmp(PosX1:PosX2,PosY1:PosY2);
+    Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+    ExpSpec{Index} = Spectrum_cut;
+    
+  end
+  if isExcluded
+    Spectrum_cut = Spectrum;
+    Spectrum_cut(EPosX1:EPosX2,EPosY1:EPosY2) = 0;
+    Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+    Spectrum = Spectrum_cut;
+    Spectrum_cut = ExpSpec{Index};
+    Spectrum_cut(EPosX1:EPosX2,EPosY1:EPosY2) = 0;
+    Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+    ExpSpec{Index} = Spectrum_cut;
   end
    simspec{Index} = Spectrum;
   
@@ -3302,8 +3360,9 @@ if get(object,'value')
   set(rectHandle,'Tag','confinementRectangle')
   hold(haxes,'off')
   
-  Axis1 = haxes.Children(2).XData;
-  Axis2 = haxes.Children(2).YData;
+  h1 = findobj('Tag','currsimdata');
+  Axis1 = h1.XData;
+  Axis2 = h1.YData;
 
   [~,PosX1] = min(abs(Axis1-RectX1));
   [~,PosX2] = min(abs(Axis1-RectX2));
@@ -3459,3 +3518,189 @@ drawnow
 return
 %==========================================================================
 
+%==========================================================================
+function excludeCallBack(object,src,event)
+
+
+global FitData
+
+
+if get(object,'value')
+  
+  
+  %========================================================================
+  % Spectral exclusion
+  %========================================================================
+  set(object,'string','Include')
+  
+  haxes = findobj('Tag','dataaxes');
+  
+  rect = getrect(haxes);
+  
+  RectX1 = rect(2);
+  RectY1 = rect(1);
+  RectX2 = RectX1 + rect(4);
+  RectY2 = RectY1 + rect(3);
+  
+  hold(haxes,'on')
+  rectHandle = rectangle(haxes,'Position',rect);
+  set(rectHandle,'Tag','exclusionRectangle')
+  hold(haxes,'off')
+  
+  h1 = findobj('Tag','currsimdata');
+  Axis1 = h1.XData;
+  Axis2 = h1.YData;
+
+  [~,PosX1] = min(abs(Axis1-RectX1));
+  [~,PosX2] = min(abs(Axis1-RectX2));
+  [~,PosY1] = min(abs(Axis2-RectY1));
+  [~,PosY2] = min(abs(Axis2-RectY2));
+  
+  FitData.Exclude = [PosX1 PosX2 PosY1 PosY2];
+  
+  %========================================================================
+  % Update the main display plots
+  %========================================================================
+  h1 = findobj('Tag','currsimdata');
+  if isprop(h1,'CData')
+    CurrentSpectrum = h1.CData;
+  else
+    CurrentSpectrum = h1.ZData;
+  end
+  CurrentSpectrum_cut = CurrentSpectrum;
+  CurrentSpectrum_cut(PosX1:PosX2,PosY1:PosY2) = 0;
+  CurrentSpectrum_cut = CurrentSpectrum_cut/max(max(abs(CurrentSpectrum_cut)));
+  if isprop(h1,'CData')
+    h1.CData = CurrentSpectrum_cut;
+  else
+    h1.ZData = CurrentSpectrum_cut;
+  end
+  
+  h2 = findobj('Tag','bestsimdata');
+  if isprop(h2,'CData')
+    BestSpectrum = h2.CData;
+  else
+    BestSpectrum = h2.ZData;
+  end
+  BestSpectrum_cut = BestSpectrum;
+  BestSpectrum_cut(PosX1:PosX2,PosY1:PosY2) = 0;
+  BestSpectrum_cut = BestSpectrum_cut/max(max(abs(BestSpectrum_cut)));
+  if isprop(h2,'CData')
+    h2.CData = BestSpectrum_cut;
+  else
+    h2.ZData = BestSpectrum_cut;
+  end
+  
+  h3 = findobj('Tag','expdata');
+  if isprop(h3,'CData')
+    ExperimentalSpectrum = h3.CData;
+  else
+    ExperimentalSpectrum = h3.ZData;
+  end
+  ExperimentalSpectrum_cut = ExperimentalSpectrum;
+  ExperimentalSpectrum_cut(PosX1:PosX2,PosY1:PosY2) = 0;
+  ExperimentalSpectrum_cut = ExperimentalSpectrum_cut/max(max(abs(ExperimentalSpectrum_cut)));
+  if isprop(h3,'CData')
+    h3.CData = ExperimentalSpectrum_cut;
+  else
+    h3.ZData = ExperimentalSpectrum_cut;
+  end
+  
+  FitData.ExcludedSpecctra.ExperimentalSpectrum = ExperimentalSpectrum;
+  FitData.ExcludedSpecctra.BestSpectrum = BestSpectrum;
+  FitData.ExcludedSpecctra.CurrentSpectrum = CurrentSpectrum;
+  
+  CurrentInset2 = findobj('Tag','currsimdata_projection2');
+  Data_cut = max(CurrentSpectrum_cut,[],2);
+  set(CurrentInset2,'XData',Data_cut)
+  
+  BestInset2 = findobj('Tag','bestsimdata_projection2');
+  Data_cut = max(abs(BestSpectrum_cut),[],2);
+  set(BestInset2,'XData',Data_cut)
+  
+  ExperimentalInset2 = findobj('Tag','expdata_projection2');
+  Data_cut = max(ExperimentalSpectrum_cut,[],2);
+  set(ExperimentalInset2,'XData',Data_cut)
+  
+  CurrentInset1 = findobj('Tag','currsimdata_projection1');
+  Data_cut = max(CurrentSpectrum_cut(round(length(CurrentSpectrum_cut)/2,0):end,:));
+  set(CurrentInset1,'YData',Data_cut)
+  
+  BestInset1 = findobj('Tag','bestsimdata_projection1');
+  Data_cut = max(abs(BestSpectrum_cut(round(length(BestSpectrum_cut)/2,0):end,:)));
+  set(BestInset1,'YData',Data_cut)
+  
+  ExperimentalInset1 = findobj('Tag','expdata_projection1');
+  Data_cut = max(ExperimentalSpectrum_cut(round(length(ExperimentalSpectrum_cut)/2,0):end,:));
+  set(ExperimentalInset1,'YData',Data_cut)
+  
+else
+  
+  
+  %========================================================================
+  % Release
+  %========================================================================
+  
+  CurrentSpectrum = FitData.ExcludedSpecctra.CurrentSpectrum;
+  BestSpectrum = FitData.ExcludedSpecctra.BestSpectrum;
+  ExperimentalSpectrum = FitData.ExcludedSpecctra.ExperimentalSpectrum;
+  
+  h1 = findobj('Tag','currsimdata');
+  if isprop(h1,'CData')
+    h1.CData = CurrentSpectrum;
+  else
+    h1.ZData = CurrentSpectrum;
+  end
+  
+  h2 = findobj('Tag','bestsimdata');
+  if isprop(h2,'CData')
+    h2.CData = BestSpectrum;
+  else
+    h2.ZData = BestSpectrum;
+  end
+  
+  h3 = findobj('Tag','expdata');
+  if isprop(h3,'CData')
+    h3.CData = ExperimentalSpectrum;
+  else
+    h3.ZData = ExperimentalSpectrum;
+  end
+  
+  CurrentInset2 = findobj('Tag','currsimdata_projection2');
+  Data = max(CurrentSpectrum,[],2);
+  set(CurrentInset2,'XData',Data)
+  
+  BestInset2 = findobj('Tag','bestsimdata_projection2');
+  Data = max(abs(BestSpectrum),[],2);
+  set(BestInset2,'XData',Data)
+  
+  ExperimentalInset2 = findobj('Tag','expdata_projection2');
+  Data = max(ExperimentalSpectrum,[],2);
+  set(ExperimentalInset2,'XData',Data)
+  
+  CurrentInset1 = findobj('Tag','currsimdata_projection1');
+  Data = max(CurrentSpectrum(round(length(CurrentSpectrum)/2,0):end,:));
+  set(CurrentInset1,'YData',Data)
+  
+  BestInset1 = findobj('Tag','bestsimdata_projection1');
+  Data = max(abs(BestSpectrum(round(length(BestSpectrum)/2,0):end,:)));
+  set(BestInset1,'YData',Data)
+  
+  ExperimentalInset1 = findobj('Tag','expdata_projection1');
+  Data = max(ExperimentalSpectrum(round(length(ExperimentalSpectrum)/2,0):end,:));
+  set(ExperimentalInset1,'YData',Data)
+  
+  
+  rectHandle = findobj('Tag','exclusionRectangle');
+  delete(rectHandle);
+  FitData = rmfield(FitData,'ExcludedSpecctra');
+  FitData = rmfield(FitData,'Exclude');
+
+  set(object,'string','Exclude')
+  
+end
+
+drawnow
+
+return
+%==========================================================================
