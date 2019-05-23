@@ -1326,7 +1326,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
       Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
   end
   if isfield(FitData,'Confiment')
-    Spectrum = 0*Spectrum;
+    Spectrum_cut = 0*Spectrum;
     PosX1 = FitData.Confiment(1);
     PosX2 = FitData.Confiment(2);
     PosY1 = FitData.Confiment(3);
