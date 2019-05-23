@@ -2153,9 +2153,8 @@ function systemButtonCallback(object,src,event)
 global FitData
 
 %Reset the local Sys and Vary variables
-clear Sys Vary
 while true
-  
+  clear Sys Vary
   %Get the current spin system definition from the Hyscorean preferences
   DefaultInput = getpref('hyscorean','defaultsystemEasyspin');
   
