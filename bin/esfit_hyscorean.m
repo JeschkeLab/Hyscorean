@@ -1139,10 +1139,18 @@ if ~FitData.GUI
 end
 
 if FitData.GUI
-  data = get(getParameterTableHandle,'Data');
-  for iPar = 1:FitData.nParameters
-    FitData.inactiveParams(iPar) = data{iPar,1}==0;
+  
+  %If using Manual fitting, all parameters are active
+  if FitOpts.MethodID == 7
+    FitData.inactiveParams(1:FitData.nParameters) = false;
+  %Otherwise check the active/inactive ones in the Parameters table
+  else
+    data = get(getParameterTableHandle,'Data');
+    for iPar = 1:FitData.nParameters
+      FitData.inactiveParams(iPar) = data{iPar,1}==0;
+    end
   end
+  
 end
 
 switch FitOpts.Startpoint
