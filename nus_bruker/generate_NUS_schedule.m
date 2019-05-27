@@ -7,19 +7,19 @@
 % Parameters
 %-----------------------------------------------------------------------
 
-% FileName = 'NUSgrid_20000points';
+FileName = 'YourFileNameGoesHere';
 
 %Grid greatest-common denominator [ns]
 TimeStep1 = 16;
 TimeStep2 = 16;
 
 %Dimensionality
-Dimension1 = 100;
-Dimension2 = 100;
+Dimension1 = 300;
+Dimension2 = 300;
 
 %NUS sampler settings
-SamplingDensity = 0.4;
-Envelope = 'expdiag';
+SamplingDensity = 0.2;
+Envelope = 'exponential';
 Decay = [];
 
 % Construction
@@ -62,5 +62,5 @@ t1_timings = t1_axis(t1_indices);
 t2_timings = t2_axis(t2_indices);
 
 %Save them to DSC file to be loaded by PRODEL program
-% eprsave(['./grids/' FileName],t1_timings,t2_timings,FileName)
+eprsave(['./' FileName],t1_timings,t2_timings,FileName)
 
