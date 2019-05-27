@@ -1344,10 +1344,11 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   end
   
   if isfield(FitData,'Confiment')
-    PosX1 = FitData.Confiment(1);
-    PosX2 = FitData.Confiment(2);
-    PosY1 = FitData.Confiment(3);
-    PosY2 = FitData.Confiment(4);
+    ConfinementPos = FitData.Confiment{Index};
+    PosX1 = ConfinementPos(1);
+    PosX2 = ConfinementPos(2);
+    PosY1 = ConfinementPos(3);
+    PosY2 = ConfinementPos(4);
     Spectrum_cut = 0*Spectrum;
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = Spectrum(PosX1:PosX2,PosY1:PosY2);
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -1359,10 +1360,11 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   end
   
   if isfield(FitData,'Exclude')
-    PosX1 = FitData.Exclude(1);
-    PosX2 = FitData.Exclude(2);
-    PosY1 = FitData.Exclude(3);
-    PosY2 = FitData.Exclude(4);
+    ExcludePos = FitData.Exclude{Index};
+    PosX1 = ExcludePos(1);
+    PosX2 = ExcludePos(2);
+    PosY1 = ExcludePos(3);
+    PosY2 = ExcludePos(4);
     Spectrum_cut = Spectrum;
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = 0;
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -1527,29 +1529,11 @@ SimFcnHandel = FitData.SimFcn;
 ScalingOption = FitOpt.Scaling;
 isConfined = isfield(FitData,'Confiment');
 if isConfined
-  PosX1 = FitData.Confiment(1);
-  PosX2 = FitData.Confiment(2);
-  PosY1 = FitData.Confiment(3);
-  PosY2 = FitData.Confiment(4);
-else
-  %These variables need to be defined in order to be sliced correctly
-  PosX1 = NaN;
-  PosX2 = NaN;
-  PosY1 = NaN;
-  PosY2 = NaN;
+Confiment = FitData.Confiment;
 end
 isExcluded = isfield(FitData,'Exclude');
 if isExcluded
-  EPosX1 = FitData.Exclude(1);
-  EPosX2 = FitData.Exclude(2);
-  EPosY1 = FitData.Exclude(3);
-  EPosY2 = FitData.Exclude(4);
-else
-  %These variables need to be defined in order to be sliced correctly
-  EPosX1 = NaN;
-  EPosX2 = NaN;
-  EPosY1 = NaN;
-  EPosY2 = NaN;
+Exclude = FitData.Exclude;
 end
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
@@ -1592,6 +1576,11 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   end
   
   if isConfined
+    ConfinementPos = Confiment{Index};
+    PosX1 = ConfinementPos(1);
+    PosX2 = ConfinementPos(2);
+    PosY1 = ConfinementPos(3);
+    PosY2 = ConfinementPos(4);
     Spectrum_cut = 0*Spectrum;
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = Spectrum(PosX1:PosX2,PosY1:PosY2);
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -1604,6 +1593,11 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     
   end
   if isExcluded
+    ExcludePos = Exclude{Index};
+    EPosX1 = ExcludePos(1);
+    EPosX2 = ExcludePos(2);
+    EPosY1 = ExcludePos(3);
+    EPosY2 = ExcludePos(4);
     Spectrum_cut = Spectrum;
     Spectrum_cut(EPosX1:EPosX2,EPosY1:EPosY2) = 0;
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -2484,6 +2478,41 @@ FrequencyAxis = linspace(-1/(2*TimeStep),1/(2*TimeStep),length(FitData.ExpSpec{F
 
 %Get the corresponding experimental spectrum
 CurrentExpSpec = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
+
+%Check for excluded/included regions
+isConfined = isfield(FitData,'Confiment');
+isExcluded = isfield(FitData,'Exclude');
+if isConfined
+  Confinement = FitData.Confiment{FitData.CurrentSpectrumDisplay};
+  PosX1 = Confinement(1);
+  PosX2 = Confinement(2);
+  PosY1 = Confinement(3);
+  PosY2 = Confinement(4); 
+  rectHandle = findobj('Tag','confinementRectangle');
+  set(rectHandle,'Position',FitData.ConfimentRectanglePos{FitData.CurrentSpectrumDisplay})
+end
+if isExcluded
+  Exclude = FitData.Exclude{FitData.CurrentSpectrumDisplay};
+  EPosX1 = Exclude(1);
+  EPosX2 = Exclude(2);
+  EPosY1 = Exclude(3);
+  EPosY2 = Exclude(4);
+  rectHandle = findobj('Tag','exclusionRectangle');
+  set(rectHandle,'Position',FitData.ExcludeRectanglePos{FitData.CurrentSpectrumDisplay})
+end
+if isConfined
+  Spectrum_cut = 0*CurrentExpSpec;
+  Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = CurrentExpSpec(PosX1:PosX2,PosY1:PosY2);
+  Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+  CurrentExpSpec = Spectrum_cut;
+end
+if isExcluded
+  Spectrum_cut = CurrentExpSpec;
+  Spectrum_cut(EPosX1:EPosX2,EPosY1:EPosY2) = 0;
+  Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+  CurrentExpSpec = Spectrum_cut;
+end
+
 CurrentExpSpec = CurrentExpSpec/max(max(CurrentExpSpec));
 
 %Update the experimental main display plot
@@ -2509,6 +2538,20 @@ FrequencyAxis = linspace(-1/(2*TimeStep),1/(2*TimeStep),length(FitData.ExpSpec{F
   
 CurrentBestSpec = abs(FitData.bestspec{FitData.CurrentSpectrumDisplay});
 
+%Adapt to excluded/confined region
+if isConfined
+  Spectrum_cut = 0*CurrentBestSpec;
+  Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = CurrentBestSpec(PosX1:PosX2,PosY1:PosY2);
+  Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+  CurrentBestSpec = Spectrum_cut;
+end
+if isExcluded
+  Spectrum_cut = CurrentBestSpec;
+  Spectrum_cut(EPosX1:EPosX2,EPosY1:EPosY2) = 0;
+  Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+  CurrentBestSpec = Spectrum_cut;
+end
+
 %If the current spectrum is not from a saved parameter set then show the current
 if ~FitData.DisplayingFitSetSpec
   
@@ -2516,7 +2559,22 @@ if ~FitData.DisplayingFitSetSpec
     
     %Get the manual fit or ORCA fit saved in the currentFitSpec variable
     CurrentFitSpec = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+    
+    %Adapt to excluded/confined region
+    if isConfined
+      Spectrum_cut = 0*CurrentFitSpec;
+      Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = CurrentFitSpec(PosX1:PosX2,PosY1:PosY2);
+      Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+      CurrentFitSpec = Spectrum_cut;
+    end
+    if isExcluded
+      Spectrum_cut = CurrentFitSpec;
+      Spectrum_cut(EPosX1:EPosX2,EPosY1:EPosY2) = 0;
+      Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
+      CurrentFitSpec = Spectrum_cut;
+    end
     CurrentFitSpec = abs(CurrentFitSpec);
+
     %Get handle to plot
     h = findobj('Tag','currsimdata');
     if FitOpts.MethodID==7
@@ -3359,15 +3417,15 @@ if get(object,'value')
   
   haxes = findobj('Tag','dataaxes');
   
-  rect = getrect(haxes);
+  RectanglePosition = getrect(haxes);
   
-  RectX1 = rect(2);
-  RectY1 = rect(1);
-  RectX2 = RectX1 + rect(4);
-  RectY2 = RectY1 + rect(3);
+  RectX1 = RectanglePosition(2);
+  RectY1 = RectanglePosition(1);
+  RectX2 = RectX1 + RectanglePosition(4);
+  RectY2 = RectY1 + RectanglePosition(3);
   
   hold(haxes,'on')
-  rectHandle = rectangle(haxes,'Position',rect,'LineWidth',2,'EdgeColor','b','LineStyle','--');
+  rectHandle = rectangle(haxes,'Position',RectanglePosition,'LineWidth',2,'EdgeColor','b','LineStyle','--');
   set(rectHandle,'Tag','confinementRectangle')
   hold(haxes,'off')
   
@@ -3375,13 +3433,22 @@ if get(object,'value')
   Axis1 = h1.XData;
   Axis2 = h1.YData;
 
-  [~,PosX1] = min(abs(Axis1-RectX1));
-  [~,PosX2] = min(abs(Axis1-RectX2));
-  [~,PosY1] = min(abs(Axis2-RectY1));
-  [~,PosY2] = min(abs(Axis2-RectY2));
-  
-  FitData.Confiment = [PosX1 PosX2 PosY1 PosY2];
-  
+  for Index=1:length(FitData.Exp)
+    StretchFactor =   mt2mhz(FitData.Exp{Index}.Field)/mt2mhz(FitData.Exp{FitData.CurrentSpectrumDisplay}.Field);
+    [~,PosX1] = min(abs(Axis1-StretchFactor*RectX1));
+    [~,PosX2] = min(abs(Axis1-StretchFactor*RectX2));
+    [~,PosY1] = min(abs(Axis2-StretchFactor*RectY1));
+    [~,PosY2] = min(abs(Axis2-StretchFactor*RectY2));
+    
+    FitData.ConfimentRectanglePos{Index} = StretchFactor*RectanglePosition;
+    FitData.Confiment{Index} = [PosX1 PosX2 PosY1 PosY2];
+  end
+  Confiment = FitData.Confiment{FitData.CurrentSpectrumDisplay};
+  PosX1 = Confiment(1);
+  PosX2 = Confiment(2);
+  PosY1 = Confiment(3);
+  PosY2 = Confiment(4);
+    
   %========================================================================
   % Update the main display plots
   %========================================================================
@@ -3443,7 +3510,7 @@ if get(object,'value')
     CurrentSpectrum(EPosX1:EPosX2,EPosY1:EPosY2) = ExcludedCurrentSpectrum(EPosX1:EPosX2,EPosY1:EPosY2);
   end
   
-  FitData.UnconfinedSpecctra.ExperimentalSpectrum = ExperimentalSpectrum;
+  FitData.UnconfinedSpecctra.ExperimentalSpectrum = FitData.ExpSpecScaled;
   FitData.UnconfinedSpecctra.BestSpectrum = BestSpectrum;
   FitData.UnconfinedSpecctra.CurrentSpectrum = CurrentSpectrum;
   
@@ -3478,9 +3545,21 @@ else
   % Release
   %========================================================================
   
-  CurrentSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum;
-  BestSpectrum = FitData.UnconfinedSpecctra.BestSpectrum;
-  ExperimentalSpectrum = FitData.UnconfinedSpecctra.ExperimentalSpectrum;
+  if isfield(FitData,'CurrentSimSpec')
+    CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+    CurrentSpectrum = abs(CurrentSpectrum);
+    CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
+  else
+    CurrentSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum;
+  end
+  if isfield(FitData,'bestspec')
+    BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
+    BestSpectrum = abs(BestSpectrum);
+    BestSpectrum = BestSpectrum/max(max(BestSpectrum));
+  else
+    BestSpectrum = FitData.UnconfinedSpecctra.BestSpectrum;
+  end
+  ExperimentalSpectrum = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
   
   %If spectrum is also excluded, then recover that part too
   if isfield(FitData,'ExcludedSpecctra')
@@ -3567,29 +3646,39 @@ if get(object,'value')
   
   haxes = findobj('Tag','dataaxes');
   
-  rect = getrect(haxes);
+  RectanglePosition = getrect(haxes);
   
-  RectX1 = rect(2);
-  RectY1 = rect(1);
-  RectX2 = RectX1 + rect(4);
-  RectY2 = RectY1 + rect(3);
+  RectX1 = RectanglePosition(2);
+  RectY1 = RectanglePosition(1);
+  RectX2 = RectX1 + RectanglePosition(4);
+  RectY2 = RectY1 + RectanglePosition(3);
   
   hold(haxes,'on')
-  rectHandle = rectangle(haxes,'Position',rect,'LineWidth',2,'EdgeColor','r','LineStyle','--');
+  rectHandle = rectangle(haxes,'Position',RectanglePosition,'LineWidth',2,'EdgeColor','r','LineStyle','--');
   set(rectHandle,'Tag','exclusionRectangle')
   hold(haxes,'off')
   
   h1 = findobj('Tag','currsimdata');
   Axis1 = h1.XData;
   Axis2 = h1.YData;
-
-  [~,PosX1] = min(abs(Axis1-RectX1));
-  [~,PosX2] = min(abs(Axis1-RectX2));
-  [~,PosY1] = min(abs(Axis2-RectY1));
-  [~,PosY2] = min(abs(Axis2-RectY2));
   
-  FitData.Exclude = [PosX1 PosX2 PosY1 PosY2];
   
+  for Index=1:length(FitData.Exp)
+    StretchFactor =   mt2mhz(FitData.Exp{Index}.Field)/mt2mhz(FitData.Exp{FitData.CurrentSpectrumDisplay}.Field);
+    [~,PosX1] = min(abs(Axis1-StretchFactor*RectX1));
+    [~,PosX2] = min(abs(Axis1-StretchFactor*RectX2));
+    [~,PosY1] = min(abs(Axis2-StretchFactor*RectY1));
+    [~,PosY2] = min(abs(Axis2-StretchFactor*RectY2));
+    
+    FitData.ExcludeRectanglePos{Index} = StretchFactor*RectanglePosition;
+    FitData.Exclude{Index} = [PosX1 PosX2 PosY1 PosY2];
+  end
+  Exclude = FitData.Exclude{FitData.CurrentSpectrumDisplay};
+  PosX1 = Exclude(1);
+  PosX2 = Exclude(2);
+  PosY1 = Exclude(3);
+  PosY2 = Exclude(4);
+%   FitData.ExcludeStretchFactor = 
   %========================================================================
   % Update the main display plots
   %========================================================================
@@ -3673,10 +3762,22 @@ else
   % Release
   %========================================================================
   
-  CurrentSpectrum = FitData.ExcludedSpecctra.CurrentSpectrum;
-  BestSpectrum = FitData.ExcludedSpecctra.BestSpectrum;
-  ExperimentalSpectrum = FitData.ExcludedSpecctra.ExperimentalSpectrum;
-  
+  if isfield(FitData,'CurrentSimSpec')
+    CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+    CurrentSpectrum = abs(CurrentSpectrum);
+    CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
+  else
+    CurrentSpectrum = FitData.ExcludedSpecctra.CurrentSpectrum;
+  end
+  if isfield(FitData,'bestspec')
+    BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
+    BestSpectrum = abs(BestSpectrum);
+    BestSpectrum = BestSpectrum/max(max(BestSpectrum));
+  else
+    BestSpectrum = FitData.ExcludedSpecctra.BestSpectrum;
+  end
+  ExperimentalSpectrum = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
+
   h1 = findobj('Tag','currsimdata');
   if isprop(h1,'CData')
     h1.CData = CurrentSpectrum;
