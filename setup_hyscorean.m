@@ -165,24 +165,24 @@ else
   fprintf('        Graphical settings: user-defined \n')
 end
 %EasySpin default spin system definition
+SystemInputString(1,:) =  '%---------------------------------------------';
+SystemInputString(2,:) =  '% EasySpin Input                              ';
+SystemInputString(3,:) =  '%---------------------------------------------';
+SystemInputString(4,:) =  '                                              ';
+SystemInputString(5,:) =  '%Spin System definition                       ';
+SystemInputString(6,:) =  '%---------------------------------------------';
+SystemInputString(8,:) =  'Sys.Nucs = ''14N,15N,1H'';                      ';
+SystemInputString(9,:) =  'Sys.A = [9 0  0; 7.6 0 0 ; 7.6 8.7 7.0];      ';
+SystemInputString(10,:) = 'Sys.Q = [0.8 0.8 0.8; 0 0 0; 0 0 0];          ';
+SystemInputString(11,:) = '                                              ';
+SystemInputString(12,:) = '%Fit variables definition                     ';
+SystemInputString(13,:) = '%---------------------------------------------';
+SystemInputString(14,:) = 'Vary.A =  [2 4 6; 5 4 9; 2 2 2];              ';
+setpref('hyscorean','defaultsystemEasyspin',SystemInputString)
 if ~ispref('hyscorean','defaultsystemEasyspin')
-  SystemInputString(1,:) =  '%---------------------------------------------';
-  SystemInputString(2,:) =  '% EasySpin Input                              ';
-  SystemInputString(3,:) =  '%---------------------------------------------';
-  SystemInputString(4,:) =  '                                              ';
-  SystemInputString(5,:) =  '%Spin System definition                       ';
-  SystemInputString(6,:) =  '%---------------------------------------------';
-  SystemInputString(8,:) =  'Sys.Nucs = ''14N,15N,1H'';                      ';
-  SystemInputString(9,:) =  'Sys.A = [9 0  0; 7.6 0 0 ; 7.6 8.7 7.0];      ';
-  SystemInputString(10,:) = 'Sys.Q = [0.8 0.8 0.8; 0 0 0; 0 0 0];          ';
-  SystemInputString(11,:) = '                                              ';
-  SystemInputString(12,:) = '%Fit variables definition                     ';
-  SystemInputString(13,:) = '%---------------------------------------------';
-  SystemInputString(14,:) = 'Vary.A =  [2 4 6; 5 4 9; 2 2 2];              ';
-  setpref('hyscorean','defaultsystemEasyspin',SystemInputString)
   fprintf('        Easyspin input system: default \n')
 else
-  fprintf('        Easyspin input system: user-defined \n')
+  fprintf('        Easyspin input system: reset to default \n')
 end
 
 %==========================================================================
