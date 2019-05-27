@@ -59,7 +59,7 @@ printLn("------------------------------------------------------------");
 printLn("Non-Uniform Sampled HYSCORE PRODEL Program");
 printLn("------------------------------------------------------------");
 printLn("NUS schedule: ",ExperimentName);
-printLn("Points to measure: ",scheduleDim);
+printLn("Points to measure (per tau): ",scheduleDim);
 print("Tau-values:");
 i = 0;
 while (i < tauDim)
@@ -235,7 +235,7 @@ while (k < tauDim)
 
 			# Check if all points have been saved. If dummy, skip saving #
 			measuredPoints = getNrOfPoints(dsetP,REAL_ORD);
-			if (measuredPoints < scheduleDim)
+			if (measuredPoints < tauDim*scheduleDim)
 			
 				# Initialize a new point in the true dataset #
 				appendPoint(dsetP);
