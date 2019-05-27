@@ -2760,7 +2760,7 @@ end
 % Revert edit if user-entered data does not cleanly convert to a scalar,
 % assert non-negativity for vary range
 numval = str2num(callbackData.EditData);
-if numel(numval)~=1 || ((numval<0) && (cidx==6))
+if numel(numval)~=1 || ((numval<=0) && (cidx==6))
   hTable.Data{ridx,cidx} = callbackData.PreviousData;
   return
 end
