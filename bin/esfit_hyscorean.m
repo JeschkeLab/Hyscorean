@@ -1537,6 +1537,7 @@ Exclude = FitData.Exclude;
 end
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
+%   for Index = 1:numSpec
 % for Index = 1:numSpec
   if numel(SimSystems)==1
     [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
@@ -1576,7 +1577,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   end
   
   if isConfined
-    ConfinementPos = Confiment{Index};
+    ConfinementPos = FitData.Confiment{Index};
     PosX1 = ConfinementPos(1);
     PosX2 = ConfinementPos(2);
     PosY1 = ConfinementPos(3);
@@ -1593,7 +1594,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     
   end
   if isExcluded
-    ExcludePos = Exclude{Index};
+    ExcludePos = FitData.Exclude{Index};
     EPosX1 = ExcludePos(1);
     EPosX2 = ExcludePos(2);
     EPosY1 = ExcludePos(3);
