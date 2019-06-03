@@ -3568,6 +3568,7 @@ else
     delete(rectHandle);
     ExclusionButtonHandle = findobj('String','Include');
     set(ExclusionButtonHandle,'value',0,'string','Exclude');
+    FitData =  rmfield(FitData,'ExcludedSpecctra');
   end
   
   h1 = findobj('Tag','currsimdata');
@@ -3760,25 +3761,30 @@ else
   
   
   %========================================================================
-  % Release
+  % Include
   %========================================================================
   
-  if isfield(FitData,'CurrentSimSpec')
-    CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
-    CurrentSpectrum = abs(CurrentSpectrum);
-    CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
-  else
+  if ~isempty(findobj('String','Release'))
     CurrentSpectrum = FitData.ExcludedSpecctra.CurrentSpectrum;
-  end
-  if isfield(FitData,'bestspec')
-    BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
-    BestSpectrum = abs(BestSpectrum);
-    BestSpectrum = BestSpectrum/max(max(BestSpectrum));
-  else
     BestSpectrum = FitData.ExcludedSpecctra.BestSpectrum;
+    ExperimentalSpectrum = FitData.ExcludedSpecctra.ExperimentalSpectrum;
+  else
+    if isfield(FitData,'CurrentSimSpec')
+      CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+      CurrentSpectrum = abs(CurrentSpectrum);
+      CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
+    else
+      CurrentSpectrum = FitData.ExcludedSpecctra.CurrentSpectrum;
+    end
+    if isfield(FitData,'bestspec')
+      BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
+      BestSpectrum = abs(BestSpectrum);
+      BestSpectrum = BestSpectrum/max(max(BestSpectrum));
+    else
+      BestSpectrum = FitData.ExcludedSpecctra.BestSpectrum;
+    end
+    ExperimentalSpectrum = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
   end
-  ExperimentalSpectrum = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
-
   h1 = findobj('Tag','currsimdata');
   if isprop(h1,'CData')
     h1.CData = CurrentSpectrum;
