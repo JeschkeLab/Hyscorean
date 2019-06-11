@@ -1306,6 +1306,8 @@ Residuals = cell(numSpec,1);
 rmsd_individual = cell(numSpec,1);
 ScalingOption = FitOpts.Scaling;
 ExpSpec = FitData.ExpSpec;
+SpectraConfined = {};
+SpectraExcluded = {};
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
 
@@ -1349,6 +1351,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     PosX2 = ConfinementPos(2);
     PosY1 = ConfinementPos(3);
     PosY2 = ConfinementPos(4);
+    SpectraConfined{Index} = Spectrum;
     Spectrum_cut = 0*Spectrum;
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = Spectrum(PosX1:PosX2,PosY1:PosY2);
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -1365,6 +1368,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     PosX2 = ExcludePos(2);
     PosY1 = ExcludePos(3);
     PosY2 = ExcludePos(4);
+    SpectraExcluded{Index} = Spectrum;
     Spectrum_cut = Spectrum;
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = 0;
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -1398,6 +1402,14 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   rmsd_individual{Index} = norm(BestSpec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
   rmsd = rmsd + rmsd_individual{Index};
   
+end
+
+if ~isempty(SpectraConfined)
+FitData.UnconfinedSpecctra.CurrentSpectrum = SpectraConfined;
+
+end
+if ~isempty(SpectraExcluded)
+FitData.ExcludedSpectra.CurrentSpectrum = SpectraExcluded;
 end
 
 else
@@ -1535,6 +1547,10 @@ isExcluded = isfield(FitData,'Exclude');
 if isExcluded
 Exclude = FitData.Exclude;
 end
+
+SpectraExcluded = {};
+SpectraConfined = {};
+
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
 %   for Index = 1:numSpec
@@ -1582,6 +1598,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     PosX2 = ConfinementPos(2);
     PosY1 = ConfinementPos(3);
     PosY2 = ConfinementPos(4);
+    SpectraConfined{Index} = Spectrum;
     Spectrum_cut = 0*Spectrum;
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = Spectrum(PosX1:PosX2,PosY1:PosY2);
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -1591,7 +1608,6 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     Spectrum_cut(PosX1:PosX2,PosY1:PosY2) = tmp(PosX1:PosX2,PosY1:PosY2);
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
     ExpSpec{Index} = Spectrum_cut;
-    
   end
   if isExcluded
     ExcludePos = FitData.Exclude{Index};
@@ -1599,6 +1615,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     EPosX2 = ExcludePos(2);
     EPosY1 = ExcludePos(3);
     EPosY2 = ExcludePos(4);
+    SpectraExcluded{Index} = Spectrum;
     Spectrum_cut = Spectrum;
     Spectrum_cut(EPosX1:EPosX2,EPosY1:EPosY2) = 0;
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
@@ -1621,6 +1638,14 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   rmsd = rmsd + rmsd_individual{Index};
  
 
+end
+
+if ~isempty(SpectraConfined)
+FitData.UnconfinedSpecctra.CurrentSpectrum = SpectraConfined;
+
+end
+if ~isempty(SpectraExcluded)
+FitData.ExcludedSpectra.CurrentSpectrum = SpectraExcluded;
 end
 
 for i=1:FitData.numSpec
@@ -1682,14 +1707,14 @@ if FitOpts.MethodID<7
     set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color','r');
     % update lower projection graph
     Inset = max(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:));
-%     set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
+    set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
     %   Temp = abs(CurrentBestSpec)/max(max(abs(CurrentBestSpec)));
     Temp = abs(CurrentBestSpec);
-    Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+    Inset = max(Temp(round(length(Temp)/2,0):end,:),[],1);
     set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
     %   Temp = abs(CurrentSimSpec)/max(max(abs(CurrentSimSpec)));
     Temp = abs(CurrentSimSpec);
-    Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+    Inset = max(Temp(round(length(Temp)/2,0):end,:),[],1);
     set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset,'Color','r');
     
   if strcmp(FitOpts.Scaling, 'none')
@@ -1712,7 +1737,7 @@ elseif FitOpts.MethodID==7
   Inset = max(Temp,[],2);
   set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color','b');
   Temp = abs(CurrentSimSpec);
-  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  Inset = max(Temp(round(length(Temp)/2,0):end,:),[],1);
   set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset,'Color','b');
   
 else
@@ -1731,7 +1756,7 @@ else
   cmp = lines(5);
   set(findobj('Tag','currsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset,'Color',cmp(3,:));
   Temp = abs(CurrentSimSpec);
-  Inset = max(Temp(:,round(length(Temp)/2,0):end),[],2);
+  Inset = max(Temp(round(length(Temp)/2,0):end,:),[],1);
   set(findobj('Tag','currsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset,'Color',cmp(3,:));
   
 end
@@ -2525,7 +2550,7 @@ switch FitOpts.GraphicalSettings.ExperimentalSpectrumTypeString
 end
 
 % Update the inset experimental plots
-Inset = max(CurrentExpSpec(:,round(length(CurrentExpSpec)/2,0):end),[],2);
+Inset = max(CurrentExpSpec(round(length(CurrentExpSpec)/2,0):end,:),[],1);
 set(findobj('Tag','expdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
 Inset = max(CurrentExpSpec,[],2);
 set(findobj('Tag','expdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
@@ -2614,7 +2639,7 @@ if ~FitData.DisplayingFitSetSpec
     end
     
     %Update the inset plots
-    Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],2);
+    Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],1);
     set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
     Inset = max(CurrentBestSpec,[],2);
     set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
@@ -3547,18 +3572,22 @@ else
   %========================================================================
   
   if isfield(FitData,'CurrentSimSpec')
-    CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+%     CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+%     CurrentSpectrum = abs(CurrentSpectrum);
+%     CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
+%   else
+    CurrentSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum{FitData.CurrentSpectrumDisplay};
     CurrentSpectrum = abs(CurrentSpectrum);
     CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
-  else
-    CurrentSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum;
   end
   if isfield(FitData,'bestspec')
-    BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
+    %     BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
+    %     BestSpectrum = abs(BestSpectrum);
+    %     BestSpectrum = BestSpectrum/max(max(BestSpectrum));
+    %   else
+    BestSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum{FitData.CurrentSpectrumDisplay};
     BestSpectrum = abs(BestSpectrum);
     BestSpectrum = BestSpectrum/max(max(BestSpectrum));
-  else
-    BestSpectrum = FitData.UnconfinedSpecctra.BestSpectrum;
   end
   ExperimentalSpectrum = FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay};
   
