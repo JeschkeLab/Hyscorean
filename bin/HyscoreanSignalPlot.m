@@ -153,7 +153,7 @@ if get(handles.NonCorrectedTrace,'value')
     Mean = 0;
   end
   SignalTrace = SignalTrace - Mean;
-          SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
+  SignalTrace = SignalTrace/max(max(real(handles.Data.NonCorrectedIntegral)));
 
   
   %Construct axis and plot
@@ -163,7 +163,7 @@ if get(handles.NonCorrectedTrace,'value')
   
   %Rescale and zero-adjust the background trace
   Background1Trace = Background1Trace - Mean;
-    Background1Trace = Background1Trace/max(max(abs(handles.Data.NonCorrectedIntegral)));
+  Background1Trace = Background1Trace/max(max(real(handles.Data.NonCorrectedIntegral)));
 
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(Background1Trace));
@@ -212,7 +212,7 @@ if PlotSecondCorrection
   
   %Rescale and zero-adjust the signal trace
   SignalTrace = SignalTrace - Mean;
-  SignalTrace = SignalTrace/max(max(abs(handles.Data.FirstBackgroundCorrected)));
+  SignalTrace = SignalTrace/max(max(real(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(SignalTrace));
@@ -221,7 +221,7 @@ if PlotSecondCorrection
   
   %Rescale and zero-adjust the background trace
   Background2Trace = Background2Trace - Mean;
-  Background2Trace = Background2Trace/max(max(abs(handles.Data.FirstBackgroundCorrected)));
+  Background2Trace = Background2Trace/max(max(real(handles.Data.FirstBackgroundCorrected)));
   
   %Construct axis and plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(Background2Trace));
@@ -267,7 +267,7 @@ if get(handles.PreProcessedTrace,'value')
   
   %Rescale and zero-adjust the trace
   PreProcessedSignalTrace = PreProcessedSignalTrace - Mean;
-  PreProcessedSignalTrace = PreProcessedSignalTrace/max(max(abs(handles.Data.PreProcessedSignal)));
+  PreProcessedSignalTrace = PreProcessedSignalTrace/max(max(real(handles.Data.PreProcessedSignal)));
   
   %Get axis for plot
   Axis = linspace(min(handles.Data.CorrectedTimeAxis1),max(handles.Data.CorrectedTimeAxis1),length(PreProcessedSignalTrace));

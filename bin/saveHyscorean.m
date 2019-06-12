@@ -182,6 +182,7 @@ if getpref('hyscorean','reportlicense')
   reportdata.BackgroundStart1 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex1),0);
   reportdata.BackgroundStart2 = round(1000*BackgroundAxis(reportdata.Data.BackgroundStartIndex2),0);
   reportdata.MinimalContourLevel = str2double(get(handles.MinimalContourLevel,'string'));
+  reportdata.MaximalContourLevel = str2double(get(handles.MaximalContourLevel,'string'));
   %Store apodization window
   WindowDecay1 = str2double(get(handles.WindowLength1,'string'));
   WindowDecay2 = str2double(get(handles.WindowLength2,'string'));
@@ -203,7 +204,8 @@ if getpref('hyscorean','reportlicense')
   else
     Window2=[Window2 zeros(1,length(TimeAxis2)-WindowDecay2)];
   end
-  reportdata.WindowType = WindowType;
+  WindowStrings = get(handles.WindowType,'string');
+  reportdata.WindowType = WindowStrings{get(handles.WindowType,'value')};
   reportdata.ApodizationWindow1 = Window1;
   reportdata.ApodizationWindow2 = Window2;
   reportdata.WindowLength1 = WindowDecay1;
