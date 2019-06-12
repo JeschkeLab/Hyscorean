@@ -18,7 +18,7 @@
 % it under the terms of the GNU General Public License 3.0 as published by
 % the Free Software Foundation.
 %==========================================================================
-
+function setup_hyscorean
 %Clear workspace
 clc, clearvars
 
@@ -241,6 +241,8 @@ fprintf('=======================================================================
 
 %Remove all installer variables from workspace
 clearvars
+end
+
 
 %==========================================================================
 %Callbacks for License Agreement GUI
