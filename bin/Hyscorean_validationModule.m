@@ -1155,7 +1155,11 @@ ValidationResults.ParameterSets = handles.ParameterSets;
 for i=1:length(ValidationResults.ParameterSets)
   SamplingDensities(i) = ValidationResults.ParameterSets(i).SamplingDensity;
 end
-ValidationParameters.SamplingDensity_Vector = unique(SamplingDensities);
+if ~handles.RawData.NUSflag
+  ValidationParameters.SamplingDensity_Vector = 100;
+else
+  ValidationParameters.SamplingDensity_Vector = unique(SamplingDensities);
+end
 ValidationResults.Uncertainty = Uncertainty;
 ValidationResults.LowerBound = MeanReconstruction - 2*Uncertainty;
 ValidationResults.MeanSpectrum = MeanReconstruction;
@@ -1213,10 +1217,17 @@ ExternalHandles.superimpose_Check = handles.superimpose_Check;
 ExternalHandles.DisplayRadioStatus = 'uncertainty';
 updateValidationPlots(ExternalHandles)
 %Use the same formatting in name as before to avoid filename clash
-  SaveName = sprintf('%s_%s_Uncertainty',Date,Identifier);  
+if ExternalHandles.superimpose_Check
+  SaveName = sprintf('%s_%s_Uncertainty',Date,Identifier);
   if CrashFlag
-      SaveName = sprintf('%s_%s_Uncertainty_%i',Date,Identifier,CopyIndex);
+    SaveName = sprintf('%s_%s_Uncertainty_%i',Date,Identifier,CopyIndex);
   end
+else
+  SaveName = sprintf('%s_%s_Mean',Date,Identifier);
+  if CrashFlag
+    SaveName = sprintf('%s_%s_Mean_%i',Date,Identifier,CopyIndex);
+  end
+end
 %Save as Matlab figure (.fig)
 savefig(FigureHandle,fullfile(FullPath,[SaveName '.fig']), 'compact');
 
