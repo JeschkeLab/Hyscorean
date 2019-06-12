@@ -1288,8 +1288,7 @@ if getpref('hyscorean','reportlicense')
   ReportData.SavePath = FullPath;
   
   %Get the location of the processing report logo
-  HyscoreanPath = which('Hyscorean');
-  HyscoreanPath = HyscoreanPath(1:end-11);
+  HyscoreanPath = fileparts(which('Hyscorean'));
   ReportData.ValidationReport_logo_Path = fullfile(HyscoreanPath,'bin','ValidationReport_logo.png');
   
   %Send structure to workspace
