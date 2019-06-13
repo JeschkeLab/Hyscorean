@@ -1551,6 +1551,10 @@ end
 SpectraExcluded = {};
 SpectraConfined = {};
 
+SimulationNotSuccesful = true;
+
+while SimulationNotSuccesful
+
 %Loop over all field positions (i.e. different files/spectra)
 parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
 %   for Index = 1:numSpec
@@ -1638,6 +1642,28 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
   rmsd = rmsd + rmsd_individual{Index};
  
 
+end
+  %Check if excitation bandwidth was sufficient
+  if isnan(rmsd) && Exp{1}.ExciteWidth < 1e5
+    h = helpdlg({'The HYSCORE simulation failed.',...
+      ' Default excitation bandwidth may be insufficient.',...
+      sprintf('         Excitation pulse length:   %i ns',1000*1/Exp{1}.ExciteWidth),...
+      sprintf('         Excitation bandwidth:       %.2f MHz',Exp{1}.ExciteWidth),...
+      sprintf('         MW frequency:                 %.2f GHz',Exp{1}.mwFreq),...
+      'Excitation bandwidth will be set to infinity and the simulation re-run.'});
+    waitfor(h);
+    for i=1:length(Exp)
+      Exp{i}.ExciteWidth = 1e6;
+      FitData.Exp{i}.ExciteWidth = 1e6;
+    end
+    rmsd = 0;
+  elseif isnan(rmsd) && Exp{1}.ExciteWidth > 1e5
+    h = errordlg('The HYSCORE simulation failed due to unknown reasons.');
+    waitfor(h);
+    return
+  else
+    break
+  end
 end
 
 if ~isempty(SpectraConfined)
