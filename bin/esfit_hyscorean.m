@@ -1658,7 +1658,7 @@ end
     end
     rmsd = 0;
   elseif isnan(rmsd) && Exp{1}.ExciteWidth > 1e5
-    h = errordlg('The HYSCORE simulation failed due to unknown reasons.');
+    h = errordlg('The HYSCORE simulation still failed due to unknown reasons.');
     waitfor(h);
     return
   else
@@ -3275,8 +3275,8 @@ if Answered
     else
       FitData.SimOpt{1}.ProductRule = 0;
     end
-      FitData.Exp{1} = rmfield(FitData.Exp{1},'ExciteWidth');
-      FitData.Exp{1} = rmfield(FitData.Exp{1},'mwFreq');
+%       FitData.Exp{1} = rmfield(FitData.Exp{1},'ExciteWidth');
+%       FitData.Exp{1} = rmfield(FitData.Exp{1},'mwFreq');
     FitData.Sys0 = {ORCASys};
     %Set a dummy for vary for asses to work
     Dummy.A = 1;

@@ -168,6 +168,7 @@ set(handles.Validation_Button,'enable','off')
 set(handles.AddTagList,'enable','off')
 set(handles.ClearTags,'enable','off')
 set(handles.FieldOffsetTag,'enable','off')
+set(handles.GPS_button,'visible','off')
 set(handles.ZoomButton,'visible','off')
 set(handles.ZoomOutButton,'visible','off')
 set(handles.ProcessButton,'enable','off')
@@ -277,6 +278,7 @@ set(handles.ClearTags,'enable','on')
 set(handles.FieldOffsetTag,'enable','on')
 set(handles.FieldOffset,'enable','on')
 set(handles.ZoomButton,'visible','on')
+set(handles.GPS_button,'visible','on')
 set(handles.ZoomOutButton,'visible','on')
 set(handles.Validation_Button,'enable','on')
 %Enable the Fitting module only if EasySpin is installed
@@ -1299,11 +1301,8 @@ web(fullfile(Path,'index.html'),'-browser')
 %==========================================================================
 
 
-% --- Executes on button press in GPS_button.
+%==========================================================================
 function GPS_button_Callback(hObject, eventdata, handles)
-% hObject    handle to GPS_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 while true
   ScreenPos = get(0, 'PointerLocation');
   Transform = axis2Screen(handles.mainPlot);
@@ -1358,7 +1357,6 @@ while true
   end
 end
 
-
 function T = axis2Screen(ax)
   set(ax,'Units','Normalized');
   T = get(ax,'Position');
@@ -1380,3 +1378,4 @@ function T = axis2Screen(ax)
       end
     end
 return
+%==========================================================================
