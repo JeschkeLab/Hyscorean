@@ -226,6 +226,8 @@ set(handles.MultiTauDimensions,'String',handles.Selections);
 %Set the edit boxes depending on the signal size to the corresponding value
 set(handles.ZeroFilling1,'String',size(handles.Data.TauSignals,2));
 set(handles.ZeroFilling2,'String',size(handles.Data.TauSignals,3));
+set(handles.ZeroFilling1_Text,'String',sprintf('t1: %i  +',size(handles.Data.TauSignals,2)))
+set(handles.ZeroFilling2_Text,'String',sprintf('t2: %i  +',size(handles.Data.TauSignals,3)))
 set(handles.WindowLength1,'String',size(handles.Data.TauSignals,2));
 set(handles.WindowLength2,'String',size(handles.Data.TauSignals,3));
 
@@ -1295,3 +1297,86 @@ Path = fileparts(which('Hyscorean'));
 Path = fullfile(Path,'doc','html');
 web(fullfile(Path,'index.html'),'-browser')
 %==========================================================================
+
+
+% --- Executes on button press in GPS_button.
+function GPS_button_Callback(hObject, eventdata, handles)
+% hObject    handle to GPS_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+while true
+  ScreenPos = get(0, 'PointerLocation');
+  Transform = axis2Screen(handles.mainPlot);
+  AxisPos = (ScreenPos - Transform(1:2))./Transform(3:4);
+  ylim_axes=get(handles.mainPlot,'YLim');
+  height_axes_unitaxes=ylim_axes(2)-ylim_axes(1);
+  
+  if exist('AnnotationHandle')
+    delete(AnnotationHandle)
+    delete(LineHandle)
+    delete(RectangleHandle)
+    delete(PointHandle)
+  end
+  
+  if AxisPos(1)>=0 &&  AxisPos(1)<=1 &&...
+      AxisPos(2)>=0 &&  AxisPos(2)<=1
+    if AxisPos(1)>0.5
+      Sign = 1;
+      x = Sign*(2*AxisPos(1)-1)*height_axes_unitaxes;
+    else
+      Sign = -1;
+      x = Sign*(1-2*AxisPos(1))*height_axes_unitaxes;
+    end
+    
+    xylimratio = str2double(handles.XUpperLimit.String)/20;
+    y = AxisPos(2)*height_axes_unitaxes;
+    dim = [x + 0.5*xylimratio  y-1*xylimratio  10*xylimratio 2*xylimratio];
+    str = sprintf('x = %.2f  y = %.2f',x,y);
+    RectangleHandle = rectangle(handles.mainPlot,'Position',dim,'FaceColor','r');
+    AnnotationHandle = text(handles.mainPlot,x + 1*xylimratio,y,str,'FontSize',13,'Color','w','FontWeight','bold');
+    Xaxis = handles.Processed.axis1;
+    if x>0
+      Xaxis = Xaxis(Xaxis>0);
+      Slope = -1;
+    else
+      Xaxis = Xaxis(Xaxis<0);
+      Slope = 1;
+    end
+    Yaxis =  y + Slope*(Xaxis - (x));
+    hold(handles.mainPlot,'on');
+    LineHandle = plot(handles.mainPlot,Xaxis,Yaxis,'r','LineWidth',1.5);
+    PointHandle = plot(handles.mainPlot,x,y,'.r','LineWidth',1.5,'MarkerSize',24);
+    hold(handles.mainPlot,'off');
+  end
+  drawnow
+  if ~get(hObject,'value')
+    delete(AnnotationHandle)
+    delete(LineHandle)
+    delete(PointHandle)
+    delete(RectangleHandle)
+    break
+  end
+end
+
+
+function T = axis2Screen(ax)
+  set(ax,'Units','Normalized');
+  T = get(ax,'Position');
+  % Loop all the way up the hierarchy to the root
+  parent = get(ax,'Parent');
+    % Transform normalized axis coords -> parent coords
+    while true
+      if strcmp(get(parent,'type'),'root')
+        parentPos = get(parent,'ScreenSize');  % Save screen units
+      else
+        set(parent,'Units','Normalized'); % Norm units
+        parentPos = get(parent,'Position'); % Norm units
+      end
+      T(1:2) = parentPos(1:2) + parentPos(3:4) .* T(1:2);
+      T(3:4) = parentPos(3:4) .* T(3:4);
+      parent = get(parent,'Parent');
+      if ~strcmp(get(parent,'type'),'root')
+        break
+      end
+    end
+return
