@@ -1522,11 +1522,13 @@ end
 
 Sys0 = FitDat.Sys0;
 Vary = FitDat.Vary;
-Exp = FitDat.Exp;
+Exp = FitData.Exp;
 SimOpt = FitDat.SimOpt;
 rmsd_individual = cell(FitData.numSpec,1);
 
-% Simulate spectra ------------------------------------------
+%------------------------------------------------------------------------
+%Simulate spectra 
+%------------------------------------------------------------------------
 inactive = FitData.inactiveParams;
 x_all = FitData.startx;
 x_all(~inactive) = x;
@@ -1539,6 +1541,8 @@ rmsd_individual = cell(numSpec,1);
 nOutArguments = FitData.nOutArguments;
 SimFcnHandel = FitData.SimFcn;
 ScalingOption = FitOpt.Scaling;
+
+%Check for confinement/exclusion
 isConfined = isfield(FitData,'Confiment');
 if isConfined
 Confiment = FitData.Confiment;
@@ -1547,12 +1551,10 @@ isExcluded = isfield(FitData,'Exclude');
 if isExcluded
 Exclude = FitData.Exclude;
 end
-
 SpectraExcluded = {};
 SpectraConfined = {};
 
 SimulationNotSuccesful = true;
-
 while SimulationNotSuccesful
 
 %Loop over all field positions (i.e. different files/spectra)
@@ -1595,7 +1597,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
       Spectrum = (Spectrum.*Spectrum').^0.5;
       Spectrum = fliplr(fliplr(Spectrum).*fliplr(Spectrum)').^0.5;
   end
-  
+  %If expSpec confined, then confine simulation too
   if isConfined
     ConfinementPos = FitData.Confiment{Index};
     PosX1 = ConfinementPos(1);
@@ -1613,6 +1615,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
     ExpSpec{Index} = Spectrum_cut;
   end
+  %If expSpec excluded, then confine simulation too
   if isExcluded
     ExcludePos = FitData.Exclude{Index};
     EPosX1 = ExcludePos(1);
@@ -1630,19 +1633,18 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     ExpSpec{Index} = Spectrum_cut;
   end
    simspec{Index} = Spectrum;
-  
-  % (SimSystems{s}.weight is taken into account in the simulation function)
-  % simspec = out{FitData.OutArgument}; % pick last output argument
-  
-  % Scale simulated spectrum to experimental spectrum ----------
+   
+  % Scale simulated spectrum to experimental spectrum
   simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},ScalingOption);
   simspec{Index}  = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
   
+  %Compute the RMSD for this simulation
   rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
   rmsd = rmsd + rmsd_individual{Index};
  
 
 end
+
   %Check if excitation bandwidth was sufficient
   if isnan(rmsd) && Exp{1}.ExciteWidth < 1e5
     h = helpdlg({'The HYSCORE simulation failed.',...
@@ -1654,6 +1656,7 @@ end
     waitfor(h);
     for i=1:length(Exp)
       Exp{i}.ExciteWidth = 1e6;
+      FitDat.Exp{i}.ExciteWidth = 1e6;
       FitData.Exp{i}.ExciteWidth = 1e6;
     end
     rmsd = 0;
@@ -1666,29 +1669,31 @@ end
   end
 end
 
+%Store the unconfined/non-excluded spectra for later if needed
 if ~isempty(SpectraConfined)
 FitData.UnconfinedSpecctra.CurrentSpectrum = SpectraConfined;
-
 end
 if ~isempty(SpectraExcluded)
 FitData.ExcludedSpectra.CurrentSpectrum = SpectraExcluded;
 end
-
 for i=1:FitData.numSpec
  FitData.individualErrors{i} = [FitData.individualErrors{i} rmsd_individual{i}];
 end
 
+%Update error list and check if best fit thus far
 FitData.errorlist = [FitData.errorlist rmsd];
 isNewBest = rmsd<FitData.smallestError;
 
+%If best, then update best-variables
 if isNewBest
   FitData.smallestError = rmsd;
   FitData.bestspec = simspec;
   BestSys = SimSystems;
 end
 
-% update GUI
-%-----------------------------------------------------------
+%------------------------------------------------------------------------
+%Update GUI
+%------------------------------------------------------------------------
 
 FitData.DisplayingFitSetSpec = false;
 
@@ -1874,7 +1879,6 @@ end
   drawnow
 
 end
-%-------------------------------------------------------------------
 
 if (UserCommand==2)
   UserCommand = 0;
@@ -3319,8 +3323,20 @@ global FitOpts FitData
 
 warning('off','all')
 
+FigureHandle = findobj('Name','Hyscorean: EasySpin - Least-Squares Fitting');
+EsfitPosition = get(FigureHandle,'Position');
+ScreenSize = get(0,'Screensize');
+Position(1) = EsfitPosition(1)/ScreenSize(3)+ 0.25;
+Position(2) = EsfitPosition(2)/ScreenSize(4) + 0.25;
+Position(3) = 337/ScreenSize(3);
+Position(4) = 196/ScreenSize(4);
 %Launch the graphical settings GUI with the current settings and retrieve them back
-FitOpts.GraphicalSettings = Hyscorean_esfit_GraphicalSettings(FitOpts.GraphicalSettings);
+GraphicalSettings = Hyscorean_esfit_GraphicalSettings(FitOpts.GraphicalSettings,'normalize',Position);
+
+if GraphicalSettings.Cancelled
+  return
+end
+FitOpts.GraphicalSettings = GraphicalSettings;
 
 %Translate the UI element values to evaluation strings
 switch FitOpts.GraphicalSettings.ExperimentalSpectrumType
@@ -3562,9 +3578,9 @@ if get(object,'value')
     CurrentSpectrum(EPosX1:EPosX2,EPosY1:EPosY2) = ExcludedCurrentSpectrum(EPosX1:EPosX2,EPosY1:EPosY2);
   end
   
-  FitData.UnconfinedSpecctra.ExperimentalSpectrum = FitData.ExpSpecScaled;
-  FitData.UnconfinedSpecctra.BestSpectrum = BestSpectrum;
-  FitData.UnconfinedSpecctra.CurrentSpectrum = CurrentSpectrum;
+  FitData.UnconfinedSpecctra.ExperimentalSpectrum{1} = FitData.ExpSpecScaled;
+  FitData.UnconfinedSpecctra.BestSpectrum{1} = BestSpectrum;
+  FitData.UnconfinedSpecctra.CurrentSpectrum{1} = CurrentSpectrum;
   
   CurrentInset2 = findobj('Tag','currsimdata_projection2');
   Data_cut = max(CurrentSpectrum_cut,[],2);
@@ -3597,21 +3613,21 @@ else
   % Release
   %========================================================================
   
-  if isfield(FitData,'CurrentSimSpec')
-%     CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
-%     CurrentSpectrum = abs(CurrentSpectrum);
-%     CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
-%   else
+  if isfield(FitData,'UnconfinedSpecctra')
     CurrentSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum{FitData.CurrentSpectrumDisplay};
     CurrentSpectrum = abs(CurrentSpectrum);
     CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
+  else
+    CurrentSpectrum = FitData.CurrentSimSpec{FitData.CurrentSpectrumDisplay};
+    CurrentSpectrum = abs(CurrentSpectrum);
+    CurrentSpectrum = CurrentSpectrum/max(max(CurrentSpectrum));
   end
-  if isfield(FitData,'bestspec')
-    %     BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
-    %     BestSpectrum = abs(BestSpectrum);
-    %     BestSpectrum = BestSpectrum/max(max(BestSpectrum));
-    %   else
+  if isfield(FitData,'UnconfinedSpecctra')
     BestSpectrum = FitData.UnconfinedSpecctra.CurrentSpectrum{FitData.CurrentSpectrumDisplay};
+    BestSpectrum = abs(BestSpectrum);
+    BestSpectrum = BestSpectrum/max(max(BestSpectrum));
+  else
+    BestSpectrum = FitData.bestspec{FitData.CurrentSpectrumDisplay};
     BestSpectrum = abs(BestSpectrum);
     BestSpectrum = BestSpectrum/max(max(BestSpectrum));
   end
@@ -3626,6 +3642,7 @@ else
     FitData =  rmfield(FitData,'ExcludedSpecctra');
   end
   
+  
   h1 = findobj('Tag','currsimdata');
   if isprop(h1,'CData')
     h1.CData = CurrentSpectrum;
@@ -3639,7 +3656,7 @@ else
   else
     h2.ZData = BestSpectrum;
   end
-  
+
   h3 = findobj('Tag','expdata');
   if isprop(h3,'CData')
     h3.CData = ExperimentalSpectrum;

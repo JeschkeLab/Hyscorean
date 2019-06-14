@@ -36,7 +36,6 @@ end
 
 %==========================================================================
 function Hyscorean_GraphicalSettings_OpeningFcn(hObject, eventdata, handles, varargin)
-
 handles.output = hObject;
 warning('off','all')
 Path =  fileparts(which('Hyscorean'));

@@ -418,12 +418,13 @@ function SaverSettings_Callback(hObject, eventdata, handles)
 setappdata(0,'SaverSettings',handles.SaveHyscoreanSettings)
 %Make the window appear relative to the Hyscorean window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+500;
-Position(2) = Position(2)+60;
-Position(3) = 451.0;
-Position(4) = 177.0;
-%Call graphical settings GUI
-Hyscorean_saveSettings('Position',Position)
+Position(1) = Position(1) + 0.2;
+Position(2) = Position(2) + 0.2;
+ScreenSize = get(0,'ScreenSize');
+Position(3) = 451.0/ScreenSize(3);
+Position(4) = 177.0/ScreenSize(4);
+%Call saver settings GUI
+Hyscorean_saveSettings('Units','normalized','Position',Position)
 uiwait(Hyscorean_saveSettings)
 handles.SaveHyscoreanSettings = getappdata(0,'SaverSettings');
 guidata(hObject, handles);
@@ -586,12 +587,14 @@ else
 end
 %Make the window appear relative to the Hyscorean window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+500;
-Position(2) = Position(2)+60;
+Position(1) = Position(1)+0.1;
+Position(2) = Position(2);
+ScreenSize = get(0,'ScreenSize');
 %Copy object as it is
 AxesHandles = copyobj(handles.mainPlot,Figure);
 GraphicalSettings = getpref('hyscorean','graphicalsettings');
-set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE Spectrum','Units','pixels','Position',[Position(1) Position(2) 776 415]);
+set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE spectrum',...
+  'Units','normalized','Position',[Position(1) Position(2) 776/ScreenSize(3) 415/ScreenSize(4)]);
 set(AxesHandles,'Position',[0.07 0.12 0.9 0.85]);
 colormap(AxesHandles,GraphicalSettings.ColormapName)
 
@@ -615,9 +618,11 @@ else
 end
 %Make the window appear relative to the Hyscorean window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+500;
-Position(2) = Position(2)+60;
-set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE Surface','Units','pixels','Position',[Position(1) Position(2) 776 415]);
+Position(1) = Position(1)+0.1;
+Position(2) = Position(2);
+ScreenSize = get(0,'ScreenSize');
+set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE Surface',...
+    'Units','normalized','Position',[Position(1) Position(2) 776/ScreenSize(3) 415/ScreenSize(4)]);
 if handles.GraphicalSettings.Absolute
   spectrum2 = abs(handles.Processed.spectrum);
 elseif handles.GraphicalSettings.Real
@@ -677,12 +682,13 @@ function GraphicalSettingsButton_Callback(hObject, eventdata, handles)
 setappdata(0,'GraphicalSettings',handles.GraphicalSettings)
 %Make the window appear relative to the Hyscorean window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+500;
-Position(2) = Position(2)+60;
-Position(3) = 451.0;
-Position(4) = 177.0;
+Position(1) = Position(1) + 0.2;
+Position(2) = Position(2) + 0.2;
+ScreenSize = get(0,'ScreenSize');
+Position(3) = 451.0/ScreenSize(3);
+Position(4) = 177.0/ScreenSize(4);
 %Call graphical settings GUI
-Hyscorean_GraphicalSettings('Position',Position)
+Hyscorean_GraphicalSettings('Units','normalized','Position',Position)
 uiwait(Hyscorean_GraphicalSettings)
 
 handles.GraphicalSettings = getappdata(0,'GraphicalSettings');
@@ -928,7 +934,14 @@ setappdata(0,'WindowType',get(handles.WindowType,'Value'))
 handles.SignalPlotIsDetached = true;
 guidata(hObject, handles);
 
-uiwait(Hyscorean_detachedSignalPlot)
+Position = handles.HyscoreanFigure.Position;
+Position(1) = Position(1) + 0.2;
+Position(2) = Position(2) + 0.2;
+ScreenSize = get(0,'ScreenSize');
+Position(3) = 790.0/ScreenSize(3);
+Position(4) = 463.0/ScreenSize(4);
+
+uiwait(Hyscorean_detachedSignalPlot('Units','normalized','Position',Position))
 
 handles.SignalPlotIsDetached = false;
 guidata(hObject, handles);

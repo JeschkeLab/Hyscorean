@@ -41,6 +41,8 @@ end
 %------------------------------------------------------------------------
 function Hyscorean_esfit_GraphicalSettings_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
+set(hObject,'Units',varargin{2});
+set(hObject,'Position',varargin{3});
 Settings = varargin{1};
 %Get current settings from the function input and set the UI elements
 set(handles.ExperimentalSpectrumType,'value',Settings.ExperimentalSpectrumType);
@@ -103,6 +105,7 @@ function SaveButton_Callback(hObject, eventdata, handles)
 Settings.ExperimentalSpectrumType = get(handles.ExperimentalSpectrumType,'value');
 Settings.FitSpectraType = get(handles.FitSpectraType,'value');
 Settings.LineWidth = str2double(get(handles.Linewidth,'string'));
+Settings.Cancelled = false;
 Settings.ContourLevels = str2double(get(handles.ContourLevels,'string'));
 %Save them to the handles
 handles.Settings = Settings;
@@ -120,4 +123,15 @@ set(handles.FitSpectraType,'value',Settings.FitSpectraType);
 set(handles.Linewidth,'string',num2str(Settings.Linewidth));
 set(handles.ContourLevels,'string',num2str(Settings.ContourLevels));
 guidata(hObject, handles);
+%------------------------------------------------------------------------
+
+%------------------------------------------------------------------------
+function CloseButton_Callback(hObject, eventdata, handles)
+%Get the current state of the UI elements
+Settings.Cancelled = true;
+%Save them to the handles
+handles.Settings = Settings;
+guidata(hObject, handles);
+%Lift the uiwait state prompting the CloseReqFcn to start
+uiresume(handles.figure1);
 %------------------------------------------------------------------------
