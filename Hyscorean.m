@@ -1303,79 +1303,130 @@ web(fullfile(Path,'index.html'),'-browser')
 
 %==========================================================================
 function GPS_button_Callback(hObject, eventdata, handles)
-while true
-  ScreenPos = get(0, 'PointerLocation');
-  Transform = axis2Screen(handles.mainPlot);
-  AxisPos = (ScreenPos - Transform(1:2))./Transform(3:4);
-  ylim_axes=get(handles.mainPlot,'YLim');
-  height_axes_unitaxes=ylim_axes(2)-ylim_axes(1);
-  
-  if exist('AnnotationHandle')
-    delete(AnnotationHandle)
-    delete(LineHandle)
-    delete(RectangleHandle)
-    delete(PointHandle)
-  end
-  
-  if AxisPos(1)>=0 &&  AxisPos(1)<=1 &&...
-      AxisPos(2)>=0 &&  AxisPos(2)<=1
-    if AxisPos(1)>0.5
-      Sign = 1;
-      x = Sign*(2*AxisPos(1)-1)*height_axes_unitaxes;
-    else
-      Sign = -1;
-      x = Sign*(1-2*AxisPos(1))*height_axes_unitaxes;
-    end
-    
-    xylimratio = str2double(handles.XUpperLimit.String)/20;
-    y = AxisPos(2)*height_axes_unitaxes;
-    dim = [x + 0.5*xylimratio  y-1*xylimratio  10*xylimratio 2*xylimratio];
-    str = sprintf('x = %.2f  y = %.2f',x,y);
-    RectangleHandle = rectangle(handles.mainPlot,'Position',dim,'FaceColor','r');
-    AnnotationHandle = text(handles.mainPlot,x + 1*xylimratio,y,str,'FontSize',13,'Color','w','FontWeight','bold');
-    Xaxis = handles.Processed.axis1;
-    if x>0
-      Xaxis = Xaxis(Xaxis>0);
-      Slope = -1;
-    else
-      Xaxis = Xaxis(Xaxis<0);
-      Slope = 1;
-    end
-    Yaxis =  y + Slope*(Xaxis - (x));
-    hold(handles.mainPlot,'on');
-    LineHandle = plot(handles.mainPlot,Xaxis,Yaxis,'r','LineWidth',1.5);
-    PointHandle = plot(handles.mainPlot,x,y,'.r','LineWidth',1.5,'MarkerSize',24);
-    hold(handles.mainPlot,'off');
-  end
-  drawnow
-  if ~get(hObject,'value')
-    delete(AnnotationHandle)
-    delete(LineHandle)
-    delete(PointHandle)
-    delete(RectangleHandle)
-    break
-  end
-end
 
-function T = axis2Screen(ax)
-  set(ax,'Units','Normalized');
-  T = get(ax,'Position');
-  % Loop all the way up the hierarchy to the root
-  parent = get(ax,'Parent');
-    % Transform normalized axis coords -> parent coords
+%Check if button is toogled 
+if get(hObject,'value')
+  
+  %Start continuous execution
+  while true
+    %Get mouse pointer location in root
+    ScreenPos = get(0, 'PointerLocation');
+    %Set main figure axis to normalized units 
+    set(handles.mainPlot,'Units','Normalized');
+    %Get relative position of axis in screen
+    Transform = get(handles.mainPlot,'Position');
+    %Get main axis parent
+    Parent = get(handles.mainPlot,'Parent');
+    %Loop all the way up the hierarchy to the root
     while true
-      if strcmp(get(parent,'type'),'root')
-        parentPos = get(parent,'ScreenSize');  % Save screen units
+      if strcmp(get(Parent,'type'),'root')
+        parentPos = get(Parent,'ScreenSize');  % Save screen units
       else
-        set(parent,'Units','Normalized'); % Norm units
-        parentPos = get(parent,'Position'); % Norm units
+        set(Parent,'Units','Normalized'); % Norm units
+        parentPos = get(Parent,'Position'); % Norm units
       end
-      T(1:2) = parentPos(1:2) + parentPos(3:4) .* T(1:2);
-      T(3:4) = parentPos(3:4) .* T(3:4);
-      parent = get(parent,'Parent');
-      if ~strcmp(get(parent,'type'),'root')
+      %Adapt transform vector
+      Transform(1:2) = parentPos(1:2) + parentPos(3:4).*Transform(1:2);
+      Transform(3:4) = parentPos(3:4).*Transform(3:4);
+      Parent = get(Parent,'Parent');
+      %If already reached the root, stop
+      if ~strcmp(get(Parent,'type'),'root')
         break
       end
     end
+    %Translate pointer position from screen to axis coordinates 
+    AxisPos = (ScreenPos - Transform(1:2))./Transform(3:4);
+    %Get axis values
+    AxesYLim=get(handles.mainPlot,'YLim');
+    AxesValuesSpan=AxesYLim(2)-AxesYLim(1);
+    
+    %Check if graphics handles exist and delete them 
+    if exist('AnnotationHandle','var')
+      delete(AnnotationHandle)
+      delete(AnnotationHandle2)
+      delete(LineHandle)
+      delete(RectangleHandle)
+      delete(PointHandle)
+    end
+    
+    %Update datatip only if pointer is inside the axes
+    if AxisPos(1)>=0 &&  AxisPos(1)<=1 &&...
+        AxisPos(2)>=0 &&  AxisPos(2)<=1
+      
+      %Compute the frequency coordinates from relative axis position
+      y = AxisPos(2)*AxesValuesSpan;
+      %Differentiate between positive and negative quadrants
+      if AxisPos(1)>0.5
+        Sign = -1;
+        x = (2*AxisPos(1)-1)*AxesValuesSpan;
+        %Get diagonal reflection values
+        x2 = y;
+        y2 = x;
+        SideOffset = 1;
+      else
+        Sign = 1;
+        x = -(1-2*AxisPos(1))*AxesValuesSpan;
+        %Get diagonal reflection values
+        x2 = -y;
+        y2 = -x;
+        SideOffset = 0;
+      end
+      %Compute distance between current points
+      Distance = norm([x, y] - [x2, y2]);
+      %Compute ratio for adapting to frequency limit changes
+      xyLimRatio = str2double(handles.XUpperLimit.String)/20;
+      
+      %Prepare datatip
+      SideOffset = SideOffset*xyLimRatio*11;
+      dim = [x + 0.5*Sign*xyLimRatio - SideOffset  y-2.5*xyLimRatio  11*abs(xyLimRatio) 3.5*abs(xyLimRatio)];
+      str = sprintf('\\nu_1 = %.2f  \\nu_2 = %.2f',x,y);
+      str2 = sprintf('\\Delta = %.2f MHz',Distance);
+      RectangleHandle = rectangle(handles.mainPlot,'Position',dim,'FaceColor','r');
+      AnnotationHandle = text(handles.mainPlot,x + 0.5*Sign*xyLimRatio + 0.5*xyLimRatio - SideOffset,y,str,'FontSize',13,'Color','w','FontWeight','bold');
+      AnnotationHandle2 = text(handles.mainPlot,x + 0.5*Sign*xyLimRatio + 0.5*xyLimRatio - SideOffset,y - 1.5*abs(xyLimRatio),str2,'FontSize',13,'Color','w','FontWeight','bold');
+      %Plot line and points
+      Xaxis = handles.Processed.axis1;
+      if x>0
+        Xaxis = Xaxis(Xaxis>0);
+        Slope = -1;
+      else
+        Xaxis = Xaxis(Xaxis<0);
+        Slope = 1;
+      end
+      Yaxis =  y + Slope*(Xaxis - (x));
+      hold(handles.mainPlot,'on');
+      LineHandle = plot(handles.mainPlot,Xaxis,Yaxis,'r','LineWidth',1.5);
+      PointHandle = plot(handles.mainPlot,x,y,'.r',x2,y2,'.r','MarkerSize',30);
+      hold(handles.mainPlot,'off');
+      %Force GUI update
+      drawnow
+    end
+    %Update handles structure
+    guidata(hObject, handles);
+    
+    %Check if user has toogled off the button
+    if ~get(hObject,'value')
+      %If so delete all graphics handles and return
+      delete(AnnotationHandle)
+      if exist('AnnotationHandle2','var')
+        delete(AnnotationHandle2)
+      end
+      if exist('PointHandle2','var')
+        delete(PointHandle2)
+      end
+      if exist('PointHandle3','var')
+        delete(PointHandle3)
+      end
+      if exist('BoundLine','var')
+        delete(BoundLine)
+      end
+      delete(LineHandle)
+      delete(PointHandle)
+      delete(RectangleHandle)
+      break
+    end
+  end
+end
+
 return
 %==========================================================================
