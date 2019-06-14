@@ -1,0 +1,7 @@
+Thanks for downloading Hyscorean. You will find two different versions of the manual:
+
+1) A PDF version is to be found at /doc 
+2) A online version can be accessed from the Hyscorean GUI by presing the blue (?) symbol next to the Load button. 
+
+Enjoy processing with Hyscorean.
+
