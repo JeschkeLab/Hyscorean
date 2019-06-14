@@ -1635,7 +1635,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
    simspec{Index} = Spectrum;
    
   % Scale simulated spectrum to experimental spectrum
-  simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},ScalingOption);
+%   simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},ScalingOption);
   simspec{Index}  = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
   
   %Compute the RMSD for this simulation
