@@ -249,8 +249,8 @@ if getpref('hyscorean','reportlicense')
       reportdata.CenterField = NaN;
       reportdata.VideoGain = NaN;
       reportdata.VideoBandwidth = NaN;
-
     end
+
     if handles.Data.NUSflag
       reportdata.XDimension = handles.Data.NUS.Dimension1;
       reportdata.YDimension = handles.Data.NUS.Dimension2;
@@ -312,6 +312,10 @@ if getpref('hyscorean','reportlicense')
     FullSampling = reportdata.XDimension*reportdata.YDimension;
     reportdata.SamplingDensity = sprintf('%.2f%%',round(100*SampledPoints/FullSampling,2));
   end
+  
+  %Round some values to look nicer
+  reportdata.MW_Frequency = round(reportdata.MW_Frequency,2);
+  reportdata.MinimalContourLevel = round(reportdata.MinimalContourLevel,2);
   
   %Use the same formatting in name as before to avoid filename clash
   ReportName = sprintf('%s_%s_report',Date,Identifier);
