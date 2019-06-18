@@ -1387,7 +1387,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     ExpSpec{Index} = Spectrum_cut;
   end
     %Weight the simulated spectrum
-  Spectrum = Spectrum.*FitData.WeightsMap;
+%   Spectrum = Spectrum.*FitData.WeightsMap;
   Spectrum = Spectrum/max(max(abs(Spectrum)));
   BestSpec{Index} = Spectrum;
   % (SimSystems{s}.weight is taken into account in the simulation function)
@@ -1643,7 +1643,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     ExpSpec{Index} = Spectrum_cut;
   end
   %Weight the simulated spectrum
-  Spectrum = Spectrum.*FitData.WeightsMap;
+%   Spectrum = Spectrum.*FitData.WeightsMap;
   Spectrum = Spectrum/max(max(abs(Spectrum)));
    simspec{Index} = Spectrum;
    
@@ -3961,19 +3961,7 @@ set(ExperimentalInset2,'XData',Data_cut)
 ExperimentalInset1 = findobj('Tag','expdata_projection1');
 Data_cut = max(WeightedExpSpectrum(round(length(WeightedExpSpectrum)/2,0):end,:));
 set(ExperimentalInset1,'YData',Data_cut)
-h3 = findobj('Tag','currsimdata');
-if isprop(h3,'CData')
-  h3.CData = h3.CData.*WeightsMap;
-else
-  h3.ZData = h3.ZData.*WeightsMap;
-end
 
-h3 = findobj('Tag','bestsimdata');
-if isprop(h3,'CData')
-  h3.CData = h3.CData.*WeightsMap;
-else
-  h3.ZData = h3.ZData.*WeightsMap;
-end
 
 FitData.WeightsMap = WeightsMap;
 for i=1:length(FitData.UnweightedExpSpecScaled)

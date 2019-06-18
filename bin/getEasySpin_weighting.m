@@ -2,7 +2,7 @@ function  [Weights,Saved] = getEasySpin_weighting(Axis1,Axis2,ExpSpecScaled,Cust
 
 Saved = false;
 figureHandle = figure(98123);
-set(gcf,'Units','normalized','Position',[-0.8156 0.2942 0.5646 0.4508])
+set(figureHandle,'Units','normalized','Position',[0.3156 0.2942 0.5646 0.4508])
 XAxis = Axis1;
 YAxis = Axis2;
 Weights = 1 + 0*ExpSpecScaled;
