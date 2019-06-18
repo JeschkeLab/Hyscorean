@@ -92,7 +92,7 @@ FitData.CurrentCoreUsage = 0;
 FitData.DefaultExp = Exp;
 FitData.DefaultSimOpt = SimOpt;
 FitData.numSpec = length(Exp);
-
+FitData.WeightsMap = ones(size(ExpSpec{1}));
 %Check that the given simulation function exists
 switch class(SimFunctionName)
   case 'char'
@@ -594,9 +594,9 @@ if FitData.GUI
   % Normal  ->  Green-Red with white transition
   % Fliplr  ->  Blue-Orange with white transition
   CustomColormap = ...
-  [0.0 0.5 0.2; 0.0 0.45 0.2; 0.0 0.4 0.2; 0.1 0.4 0.2; 0.2 0.4 0.2; 0.2 0.35 0.2;  0.2 0.35 0.2;  
-   0.2 0.3 0.2; 0.2 0.20 0.2; 0.2 0.1 0.2; 0.0 0.4 0.2; 0.0 0.5 0.2; 0.0 0.60 0.2;  0.1 0.7 0.2; 
-   0.2 0.8 0.2; 0.1 0.80 0.0; 0.2 0.8 0.0; 0.6 1.0 0.6; 0.7 1.0 0.7; 0.8 1.00 0.8;   
+  [0.2 0.3 0.2; 0.2 0.35 0.2; 0.2 0.35 0.2;  0.2 0.4 0.2; 0.1 0.4 0.2; 
+   0.0 0.4 0.2; 0.0 0.4 0.2; 0.0 0.45 0.2; 0.0 0.5 0.2; 0.0 0.5 0.2; 0.0 0.60 0.2; 
+   0.1 0.7 0.2; 0.2 0.8 0.2; 0.1 0.80 0.0; 0.2 0.8 0.3; 0.2 0.8 0.5; 0.4 0.8 0.5; 0.5 1.0 0.6; 0.6 1.0 0.6; 0.8 1.00 0.8;   
    1 1 1;
    1.00 0.7 0.7; 1.0 0.65 0.65; 1.0 0.6 0.6; 1.0 0.55 0.55; 1.00 0.5 0.5; 1.0 0.45 0.45; 1.0 0.4 0.4; 
    1.00 0.4 0.4; 1.0 0.30 0.30; 1.0 0.2 0.2; 1.0 0.10 0.10; 1.00 0.0 0.0; 0.95 0.0 0.00; 0.9 0.0 0.0; 
@@ -735,21 +735,21 @@ uicontrol(hFig,'Style','popupmenu',...
 % Iteration and RMSD error displays
 %-----------------------------------------------------------------------
 x0 = 1070; y0 = 175;
-hAx = axes('Parent',hFig,'Units','pixels','Position',[x0 y0-25 270 110],'Layer','top');
+hAx = axes('Parent',hFig,'Units','pixels','Position',[x0 y0-35 270 110],'Layer','top');
 h = plot(hAx,1,NaN,'.');
 set(h,'Tag','errorline','MarkerSize',6,'Color',[0.2 0.2 0.8]);
 set(gca,'FontSize',7,'YScale','lin','XTick',[],'YAxisLoc','right','Layer','top');
 title('log10(rmsd)','Color','k','FontSize',7,'FontWeight','normal');
 
-h = uicontrol('Style','text','Position',[x0-3 y0+87 100 16]);
+h = uicontrol('Style','text','Position',[x0-3 y0+77 100 16]);
 set(h,'FontSize',8,'String',' RMSD: -','ForegroundColor',[0 0 1],'Tooltip','Current best RMSD');
 set(h,'Tag','RmsText','HorizontalAl','left');
 
-h = uicontrol('Style','text','Position',[x0+90 y0+87 270 14]);
+h = uicontrol('Style','text','Position',[x0+90 y0+77 270 14]);
 set(h,'FontSize',7,'Tag','logLine','Tooltip','Information from fitting algorithm');
 set(h,'Horizontal','left');
 
-h = uicontrol('Style','pushbutton','Position',[x0 y0-25 22 22]);
+h = uicontrol('Style','pushbutton','Position',[x0 y0-35 22 22]);
 load([Path2Hyscorean 'bin' filesep 'detach_icon'])
 set(h,'FontSize',7,'Tag','ExpandRMSD',...
   'Tooltip','Show individual fits RMSD',...
@@ -976,15 +976,23 @@ uicontrol('Style','text',...
 
 uicontrol('Style','togglebutton',...
   'String','Confine',...
-  'Position',[x0+0 y0-2 58 23],...
+  'Position',[x0+0 y0-2 58 20],...
   'Callback',@confineCallBack,...
+  'HorizontalAlignment','center',...
+  'BackgroundColor',get(gcf,'Color'),...
+  'HorizontalAl','left');
+
+uicontrol('Style','pushbutton',...
+  'String','Weighting Map',...
+  'Position',[x0+15 y0-24 88 20],...
+  'Callback',@FitWeightingCallback,...
   'HorizontalAlignment','center',...
   'BackgroundColor',get(gcf,'Color'),...
   'HorizontalAl','left');
 
 uicontrol('Style','togglebutton',...
   'String','Exclude',...
-  'Position',[x0+58 y0-2 58 23],...
+  'Position',[x0+60 y0-2 58 20],...
   'Callback',@excludeCallBack,...
   'HorizontalAlignment','center',...
   'BackgroundColor',get(gcf,'Color'),...
@@ -1378,8 +1386,10 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
     ExpSpec{Index} = Spectrum_cut;
   end
-  
-   BestSpec{Index} = Spectrum;
+    %Weight the simulated spectrum
+  Spectrum = Spectrum.*FitData.WeightsMap;
+  Spectrum = Spectrum/max(max(abs(Spectrum)));
+  BestSpec{Index} = Spectrum;
   % (SimSystems{s}.weight is taken into account in the simulation function)
   BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
   if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
@@ -1632,6 +1642,9 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
     Spectrum_cut = Spectrum_cut/max(max(abs(Spectrum_cut)));
     ExpSpec{Index} = Spectrum_cut;
   end
+  %Weight the simulated spectrum
+  Spectrum = Spectrum.*FitData.WeightsMap;
+  Spectrum = Spectrum/max(max(abs(Spectrum)));
    simspec{Index} = Spectrum;
    
   % Scale simulated spectrum to experimental spectrum
@@ -1646,7 +1659,7 @@ parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
 end
 
   %Check if excitation bandwidth was sufficient
-  if isnan(rmsd) && Exp{1}.ExciteWidth < 1e5
+  if (isnan(rmsd) || ~all(all(real(simspec{1})))) && Exp{1}.ExciteWidth < 1e5
     h = helpdlg({'The HYSCORE simulation failed.',...
       ' Default excitation bandwidth may be insufficient.',...
       sprintf('         Excitation pulse length:   %i ns',1000*1/Exp{1}.ExciteWidth),...
@@ -1660,7 +1673,7 @@ end
       FitData.Exp{i}.ExciteWidth = 1e6;
     end
     rmsd = 0;
-  elseif isnan(rmsd) && Exp{1}.ExciteWidth > 1e5
+  elseif isnan(rmsd) && ~all(real(simspec{1})) && Exp{1}.ExciteWidth > 1e5
     h = errordlg('The HYSCORE simulation still failed due to unknown reasons.');
     waitfor(h);
     return
@@ -3916,3 +3929,59 @@ drawnow
 
 return
 %==========================================================================
+
+
+function FitWeightingCallback(object,src,event)
+
+global FitData
+
+if ~isfield(FitData,'UnweightedExpSpecScaled')
+  FitData.UnweightedExpSpecScaled = FitData.ExpSpecScaled;
+  FitData.UnweightedExpSpec = FitData.ExpSpec;
+end
+h1 = findobj('Tag','currsimdata');
+Axis1 = h1.XData;
+Axis2 = h1.YData;
+CustomColormap = FitData.CustomColormap;
+[WeightsMap,OutBySaving] = getEasySpin_weighting(Axis1,Axis2,FitData.UnweightedExpSpecScaled{FitData.CurrentSpectrumDisplay},CustomColormap,FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim);
+if ~OutBySaving
+  return
+end
+h3 = findobj('Tag','expdata');
+WeightedExpSpectrum = FitData.UnweightedExpSpecScaled{FitData.CurrentSpectrumDisplay}.*WeightsMap;
+WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
+if isprop(h3,'CData')
+  h3.CData = WeightedExpSpectrum;
+else
+  h3.ZData = WeightedExpSpectrum;
+end
+ExperimentalInset2 = findobj('Tag','expdata_projection2');
+Data_cut = max(WeightedExpSpectrum,[],2);
+set(ExperimentalInset2,'XData',Data_cut)
+ExperimentalInset1 = findobj('Tag','expdata_projection1');
+Data_cut = max(WeightedExpSpectrum(round(length(WeightedExpSpectrum)/2,0):end,:));
+set(ExperimentalInset1,'YData',Data_cut)
+h3 = findobj('Tag','currsimdata');
+if isprop(h3,'CData')
+  h3.CData = h3.CData.*WeightsMap;
+else
+  h3.ZData = h3.ZData.*WeightsMap;
+end
+
+h3 = findobj('Tag','bestsimdata');
+if isprop(h3,'CData')
+  h3.CData = h3.CData.*WeightsMap;
+else
+  h3.ZData = h3.ZData.*WeightsMap;
+end
+
+FitData.WeightsMap = WeightsMap;
+for i=1:length(FitData.UnweightedExpSpecScaled)
+  WeightedExpSpectrum = FitData.UnweightedExpSpecScaled{i}.*WeightsMap;
+  WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
+  FitData.ExpSpecScaled{i} = WeightedExpSpectrum;
+    WeightedExpSpectrum = FitData.UnweightedExpSpec{i}.*WeightsMap;
+  WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
+  FitData.ExpSpec{i} = WeightedExpSpectrum;
+end
+return
