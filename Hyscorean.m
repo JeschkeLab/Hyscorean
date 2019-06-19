@@ -418,9 +418,9 @@ function SaverSettings_Callback(hObject, eventdata, handles)
 setappdata(0,'SaverSettings',handles.SaveHyscoreanSettings)
 %Make the window appear relative to the Hyscorean window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1) + 0.2;
-Position(2) = Position(2) + 0.2;
 ScreenSize = get(0,'ScreenSize');
+Position(1) = Position(1)/ScreenSize(3) + 0.2;
+Position(2) = Position(2)/ScreenSize(4) + 0.2;
 Position(3) = 451.0/ScreenSize(3);
 Position(4) = 177.0/ScreenSize(4);
 %Call saver settings GUI
@@ -586,10 +586,10 @@ else
   clf(Figure);
 end
 %Make the window appear relative to the Hyscorean window
-Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+0.1;
-Position(2) = Position(2);
 ScreenSize = get(0,'ScreenSize');
+Position = handles.HyscoreanFigure.Position;
+Position(1) = Position(1)/ScreenSize(3)+0.1;
+Position(2) = Position(2)/ScreenSize(4);
 %Copy object as it is
 AxesHandles = copyobj(handles.mainPlot,Figure);
 GraphicalSettings = getpref('hyscorean','graphicalsettings');
@@ -597,6 +597,14 @@ set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE spectrum',...
   'Units','normalized','Position',[Position(1) Position(2) 776/ScreenSize(3) 415/ScreenSize(4)]);
 set(AxesHandles,'Position',[0.07 0.12 0.9 0.85]);
 colormap(AxesHandles,GraphicalSettings.ColormapName)
+
+%Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(Figure,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
 
 %If the blindspots are being superimposed then switch to the hot colormap
 if get(handles.ImposeBlindSpots,'value')
@@ -616,10 +624,19 @@ else
   figure(Figure);
   clf(Figure);
 end
+%Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(Figure,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
+
 %Make the window appear relative to the Hyscorean window
+ScreenSize = get(0,'ScreenSize');
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+0.1;
-Position(2) = Position(2);
+Position(1) = Position(1)/ScreenSize(3)+0.1;
+Position(2) = Position(2)/ScreenSize(4);
 ScreenSize = get(0,'ScreenSize');
 set(Figure,'NumberTitle','off','Name','Hyscorean: HYSCORE Surface',...
     'Units','normalized','Position',[Position(1) Position(2) 776/ScreenSize(3) 415/ScreenSize(4)]);
@@ -649,6 +666,13 @@ else
   figure(Figure);
   clf(Figure);
 end
+%Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(Figure,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
 %Make the window appear relative to the Hyscorean window
 Position = handles.HyscoreanFigure.Position;
 Position(1) = Position(1)+500;
@@ -682,9 +706,9 @@ function GraphicalSettingsButton_Callback(hObject, eventdata, handles)
 setappdata(0,'GraphicalSettings',handles.GraphicalSettings)
 %Make the window appear relative to the Hyscorean window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1) + 0.2;
-Position(2) = Position(2) + 0.2;
 ScreenSize = get(0,'ScreenSize');
+Position(1) = Position(1)/ScreenSize(3) + 0.2;
+Position(2) = Position(2)/ScreenSize(4) + 0.2;
 Position(3) = 451.0/ScreenSize(3);
 Position(4) = 177.0/ScreenSize(4);
 %Call graphical settings GUI
@@ -934,10 +958,10 @@ setappdata(0,'WindowType',get(handles.WindowType,'Value'))
 handles.SignalPlotIsDetached = true;
 guidata(hObject, handles);
 
-Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1) + 0.2;
-Position(2) = Position(2) + 0.2;
 ScreenSize = get(0,'ScreenSize');
+Position = handles.HyscoreanFigure.Position;
+Position(1) = Position(1)/ScreenSize(3) + 0.1;
+Position(2) = Position(2)/ScreenSize(4) + 0.1;
 Position(3) = 790.0/ScreenSize(3);
 Position(4) = 463.0/ScreenSize(4);
 
@@ -1232,9 +1256,9 @@ else
 end
 %Center the new window at Hyscorean window
 Position = handles.HyscoreanFigure.Position;
-Position(1) = Position(1)+500;
-Position(2) = Position(2)+60;
 screensize = get(0,'ScreenSize'); %Get screensize
+Position(1) = Position(1)+500;
+Position(2) = Position(2) - 100;
 set(Figure,'NumberTitle','off','Name','Hyscorean: License','menu','none','toolbar','none',...
   'units','pixels','Position',[Position(1) Position(2) 0.3*screensize(3) 0.65*screensize(4)]);
 

@@ -43,6 +43,17 @@ function Hyscorean_esfit_GraphicalSettings_OpeningFcn(hObject, eventdata, handle
 handles.output = hObject;
 set(hObject,'Units',varargin{2});
 set(hObject,'Position',varargin{3});
+set(hObject,'Name','Settings');
+
+%Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(hObject,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
+
+
 Settings = varargin{1};
 %Get current settings from the function input and set the UI elements
 set(handles.ExperimentalSpectrumType,'value',Settings.ExperimentalSpectrumType);
