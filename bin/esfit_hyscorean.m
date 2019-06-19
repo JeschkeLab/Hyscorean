@@ -2682,7 +2682,7 @@ if ~FitData.DisplayingFitSetSpec
     end
     
     %Update the inset plots
-    Inset = max(CurrentBestSpec(:,round(length(CurrentBestSpec)/2,0):end),[],1);
+    Inset = max(CurrentBestSpec(round(length(CurrentBestSpec)/2,0):end,:),[],1);
     set(findobj('Tag','bestsimdata_projection1'),'XData',FrequencyAxis,'YData',Inset);
     Inset = max(CurrentBestSpec,[],2);
     set(findobj('Tag','bestsimdata_projection2'),'YData',FrequencyAxis,'XData',Inset);
