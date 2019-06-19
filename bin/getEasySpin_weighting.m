@@ -1,11 +1,53 @@
-function  [Weights,Saved] = getEasySpin_weighting(Axis1,Axis2,ExpSpecScaled,CustomColormap,AxLim)
+function  [Weights,Saved] = getEasySpin_weighting(InputWeights,Axis1,Axis2,ExpSpecScaled,CustomColormap,AxLim)
+%==========================================================================
+% Hyscorean Weighting Map
+%==========================================================================
+% This function creates the interactive map for defining the weighting 
+% function to be applied on the experimental spectra of the fitting module. 
+%
+% (see Hyscorean manual for further information)
+%==========================================================================
+%
+% Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
+% 
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License 3.0 as published by
+% the Free Software Foundation.
+%==========================================================================
 
-Saved = false;
-figureHandle = figure(98123);
+%--------------------------------------------------------------------------
+% Create figure
+%--------------------------------------------------------------------------
+
+%Check if another instance is open, close it and create new one
+figureHandle = findobj('Tag','esfitWeightingMap_figure');
+if isempty(figureHandle)
+  figureHandle = figure('Tag','esfitWeightingMap_figure','WindowStyle','normal','NumberTitle','off','Name','Hyscorean: Weighting Map');
+else
+  figure(figureHandle);
+  clf(figureHandle);
+end
+
+%Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(figureHandle,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
+
+%Set correct normalized size
 set(figureHandle,'Units','normalized','Position',[0.3156 0.2942 0.5646 0.4508])
+
+%--------------------------------------------------------------------------
+% Create app
+%--------------------------------------------------------------------------
+
+%Inititialize variables
+Saved = false;
 XAxis = Axis1;
 YAxis = Axis2;
-Weights = 1 + 0*ExpSpecScaled;
+Weights = InputWeights;
 ExperimentalSpec = ExpSpecScaled;
 
 %Axis for main display
@@ -13,12 +55,17 @@ AxesHandle = axes('Parent',figureHandle,'Units','normalized',...
   'Position',[0.08 0.15 0.9 0.8],'FontSize',8,'Layer','top');
 hold(AxesHandle,'on')
 
+%Colormap for weights
 [pcolorhandle] = pcolor(AxesHandle,XAxis,YAxis,Weights);
 CustomColormap = (fliplr(CustomColormap')');
 colormap(pcolorhandle.Parent,CustomColormap)
 shading(pcolorhandle.Parent,'interp')
 caxis(pcolorhandle.Parent,[0 2])
+
+%Experimental contour plot
 contour(AxesHandle,XAxis,YAxis,ExperimentalSpec,80,'k');
+
+%Configurate axes
 set(pcolorhandle.Parent,'xlim',[-AxLim AxLim])
 set(pcolorhandle.Parent,'ylim',[0 AxLim])
 xlabel('\nu_1 [MHz]')
@@ -30,6 +77,7 @@ box(AxesHandle,'on')
 set(AxesHandle,'ytick',xticks,'FontSize',11)
 colorbar 
 
+%Construct UI elements
 uicontrol('Style','pushbutton',...
   'Units','normalized',...
   'Position',[0.61 0.03 0.07 0.04],...
@@ -71,33 +119,45 @@ uicontrol('Style','text',...
   'Position',[0.75 0.02 0.05 0.04],...
   'BackgroundColor',get(gcf,'Color'));
 
+
+%--------------------------------------------------------------------------
+% Callbacks
+%--------------------------------------------------------------------------
+
  function mouseclick_callback(gcbo,eventdata)
-      cP = get(gca,'Currentpoint');
-      x = cP(1,1);
-      y = cP(1,2);
+      
+      %Get current position of pointer on screen and axes
+      PointerPosition = get(gca,'Currentpoint');
+      x = PointerPosition(1,1);
+      y = PointerPosition(1,2);
       pos1 = find(XAxis>=round(x,1));
       pos2= (find(YAxis>=round(y,1)));
             pos1 = pos1(1);
       pos2 = pos2(1);
+      %Check type of mouse signal
       switch get(gcf,'SelectionType')
-          case 'normal' % Click left mouse button.
+          case 'normal' % Left click
               Sign = +1;
-          case 'alt'    % Control - click left mouse button or click right mouse button.
+          case 'alt'    % Control-left click or right click
               Sign = -1;
-          case 'extend' % Shift - click left mouse button or click both left and right mouse buttons.
+          case 'extend' % Shift-click left click
               Sign = +10;
         otherwise
           Sign = 0;
       end
+      
+      %Compute updated weights map
       GaussianWidth = get(findobj('Tag','GaussianSlider'),'Value');
       if iscell(GaussianWidth)
       GaussianWidth = GaussianWidth{1};
       end
-      Zadd = gaussian(XAxis,x,GaussianWidth*max(XAxis))'.*gaussian(YAxis,y,GaussianWidth*max(YAxis));
-      Zadd = Zadd/max(max(Zadd));
-      Weights  = Weights + 0.5*Sign*Zadd';
+      WeightsAdd = gaussian(XAxis,x,GaussianWidth*max(XAxis))'.*gaussian(YAxis,y,GaussianWidth*max(YAxis));
+      WeightsAdd = WeightsAdd/max(max(WeightsAdd));
+      Weights  = Weights + 0.5*Sign*WeightsAdd';
       Weights(Weights>2) =2;
       Weights(Weights<0) = 0;
+      
+      %Update graphics
       set(pcolorhandle,'Cdata',Weights,'visible','on')
  end
 
@@ -116,14 +176,17 @@ uicontrol('Style','text',...
    Saved = true;
   close(figureHandle)
  end
-% now attach the function to the axes
+
+%--------------------------------------------------------------------------
+% Mouse Functionality Attachment
+%--------------------------------------------------------------------------
+
 set(pcolorhandle,'ButtonDownFcn', @mouseclick_callback)
-% and we also have to attach the function to the children, in this
-% case that is the line in the axes.
 set(get(gca,'Children'),'ButtonDownFcn', @mouseclick_callback)
 
+%Wait for figure to be closed
 waitfor(figureHandle)
+%Before closing map the weights map on the hidden quadrants
 Weights(Axis1==-abs(Axis1),:) = fliplr(fliplr(Weights(Axis1==abs(Axis1),:)')');
-
 
 end

@@ -2920,6 +2920,14 @@ else
   clf(FitData.DetachedRMSD_Fig);
 end
 
+%Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(FitData.DetachedRMSD_Fig,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
+
 %Set figure properties
 set(FitData.DetachedRMSD_Fig,'WindowStyle','normal','DockControls','off','MenuBar','none');
 set(FitData.DetachedRMSD_Fig,'Resize','off');
@@ -2982,6 +2990,15 @@ if ~isempty(FitData.ParameterEvol)
     figure(FitData.detachedParamEvol_Fig);
     clf(FitData.detachedParamEvol_Fig);
   end
+  
+  %Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(FitData.detachedParamEvol_Fig,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
+  
   sz = [650 2*200]; % figure size
   screensize = get(0,'ScreenSize');
   xpos = ceil((screensize(3)-sz(1))/3); % center the figure on the screen horizontally
@@ -3134,6 +3151,14 @@ for i=1:length(hFig.Children)
      hFig.Children(i).Tag = '';
   end
 end
+
+%Use Hyscorean window logo
+warning('off','all')
+Path =  fileparts(which('Hyscorean'));
+jFrame=get(hFig,'javaframe');
+jicon=javax.swing.ImageIcon(fullfile(Path, 'bin', 'logo.png'));
+jFrame.setFigureIcon(jicon);
+warning('on','all')
 
 %Remove the figure number and give it a title
 set(hFig,'NumberTitle','off','Name','Hyscorean: HYSCORE Fit');
@@ -3930,23 +3955,32 @@ drawnow
 return
 %==========================================================================
 
-
+%==========================================================================
 function FitWeightingCallback(object,src,event)
 
 global FitData
 
+%Check if weighting has already been applied in this session
 if ~isfield(FitData,'UnweightedExpSpecScaled')
   FitData.UnweightedExpSpecScaled = FitData.ExpSpecScaled;
   FitData.UnweightedExpSpec = FitData.ExpSpec;
 end
-h1 = findobj('Tag','currsimdata');
+
+%Get frequency axes
+h1 = findobj('Tag','expdata');
 Axis1 = h1.XData;
 Axis2 = h1.YData;
+
+%Call weighting map GUI and wait for output
 CustomColormap = FitData.CustomColormap;
-[WeightsMap,OutBySaving] = getEasySpin_weighting(Axis1,Axis2,FitData.UnweightedExpSpecScaled{FitData.CurrentSpectrumDisplay},CustomColormap,FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim);
+[WeightsMap,OutBySaving] = getEasySpin_weighting(FitData.WeightsMap,Axis1,Axis2,FitData.UnweightedExpSpecScaled{FitData.CurrentSpectrumDisplay},CustomColormap,FitData.SimOpt{FitData.CurrentSpectrumDisplay}.FreqLim);
+
+%If GUI exited by anything else than Save then stop processing and return
 if ~OutBySaving
   return
 end
+
+%Update the experimental spectrum graphics
 h3 = findobj('Tag','expdata');
 WeightedExpSpectrum = FitData.UnweightedExpSpecScaled{FitData.CurrentSpectrumDisplay}.*WeightsMap;
 WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
@@ -3962,14 +3996,17 @@ ExperimentalInset1 = findobj('Tag','expdata_projection1');
 Data_cut = max(WeightedExpSpectrum(round(length(WeightedExpSpectrum)/2,0):end,:));
 set(ExperimentalInset1,'YData',Data_cut)
 
-
+%Apply weighting to all other experimental spectra
 FitData.WeightsMap = WeightsMap;
 for i=1:length(FitData.UnweightedExpSpecScaled)
   WeightedExpSpectrum = FitData.UnweightedExpSpecScaled{i}.*WeightsMap;
   WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
   FitData.ExpSpecScaled{i} = WeightedExpSpectrum;
-    WeightedExpSpectrum = FitData.UnweightedExpSpec{i}.*WeightsMap;
+  WeightedExpSpectrum = FitData.UnweightedExpSpec{i}.*WeightsMap;
   WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
   FitData.ExpSpec{i} = WeightedExpSpectrum;
 end
+
 return
+%==========================================================================
+
