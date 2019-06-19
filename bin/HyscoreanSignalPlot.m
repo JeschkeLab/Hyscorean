@@ -359,7 +359,7 @@ if get(handles.ChangeSignalPlotDimension,'Value')
     set(handles.signal_t1,'xtick',round(linspace(TimeAxis2(1),TimeAxis2(end),10),2))
   end
   xlabel(handles.signal_t1,'t_2 [\mus]','FontSize',8);
-  set(handles.trace2Info,'string',sprintf('Trace along t2 at t1 = %g ns',round(1000*Processed.TimeAxis1(SliderPosition),1)))
+  set(handles.trace2Info,'string',sprintf('Trace along t2 at t1 = %.f ns',round(1000*Processed.TimeAxis1(SliderPosition),1)))
 else
   set(handles.signal_t1,'xlim',[min(TimeAxis1) max(TimeAxis1)])
   try
@@ -370,7 +370,7 @@ else
     set(handles.signal_t1,'xtick',round(linspace(TimeAxis1(1),TimeAxis1(end),10),2))
   end
   xlabel(handles.signal_t1,'t_1 [\mus]','FontSize',8);
-  set(handles.trace2Info,'string',sprintf('Trace along t1 at t2 = %g ns',round(1000*Processed.TimeAxis2(SliderPosition),1)))
+  set(handles.trace2Info,'string',sprintf('Trace along t1 at t2 = %.f ns',round(1000*Processed.TimeAxis2(SliderPosition),1)))
 end
 set(handles.signal_t1,'FontSize',8)
 
