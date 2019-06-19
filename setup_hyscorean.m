@@ -98,10 +98,9 @@ if ~ispref('hyscorean','LGPL_license')
     waitfor(FigureHandle)
     
     %Set Hyscorean preference accordingly. If not agreed abort installation
-    if exist('LicenseAgreed','var')
-        if LicenseAgreed
+    if ispref('hyscorean','LGPL_license')
+        if getpref('hyscorean','LGPL_license')
             fprintf('Hyscorean GNU LGPL 3.0 license accepted \n')
-            setpref('hyscorean','LGPL_license',true)
         else
             fprintf('Hyscorean GNU LGPL 3.0 license needs to be accepted. Aborting installation... \n')
             return
@@ -250,12 +249,12 @@ end
 
 function AgreeCallback(Object, ~)
 
-assignin('base','LicenseAgreed',1)
+setpref('hyscorean','LGPL_license',true)
 close(Object.Parent)
 end
 
 function DisagreeCallback(Object, ~)
 
-assignin('base','LicenseAgreed',0)
+setpref('hyscorean','LGPL_license',false)
 close(Object.Parent)
 end
