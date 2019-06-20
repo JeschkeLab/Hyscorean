@@ -169,13 +169,21 @@ uicontrol('Style','text',...
   Weights = Weights*0;
   set(pcolorhandle,'Cdata',Weights,'visible','on')
  end
- function CancelCallback(gcbo,eventdata)
-  close(figureHandle)
- end
- function SaveCallback(gcbo,eventdata)
-   Saved = true;
-  close(figureHandle)
- end
+  function CancelCallback(gcbo,eventdata)
+    if all(Weights==0)
+      messageBox = msgbox('Warning: All of the spectrum is weighted by zero.','modal');
+      waitfor(messageBox)
+    end
+    close(figureHandle)
+  end
+  function SaveCallback(gcbo,eventdata)
+    Saved = true;
+    if all(Weights==0)
+      messageBox = msgbox('Warning: All of the spectrum is weighted by zero.','modal');
+      waitfor(messageBox)
+    end
+    close(figureHandle)
+  end
 
 %--------------------------------------------------------------------------
 % Mouse Functionality Attachment
@@ -188,5 +196,6 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseclick_callback)
 waitfor(figureHandle)
 %Before closing map the weights map on the hidden quadrants
 Weights(Axis1==-abs(Axis1),:) = fliplr(fliplr(Weights(Axis1==abs(Axis1),:)')');
+
 
 end
