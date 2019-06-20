@@ -152,7 +152,7 @@ uicontrol('Style','edit',...
   'Tag','GaussianEdit',...
   'String',0.5,...
   'BackgroundColor',get(gcf,'Color'),...
-  'Min',0.01,'Max',0.25,'Value',0.05);
+  'Callback',@EditCallback);
 
 uicontrol('Style','text',...
   'Units','normalized',...
@@ -234,6 +234,13 @@ function SaveCallback(gcbo,eventdata)
     waitfor(messageBox)
   end
   close(figureHandle)
+end
+function EditCallback(gcbo,eventdata)
+      Increment = str2double(get(findobj('Tag','GaussianEdit'),'String'));
+    if Increment<0
+      Increment = abs(Increment);
+    end
+    set(findobj('Tag','GaussianEdit'),'String',Increment);
 end
 
 %--------------------------------------------------------------------------
