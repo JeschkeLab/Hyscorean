@@ -3044,9 +3044,87 @@ global FitData FitOpts
 
 if getpref('hyscorean','reportlicense')
 
+ 
 %Store all information contained in global variables into report data 
 ReportData.FitData = FitData; 
 ReportData.FitOpts = FitOpts; 
+
+%Cosntruct Exp and Sys tables
+ExpFields = {};
+SysFields = {};
+OptFields = {};
+if length(FitData.Sys0) < length(FitData.Exp)
+  Sys0_temp = {};
+  for i=1:length(FitData.Exp)
+    Sys0_temp{i} = FitData.Sys0{1};
+  end
+  FitData.Sys0 = Sys0_temp;
+end
+for i=1:length(FitData.Exp)
+  Fields = fieldnames(FitData.Exp{i});
+  Fields2 = fieldnames(FitData.Sys0{i});
+  LocalOptStruct{i} = FitData.SimOpt{i};
+  if LocalOptStruct{i}.Lorentz2GaussCheck
+    L2GParam = struct2cell(LocalOptStruct{i}.L2GParameters);
+    LocalOptStruct{i}.L2GParameters = [L2GParam{1} L2GParam{2} L2GParam{3} L2GParam{4}];
+  else
+    LocalOptStruct{i} =  rmfield(LocalOptStruct{i},'L2GParameters');
+  end
+  LocalOptStruct{i} = rmfield(LocalOptStruct{i},'FileNames');
+  LocalOptStruct{i} = rmfield(LocalOptStruct{i},'FilePaths');
+  Fields3 = fieldnames(LocalOptStruct{i});
+  for j=1:length(Fields)
+    ExpFields{end+1} = Fields{j};
+  end
+  for j=1:length(Fields2)
+    SysFields{end+1} = Fields2{j};
+  end
+  for j=1:length(Fields3)
+    OptFields{end+1} = Fields3{j};
+  end
+end
+ExpFields = unique(ExpFields);
+SysFields = unique(SysFields);
+OptFields = unique(OptFields);
+%Exp structure table
+ExpTable = cell(length(ExpFields),length(FitData.Exp));
+for i=1:length(ExpFields)
+  ExpTable{i,1} = ExpFields{i};
+  for j=1:length(FitData.Exp)
+    if isfield(FitData.Exp{j},ExpFields{i})
+      ExpTable{i,j+1} = getfield(FitData.Exp{j},ExpFields{i});
+    else
+      ExpTable{i,j+1} = 'N/D';
+    end
+  end
+end
+%Sys structure table
+SysTable = cell(length(SysFields),length(FitData.Sys0));
+for i=1:length(SysFields)
+  SysTable{i,1} = SysFields{i};
+  for j=1:length(FitData.Sys0)
+    if isfield(FitData.Sys0{j},SysFields{i})
+      SysTable{i,j+1} = getfield(FitData.Sys0{j},SysFields{i});
+    else
+      SysTable{i,j+1} = 'N/D';
+    end
+  end
+end
+%Opt structure table
+OptTable = cell(length(OptFields),length(LocalOptStruct));
+for i=1:length(OptFields)
+  OptTable{i,1} = OptFields{i};
+  for j=1:length(LocalOptStruct)
+    if isfield(LocalOptStruct{j},OptFields{i})
+      OptTable{i,j+1} = getfield(LocalOptStruct{j},OptFields{i});
+    else
+      OptTable{i,j+1} = 'N/D';
+    end
+  end
+end
+ReportData.ExpTable = ExpTable;
+ReportData.SysTable = SysTable;
+ReportData.OptTable = OptTable;
 
 %Get the current date
 Date = date;
@@ -3079,11 +3157,17 @@ end
 %Send structure to workspace
 assignin('base', 'ReportData', ReportData);
 
+messageBox = msgbox('Generating report. Please wait...','modal');
+delete(messageBox.Children(1))
+drawnow
+
 %Generate report
  report Hyscorean_Fitting_report -fpdf ;
 
 evalin('base','clear ReportData')
  
+delete(messageBox)
+
 else
   %Report generator is not available without the license
   warning('MATLAB report generator license missing. Report cannot be generated.')
