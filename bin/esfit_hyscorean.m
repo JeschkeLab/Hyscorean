@@ -1673,7 +1673,7 @@ end
       FitData.Exp{i}.ExciteWidth = 1e6;
     end
     rmsd = 0;
-  elseif isnan(rmsd) && ~all(real(simspec{1})) && Exp{1}.ExciteWidth > 1e5
+  elseif any(isnan(rmsd)) && ~all(real(simspec{1})) && Exp{1}.ExciteWidth > 1e5
     h = errordlg('The HYSCORE simulation still failed due to unknown reasons.');
     waitfor(h);
     return
