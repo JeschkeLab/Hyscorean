@@ -1671,7 +1671,7 @@ end
       sprintf('         Excitation pulse length:   %i ns',1000*1/Exp{1}.ExciteWidth),...
       sprintf('         Excitation bandwidth:       %.2f MHz',Exp{1}.ExciteWidth),...
       sprintf('         MW frequency:                 %.2f GHz',Exp{1}.mwFreq),...
-      'Excitation bandwidth will be set to infinity and the simulation re-run.'});
+      'Excitation bandwidth will be set to infinity and the simulation re-run. You may avoid this by increasing the number of knots in the orientation grid.'});
     waitfor(h);
     for i=1:length(Exp)
       Exp{i}.ExciteWidth = Inf;
@@ -3009,7 +3009,7 @@ warning('on','all')
   screensize = get(0,'ScreenSize');
   xpos = ceil((screensize(3)-sz(1))/3); % center the figure on the screen horizontally
   ypos = ceil((screensize(4)-sz(2))/3); % center the figure on the screen vertically
-  set(FitData.detachedParamEvol_Fig,'Position',reductionFactor*[xpos ypos sz(1) sz(2)])
+  set(FitData.detachedParamEvol_Fig,'Position',[xpos ypos sz(1) sz(2)])
   set(FitData.detachedParamEvol_Fig,'WindowStyle','normal','DockControls','off','MenuBar','none');
   set(FitData.detachedParamEvol_Fig,'Resize','on');
   set(FitData.detachedParamEvol_Fig,'Name','Hyscorean: EasySpin - Fit Parameters Evolution','NumberTitle','off');
