@@ -2252,11 +2252,11 @@ if ~isempty(str)
     Inset = max(CurrentFitSpec(round(length(CurrentFitSpec)/2,0):end,:),[],1);
     set(h,'YData',Inset);
     set(h2,'YData',NaN*Inset);
-    h = findobj('Tag','bestsimdata_projection2');
-    h2 = findobj('Tag','currsimdata_projection2');
+    h3 = findobj('Tag','bestsimdata_projection2');
+    h4 = findobj('Tag','currsimdata_projection2');
     Inset = max(CurrentFitSpec,[],2);
-    set(h,'XData',Inset);
-    set(h2,'XData',NaN*Inset);
+    set(h3,'YData',h.XData,'XData',Inset);
+    set(h4,'YData',h.XData,'XData',NaN*Inset);
     drawnow
   end
 else
