@@ -868,16 +868,17 @@ function AddTagList_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
   set(hObject,'BackgroundColor','white');
 end
+load isotopesdata
+set(hObject,'string',names);
+
 Names = get(hObject,'string');
 Colors = white(length(Names))-1;
 for i=1:length(Names)
   
-  Position1 = strfind(Names{i},'<SUP>');
-  Position2 = strfind(Names{i},'</SUP>');
-  Position3 = strfind(Names{i},'</FONT>');
+  Position1 = strfind(Names{i},num2str(i));
   
-  IsotopeTags(i).isotope = Names{i}(Position1+length('<SUP>'):Position2-1);
-  IsotopeTags(i).name = Names{i}(Position2+length('</SUP>'):Position3-1);
+  IsotopeTags(i).isotope = Names{i}(Position1:end);
+  IsotopeTags(i).name = Names{i}(1:Position1-1);
   IsotopeTags(i).Color =  uint8(Colors(i,:) * 255 + 0.5);
 end
 
@@ -886,6 +887,7 @@ for i = 1:numel( IsotopeTags )
   String = ['<HTML><FONT color=' reshape( dec2hex( IsotopeTags(i).Color,2 )',1, 6) '></FONT><SUP>' IsotopeTags(i).isotope '</SUP>' IsotopeTags(i).name '</HTML>'];
   ListBoxStrings{i} = String;
 end
+set(hObject,'string',ListBoxStrings);
 handles.IsotopeTags = IsotopeTags;
 guidata(hObject, handles);
 return
