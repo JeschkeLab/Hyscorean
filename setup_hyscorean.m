@@ -121,7 +121,8 @@ fprintf('Setting Hyscorean paths... ')
 MatlabPaths = path;
 OldPaths = textscan(MatlabPaths,'%s','Delimiter',';');
 OldPaths = OldPaths{1}(:)';
-AddPaths = {pwd,[pwd '\bin']};
+AddPaths = {pwd,[pwd '\bin'],[pwd '\bin\export_fig']};
+
 PathsAlreadyAdded = strfind(horzcat(OldPaths),AddPaths{1});
 
 %Check if Hyscorean paths have been already added
