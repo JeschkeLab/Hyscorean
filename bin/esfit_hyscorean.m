@@ -1195,6 +1195,9 @@ try
                 s = s{get(h,'Value')};
                 ID = sscanf(s,'%d');
                 startx = FitData.FitSets(ID).bestx;
+                if numel(startx) ~= FitData.nParameters
+                    startx = zeros(FitData.nParameters,1);
+                end
             else
                 startx = zeros(FitData.nParameters,1);
             end
