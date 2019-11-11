@@ -1348,7 +1348,7 @@ try
             %Run saffron for a given field position
             if str2double(EasySpinVersion(1))>5
                 %Refactoring of saffron in EasySpin 6.0.0 changed
-                [ts,~,out] = saffron(fs{1},FitData.Exp{Index},FitData.SimOpt{Index});
+                [ts,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
                 t1 = ts{1};
                 t2 = ts{2};
             else
@@ -1490,6 +1490,7 @@ try
             newFitSet.fitSpec = BestSpecScaled;
             newFitSet.expSpec = FitData.ExpSpecScaled;
         end
+        newFitSet.weightmap = FitData.WeightsMap;
         newFitSet.residuals = Residuals;
         newFitSet.bestx = bestx;
         newFitSet.bestvalues = bestvalues;
@@ -2293,6 +2294,15 @@ if ~isempty(str)
         Inset = max(CurrentFitSpec,[],2);
         set(h3,'YData',h.XData,'XData',Inset);
         set(h4,'YData',h.XData,'XData',NaN*Inset);
+        CurrentFitSpec = fitset.fitSpec{FitData.CurrentSpectrumDisplay};
+        h = findobj('Tag','expdata');
+        ExpSpec = fitset.expSpec{FitData.CurrentSpectrumDisplay};
+        set(h,'ZData',abs(ExpSpec));
+        Inset = max(ExpSpec(round(length(ExpSpec)/2,0):end,:),[],1);
+        set(findobj('Tag','expdata_projection1'),'YData',Inset);
+        Inset = max(ExpSpec,[],2);
+        set(findobj('Tag','expdata_projection2'),'XData',Inset);
+        FitData.WeightsMap = fitset.weightmap;
         drawnow
     end
 else
