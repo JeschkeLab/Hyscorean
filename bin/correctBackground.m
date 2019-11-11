@@ -40,15 +40,6 @@ function [Data] = correctBackground(Data,options)
 %           .BackgroundPolynomOrder1 / BackgroundPolynomOrder2
 %            --> Polynomial order to be employed in model 3 for first/second correction
 %
-%           .SavitzkyGolayFiltering (true/false)
-%            --> Employ Savitzky-Golay filter after correction
-%
-%           .SavitzkyOrder
-%            --> Order of the Savitzky-Golay Filter (must be even integer number)
-%
-%           .SavitzkyFrameLength
-%            --> Frame length Savitzky-Golay Filter (must be even integer number larger larger than order)
-%
 %==========================================================================
 %
 % Copyright (C) 2019  Luis Fabregas, Hyscorean 2019
@@ -93,16 +84,6 @@ if ~isfield(options,'BackgroundPolynomOrder2')
 end
 if ~isfield(options,'DisplayCorrected')
   options.DisplayCorrected = false;
-end
-%Set defaults for Savitzky-Golay filter
-if ~isfield(options,'SavitzkyGolayFiltering')
-  options.SavitzkyGolayFiltering = false;
-end
-if ~isfield(options,'SavitzkyOrder')
-  options.SavitzkyOrder = 3;
-end
-if ~isfield(options,'SavitzkyFrameLength')
-  options.SavitzkyFrameLength = 11;
 end
 if ~isfield(options,'BackgroundCorrection2D')
   options.BackgroundCorrection2D = false;
@@ -285,12 +266,6 @@ else
   TimeIndex2 = 1;
 end
 RawSignal = RawSignal(TimeIndex1:end,TimeIndex2:end);
-
-% Savitzky-Golay filtering of background-corrected integral
-if options.SavitzkyGolayFiltering
-  RawSignal =  sgolayfilt(RawSignal,options.SavitzkyOrder,options.SavitzkyFrameLength,[],1); % along dimension 1
-  RawSignal =  sgolayfilt(RawSignal,options.SavitzkyOrder,options.SavitzkyFrameLength,[],2); % along dimension 2
-end
 
 %Normalize the signal
 RawSignal = RawSignal/max(max(real(RawSignal)));

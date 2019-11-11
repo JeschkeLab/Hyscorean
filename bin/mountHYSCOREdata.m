@@ -42,7 +42,7 @@ switch FileExtension
         end
         %Check that the complementary BES3T file is on the same folder
         if ~exist([FullBaseName ComplementaryFileExtension],'file')
-            error(sprtinf('Error: Complementary %s file not found. Make sure it is on the same folder as the %s file.',ComplementaryFileExtension,FileExtension))
+            error('Error: Complementary %s file not found. Make sure it is on the same folder as the %s file.',ComplementaryFileExtension,FileExtension)
         end
         
         %Check if easyspin installed. If not use local eprload function copy

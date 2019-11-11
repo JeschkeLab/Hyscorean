@@ -20,8 +20,8 @@ Selections = cell(1);
 %Take increasingly more tau values for combinations
 for TauValuesTaken = 1:length(TauValues)
   %Get all possible combinations for the tau values taken
-  FoundCombinations = combnk(TauValues,TauValuesTaken);
-  IndexCombinations = combnk(1:length(TauValues),TauValuesTaken);
+  FoundCombinations = norepcomb(TauValues,TauValuesTaken);
+  IndexCombinations = norepcomb(1:length(TauValues),TauValuesTaken);
   %Get the number of combinations found
   NCombinations = size(FoundCombinations,1);
   %Construct formated strings with combinations 
