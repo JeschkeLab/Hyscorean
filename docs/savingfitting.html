@@ -73,6 +73,7 @@ Saves the selected parameter set to the MATLAB workspace as a structure variable
 .residuals  % Cell array of residuals 
 .bestValues % Array of the parameter values in the best column 
 .Sys        % Structure with spin system definition
+.weightmap  % Matrix of weights on the experimental spectrum
 .ID         % ID of the parameter set</pre>
 </ul>
 
@@ -96,6 +97,9 @@ The report contains the following:
 <li> A summary of the fitting options employed and a copy of the <code>Parameters</code> table containing the best values of the fit.
 <li> For each fitted spectrum the report includes a copy of the experimental spectrum overlaid with the best fit as in the GUI. Additionally, both the experimental spectrum as the fitted spectrum are displayed separately for a better visualization.
 <li> A summary of the evolution of the total RMSD as well as the RMSDs of the individual fitted spectra.
+<li> A table of the exact containts of the <code>Exp</code>,<code>Sys</code> ans <code>Opt</code> Easyspin structures.
+<li> A copy of the weights map employed for the fitting.
+
 </ul>
 
 <p>
