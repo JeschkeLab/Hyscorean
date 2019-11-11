@@ -78,7 +78,7 @@ if ~ispref('hyscorean','LGPL_license')
     axis(AxisHandle,'off')
     
     %Open license file
-    FileID = fopen(fullfile(InstallationPath,'LICENSE.LGPL.txt'));
+    FileID = fopen(fullfile(InstallationPath,'LICENSE'));
     %Copy license text into UI list box
     LineIndicator = 1;
     while true
