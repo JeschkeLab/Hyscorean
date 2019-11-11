@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" href="img/logo64.png">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="stylesheet" href="highlight/matlab.css">
+   <script src="highlight/highlight.pack.js"></script>
+   <script>hljs.initHighlightingOnLoad();</script>
+   <title>Generation of the NUS schedule</title>
+</head>
+
+<body>
+
+<header>
+<ul>
+<li><img src="img/logo64.png", width="80%">
+<li class="header-title">Hyscorean
+</ul>
+<p>
+<br>
+<ul>
+<li><a href="index.html">Documentation</a>
+<li><a href="references.html">Publications</a>
+<li><a href="https://github.com/luisfabib/Hyscorean" target="_blank">Repository</a>
+<li><a href="https://github.com/luisfabib/Hyscorean/issues" target="_blank">Report Issues</a>
+</ul>
+<br>
+<br>
+<ul> 
+</ul>
+</p>
+</header>
+
+<section>
+
+<hr>
+<div class="functitle">Generation of the NUS schedule</div>
+<hr>
+
+<p>
+The NUS schedule defines at which timings the HYSCORE experiment is performed and therefore determines the duration and performance of the experiment. As described in <a href="recosntructionmethods.html">here</a> each NUS schedule has an associated point-spread function (PSF) which determines how bad the sampling artifacts will be in the spectrum. Although most of these artifacts can be removed by reconstruction methods, a good PSF will ensure better reconstruction results and later better spectral quality. 
+</p>
+
+<p>
+Good sampling schemes are those which are based on random sampling schemes. Since no real random numbers can be achieved, pseudo-random number generators are used. Additionally, envelope-matched sampling (EMS) can be used to tailor the randomly generated samples to a given probability density function (PDF) of choice. 
+</p>
+
+<p>
+Hyscorean offers the MATLAB script <code>generate_NUS_schedule.m</code> which allows the user to generate a NUS schedule and save it in MATLAB and BES3T formats so that they can be used for NUS HYSCORE experiments on Bruker spectrometers. The grids are constructed from a set of parameters given by the user in the script as the following variables:
+</p>
+
+<ul>
+<li> <code>TimeStep1/TimeStep2</code>
+<p>
+Effective dwell time in ns of the NUS grid for each dimension. Minimal resolution of 2 ns (or 4ns for some spectrometers).
+</p>
+<li> <code>Dimension1/Dimension2</code>
+<p>
+Size of the grid along the first and second dimension.
+</p>
+<li> <code>SamplingDensity</code>
+<p>
+Percentage of points in the grid to be sampled. Must be a number between 0 (no sampling) and 1 (all points sampled).
+</p>
+<li> <code>Envelope</code>
+<p>
+Probability-density function to be employed for the envelope-matched sampling. For more details, type help NUS_scheduler.m in the MATLAB console.
+</p>
+<center>
+<img src="img/schedulegeneration1.png", width = "100%">
+</center>
+<li> <code>Decay</code>
+<p>
+Decay rate of the envelope functions. If empty, is set by default to half of the maximal timing.
+</p>
+<li> <code>RandomGenerator</code>
+<p>
+Type of generator to be used for the pseudo-random numbers. Is set by default to 'rand' which uses the rand function of MATLAB or can be set to 'lhs' which then uses Latin Hypercube Sampling (LHS) to generate the random numbers. 
+</p>
+</ul>
+
+<br>
+<hr>
+<p>
+NOTE: <br>
+Independently of the settings chosen for the NUS schedule construction, the first and last point of the sampling grid are always measured. 
+</p>
+<hr>
+<br>
+<!-- =========================================================== -->
+<hr>
+<a href="xeprprinciple.html" class="previous", align="left">&laquo; Previous</a>
+&emsp;
+<a href="brukersetup.html" class="next", style="text-align:right">Next &raquo;</a>
+<hr>
+</section>
+
+
+<footer>
+Hyscorean Documentation - Luis Fábregas Ibáñez  2019 - ETH Zurich - Released under the GNU Lesser General Public License (LGPL 3.0).
+</footer>
+
+</body>
+</html>

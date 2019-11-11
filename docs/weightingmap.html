@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" href="img/logo64.png">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="stylesheet" href="highlight/matlab.css">
+   <script src="highlight/highlight.pack.js"></script>
+   <script>hljs.initHighlightingOnLoad();</script>
+   <title>Weighting Map</title>
+</head>
+
+<body>
+
+<header>
+<ul>
+<li><img src="img/logo64.png", width="80%">
+<li class="header-title">Hyscorean
+</ul>
+<p>
+<br>
+<ul>
+<li><a href="index.html">Documentation</a>
+<li><a href="references.html">Publications</a>
+<li><a href="https://github.com/luisfabib/Hyscorean" target="_blank">Repository</a>
+<li><a href="https://github.com/luisfabib/Hyscorean/issues" target="_blank">Report Issues</a>
+</ul>
+<br>
+<br>
+<ul> 
+</ul>
+</p>
+</header>
+
+<section>
+
+<hr>
+<div class="functitle">Defining a Weighting Map</div>
+<hr>
+
+<p>
+As mentioned in the previous section, when fitting spectra via optimization methods, the progression of the fit optimization is determined by the root-mean-square deviation (RMSD) of the fit with respect of the experimental spectrum. This can become a problem when trying to fit less intese features in spectra with large dynamic ranges. A way to handle this is to narrow the region of the spectrum to be fitted as described <a href="confineexclude.html">before</a>.
+</p>
+
+<p>
+However, there may be situations where a non-uniform weighting of the experimental spectrum may be prefered to spectral confinement/exclusion. Such a weighting should allow for supressing as well as enhancing certain regions or features of the experimental spectrum. Hyscorean offers such a weighting option as an interactive weighting map. From the fitting module, the interactive weighting map design tool can be opened by pressing the <code>Weighting Map</code>, which prompts the following window to open:
+</p>
+
+<center>
+<img src= "img/weightmap5.png",  width="90%", class="center">
+</center>
+
+<p>
+The new window will contain a display of the experimental spectrum as in the fitting module. The weight map (displyed as a red/white/green colormap) starts by default as a uniform distribution of ones, i.e. no weighting is applied. This map can be modified freely by clicking on different regions of the spectrum. By clicking a Gaussian distribution of a certaing width and amplitude is added to the map. The program differentiates between left and right clicking: <code>left-clicking</code> will add positive weighting, whereas <code>right-clicking</code> will add negative weighting. At all points the colormap values can be referenced to the colorbar given next to the spectrum. 
+</p>
+
+<center>
+<img src= "img/weightmap1.png",  width="70%", class="center">
+</center>
+
+<p>
+The width of the Gaussian distribution added with each click can be controled by means of the <code>Width</code> slider. Analogously, the absolute amplitude of the Gaussian distribution can be modified through the <code>Increment</code> edit box. In case of errors, or in order to start the design anew, the <code>Reset</code> will bring the weighting map to its default state. 
+</p>
+
+<hr>
+<p>
+NOTE: 
+<br>
+The weighting is only applied to the experimental spectra. Simulated spectra are left unweighted during the fitting protocols.
+</p>
+<hr>
+
+<p>
+Once the map design has been finished, the window can be closed by means of the <code>Save</code> button. This will apply the weighting map to all experimental spectra loaded into the fitting module. After application of the weights, the new experimental spectra are normalized anew. Exiting by means of the <code>Cancel</code> button, will not save and apply the weighting map. In this example, the region of proton couplings are enhanced by removing matrix peaks and suppresing part of the most intensive signals in the low-frequency range to yield a spectrum with reduced dynamical range:
+</p>
+
+<center>
+<img src= "img/weightmap3.png",  width="95%", class="center">
+</center>
+
+<hr>
+<p>
+NOTE: 
+<br>
+When opening the map designer again, the weighting map will be displayed. In order to return the experimental spectra to their original state, the <code>Reset</code> must be pressed and then return via the <code>Save</code>.
+</p>
+<hr>
+
+<p>
+In the case, e.g. when one wants to remove all elements in a spectrum except some specific features, one would need to set the weights of all those elements to zero. In roder to achieve this more easily, the <code>Remove All</code> button can be used. This will set all weights in the map to zero. The weights of teh desired features can then be increased back via left-clicks. In the following example, features in the region of proton couplings are to be isolated from the rest of the spectrum as explained:
+</p>
+
+<center>
+<img src= "img/weightmap2.png",  width="95%", class="center">
+</center>
+
+Due to the weighting maps being drawn by hand it may be difficult to achieve symmetric maps. The <code>Symmetrize</code> button can be used to apply geometric averaging to the weighting map and achieve symmetric weighting later in the experimental spectra.
+
+
+<center>
+<img src= "img/weightmap4.png",  width="60%", class="center">
+</center>
+
+<!-- =========================================================== -->
+<hr>
+<a href="confineexclude.html" class="previous", align="left">&laquo; Previous</a>
+&emsp;
+<a href="speedingupsimulations.html" class="next", style="text-align:right">Next &raquo;</a>
+<hr>
+</section>
+
+
+<footer>
+Hyscorean Documentation - Luis Fábregas Ibáñez  2019 - ETH Zurich - Released under the GNU Lesser General Public License (LGPL 3.0).
+</footer>
+
+</body>
+</html>
+

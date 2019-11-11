@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" href="img/logo64.png">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="stylesheet" href="highlight/matlab.css">
+   <script src="highlight/highlight.pack.js"></script>
+   <script>hljs.initHighlightingOnLoad();</script>
+   <title>Non-uniform sampling in XEPR</title>
+</head>
+
+<body>
+
+<header>
+<ul>
+<li><img src="img/logo64.png", width="80%">
+<li class="header-title">Hyscorean
+</ul>
+<p>
+<br>
+<ul>
+<li><a href="index.html">Documentation</a>
+<li><a href="references.html">Publications</a>
+<li><a href="https://github.com/luisfabib/Hyscorean" target="_blank">Repository</a>
+<li><a href="https://github.com/luisfabib/Hyscorean/issues" target="_blank">Report Issues</a>
+</ul>
+<br>
+<br>
+<ul> 
+</ul>
+</p>
+</header>
+
+<section>
+
+<hr>
+<div class="functitle">Non-uniform sampling in XEPR</div>
+<hr>
+
+<p>
+A common trait of EPR experiments is that some dimension is swept (either by incrementing or decrementing some time interval or frequency) uniformly and for a defined sweep length. Hence, most experiment definitions in XEPR are defined around this concept. Therefore, the software is inherently not prepared or designed to allow non-uniform sampling.
+</p>
+
+<p>
+XEPR offers the well-known PulseSPEL language to define custom experiments (although with a limited variable definition set and rather limited buffer memory). This allows the design of custom HYSCORE experiments. A direct implementation of NUS HYSCORE would be a PulseSPEL program which would contain single-point measurements for all of the HYSCORE points to be measured according to some NUS schedule (which could be generated from some other program, e.g. a MATLAB script). This is, however, not possible due to the limited buffer memory of the PulseSPEL programming panel and its compiler. 
+</p>
+
+<p>
+Another tool offered by XEPR is the Procedure Description Language (ProDeL) which allows a more detailed experiment design with the possibility of performing arithmetic operations. This language is still limited in its flexibility and its functions are non-intuitive making it a difficult programming language to work with. The program still suffers from some buffer memory problems for some variable definitions, but it is not limited in its length.
+</p>
+
+<p>
+Considering these tools, the following ideas were considered for NUS HYSCORE implementation:
+</p>
+<ul>
+<li>	Use PulseSPEL to define an experiment which measures a single HYSCORE point and return
+<li>	Use ProDeL to set the NUS schedule timings from a loop into the PulseSPEL program and call iteratively. After each PulseSPEL execution store the measured point in a dataset.
+<li>	NUS schedules need to be brought in some manner into the software, either by copying them into the ProDeL code or by loading them via the program.
+<li>	The output needs to be as compact as possible for the user’s comfort and to be compatible with Hyscorean to be processed. 
+</ul>
+
+<p>
+By taking this into consideration NUS HYSCORE experiments in XEPR were implemented via a combination of PulseSPEL and ProDeL programming. Next, a detail description of the implementation will be provided.
+</p>
+
+<p>
+First, a PulseSPEL program is defined which takes only single-point measurements. Due to the limited number of variables in PulseSPEL not many delays can be defined. Considering the ideas listed above, one would want to measure a single HYSCORE point and return to the ProDeL program to set the next timings and measure the next point. This is, however, not possible in PulseSPEL due to the language limiting the minimal number of points to be measured to at least four. Therefore, the ProDeL program will have to pass the timings in sets of fourteen.
+</p>
+
+<p>
+This program is available from the <code>nus_bruker</code> directory inside Hyscorean under the name <code>NUS_HYSCORE.exp</code>. A fragment of the code is shown in the box on the right. The variable definitions and how to set them will be discussed <a href="brukersetup.html">later</a>. The <code>d4-d31</code> delays represent the t1-timings and t2-timings of the different fourteen points being measured and which will be needing to be set by the PulseSPEL program. The <code>d0-d3</code> are reserved for the other necessary delays.
+</p>
+
+<p>
+Another issue is the way the timings in ProDeL are obtained from the NUS schedule. Again, a straightforward implementation would be to hardcode the timings directly into the ProDeL program code generated via some script. A more elegant solution would be to be able to load a file containing the NUS schedule and directly read the timings from there. XEPR and ProDeL, however, are extremely limited on the type of data they can read and load. The only type of data ProDeL can read and manipulate are BES3T data formats. 
+</p>
+
+<p>
+Hyscorean then also offers a MATLAB script named <code>generate_NUS_schedule.m</code> which constructs the NUS schedule and saves it first as a MATLAB variable file and as BES3T data files (see next section for details on the NUS schedule construction). With this, the NUS HYSCORE timings can then be loaded into the ProDeL program and set in the different PulseSPEL program executions.
+</p>
+
+<p>
+The next issue is the output of the program. For the later processing in Hyscorean, the output BES3T data files need to contain the measured dataset, the experiment descriptor (where the PulseSPEL experiment and variable definition are stored) as well as the NUS schedule to be able to reconstruct the HYSCORE spectrum correctly. The first two points are not a big issue since they are automatically set as defaults in BES3T data files. However, the passing of the NUS schedule becomes a more difficult task. It could of course be passed to Hyscorean as an additional file along the measured NUS HYSCORE data file, but this is inconvenient and prone to errors due to loading of the wrong schedule file
+</p>
+
+
+<!-- =========================================================== -->
+<hr>
+<a href="brukerintro.html" class="previous", align="left">&laquo; Previous</a>
+&emsp;
+<a href="schedulegeneration.html" class="next", style="text-align:right">Next &raquo;</a>
+<hr>
+</section>
+
+
+<footer>
+Hyscorean Documentation - Luis Fábregas Ibáñez  2019 - ETH Zurich - Released under the GNU Lesser General Public License (LGPL 3.0).
+</footer>
+
+</body>
+</html>

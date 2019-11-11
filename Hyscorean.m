@@ -1318,7 +1318,7 @@ return
 function Help_Button_Callback(hObject, eventdata, handles)
 %Get the location of the html doc
 Path = fileparts(which('Hyscorean'));
-Path = fullfile(Path,'doc','html');
+Path = fullfile(Path,'docs');
 web(fullfile(Path,'index.html'),'-browser')
 %==========================================================================
 

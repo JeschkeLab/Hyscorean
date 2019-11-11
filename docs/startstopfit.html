@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <link rel="icon" href="img/logo64.png">
+   <link rel="stylesheet" type="text/css" href="style.css">
+   <link rel="stylesheet" href="highlight/matlab.css">
+   <script src="highlight/highlight.pack.js"></script>
+   <script>hljs.initHighlightingOnLoad();</script>
+   <title>Start/Stop Fit</title>
+</head>
+
+<body>
+
+<header>
+<ul>
+<li><img src="img/logo64.png", width="80%">
+<li class="header-title">Hyscorean
+</ul>
+<p>
+<br>
+<ul>
+<li><a href="index.html">Documentation</a>
+<li><a href="references.html">Publications</a>
+<li><a href="https://github.com/luisfabib/Hyscorean" target="_blank">Repository</a>
+<li><a href="https://github.com/luisfabib/Hyscorean/issues" target="_blank">Report Issues</a>
+</ul>
+<br>
+<br>
+<ul> 
+</ul>
+</p>
+</header>
+
+<section>
+
+<hr>
+<div class="functitle">Starting & Stopping the Fit</div>
+<hr>
+
+<p>
+ With the spin system defined, the fit settings can be selected to start the fitting. All the options available for the fitting can be chosen from the list boxes next to the<code> Start</code> button. 
+ </p>
+
+<center>
+<img src= "img/fittingspectra5.png",  width="55%", class="center">
+</center>
+
+<ul>
+
+	<li> <code>Method</code>
+	<p>The optimization algorithm to be employed to find the best fit spectrum corresponding to the minimum of some optimization functional. The details can be found on the <a href="http://easyspin.org/easyspin/documentation/"> EasySpin documentation </a>.
+	</p>
+
+	<li> <code>Scaling</code>
+	<p>The different ways the spectrum can be scaled once it has been simulated to compare it with the experimental spectrum. The options are:
+	</p>
+	<ul>
+		<li> <code>Scale & Shift</code>
+		<br>
+		The spectra are scaled to the absolute maxima and their absolute minima are shifted to match.
+		<li> <code>Scale only</code>
+		<br>
+		The spectra are scaled only to the absolute maxima.
+		<li> <code>No scaling</code>
+		<br>
+		The spectra are used as simulated without scaling.
+	</ul>
+	
+
+	<li> <code>Startpoint</code>
+	<p>The way the initial values of the fitting parameters are selected at the start of the optimization routine. The options are:
+	</p>
+	<ul>
+		<li> <code>Center of range</code>
+		<br>
+		Starts with the values given in the center column of the <code>Parameters</code> table.
+		<li> <code>Random within range</code>
+		<br>
+		Starts at a random value within the range given by the values given in the center and vary columns of the <code>Parameters</code> table.
+		<li> <code>Selected parameter range</code>
+		<br>
+		Starts at the values saved in the currently selected parameter set in the  <code>Parameter Sets</code> panel (see later).
+	</ul>
+
+</ul>
+
+<p>
+Once the user has chosen the settings for the fitting, this can be started via the <code>Start</code> button. Hyscorean employs the following color coding to show the state of the fitting in the main display as well as in both insets:
+</p>
+
+<center>
+<img src= "img/fittingspectra6.png",  width="85%", class="center">
+</center>
+
+<ul>
+
+	<li> <code>Black</code>
+	<br>
+	Experimental spectrum as processed and saved by Hyscorean.
+	
+	<li> <code>Green</code>
+	<br>
+	Best fit spectrum given by the parameters in the <code>best</code> column of the <code>Parameters</code> table. Displayed during and after the fitting.
+	
+	<li> <code>Red</code>
+	<br>
+	Spectrum corresponding to current iteration with the parameters in the current column of the <code>Parameters</code> table. Displayed only during the fitting.	
+</ul>
+
+<p>
+The fitting can be also monitored via the evolution of the RMSD values of the fitted spectra in the display below the <code>Start</code> button. The RMSD displayed in here is the total RMSD computed from the sum over the individual RMSD values of the different spectra being fitted (e.g. if several field positions are being fitted).
+</p>
+
+<p>
+ Nonetheless, in case the user wants to monitor the RMSD evolution of the individual fitted spectra the user can press the detach button to prompt a new window which will contain an individual display for each of the spectra RMSD as well as one for the total RMSD. 
+</p>
+
+<center>
+<img src= "img/fittingspectra7.png",  width="95%", class="center">
+</center>
+
+<p>
+Pressing this button will also prompt a new window to appear, where the evolution of the individual fit parameters can be monitored during and after the fit. The different plots can be scrolled via the slider on the right side of the figure.
+</p>
+
+<p>
+Once the fitting has started, all UI control elements are disabled and the <code>Start</code> button is changed into the <code>Stop</code> button. This <code>Stop</code> button can be used to stop the fitting prematurely even if the optimization algorithm has not found the minimum yet. Otherwise, the fitting will continue until a minimum is found, point at which the fit ends and all UI control elements are enabled again.
+</p>
+
+<p>
+In either case, once the fitting routine has stopped, the parameters of the best fitted spectrum are updated at the Parameters table under the <code>best</code> column:
+</p>
+
+<center>
+<img src= "img/fittingspectra8.png",  width="85%", class="center">
+</center>
+
+<hr>
+<p>
+NOTE: <br>
+By pressing the <code>Stop</code> button, a trigger is sent to the program to stop the optimization at the next iterate. Therefore, pressing the button will not result in an immediate abortion of the fitting. If the simulations are computationally costly then the program may require a prolonged lapse of time until it is fully stopped. Nonetheless, the user can abruptly kill the fitting by pressing the Crtl+C combination in the MATLAB console. This will result in a complete loss of the fit data.
+</p>
+<hr>
+
+
+<!-- =========================================================== -->
+<hr>
+<a href="spinsystem.html" class="previous", align="left">&laquo; Previous</a>
+&emsp;
+<a href="manualfitting.html" class="next", style="text-align:right">Next &raquo;</a>
+<hr>
+</section>
+
+
+<footer>
+Hyscorean Documentation - Luis Fábregas Ibáñez  2019 - ETH Zurich - Released under the GNU Lesser General Public License (LGPL 3.0).
+</footer>
+
+</body>
+</html>
