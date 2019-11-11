@@ -1340,11 +1340,21 @@ try
         ExpSpec = FitData.ExpSpec;
         SpectraConfined = {};
         SpectraExcluded = {};
+        EasySpinInfo = easyspininfo;
+        EasySpinVersion = EasySpinInfo.Version;
         %Loop over all field positions (i.e. different files/spectra)
         parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
             
             %Run saffron for a given field position
-            [t1,t2,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
+            if str2double(EasySpinVersion(1))>5
+                %Refactoring of saffron in EasySpin 6.0.0 changed
+                [ts,~,out] = saffron(fs{1},FitData.Exp{Index},FitData.SimOpt{Index});
+                t1 = ts{1};
+                t2 = ts{2};
+            else
+                %Run saffron for a given field position
+                [t1,t2,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
+            end
             %Get time-domain signal
             if iscell(out)
                 Out = out{1:FitData.nOutArguments};
@@ -1589,15 +1599,23 @@ SpectraExcluded = {};
 SpectraConfined = {};
 
 SimulationNotSuccesful = true;
+
+EasySpinInfo = easyspininfo;
+EasySpinVersion = EasySpinInfo.Version;
+
 while SimulationNotSuccesful
     
     %Loop over all field positions (i.e. different files/spectra)
     parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
-        %   for Index = 1:numSpec
-        % for Index = 1:numSpec
-        if numel(SimSystems)==1
-            [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
+        
+        %Run saffron for a given field position
+        if str2double(EasySpinVersion(1))>5
+            %Refactoring of saffron in EasySpin 6.0.0 changed
+            [ts,~,out] = saffron(SimSystems{1},Exp{Index},SimOpt{Index});
+            t1 = ts{1};
+            t2 = ts{2};
         else
+            %Run saffron for a given field position
             [t1,t2,~,out] = saffron(SimSystems,Exp{Index},SimOpt{Index});
         end
         
