@@ -29,140 +29,176 @@ switch FileExtension
     %------------------------------------------------------------------------
     case {'.DSC','.DTA'}
         
-        %Load file with eprload from Easyspin
-        File = FileNames{1};
+        %Prepare containers to temporarily allocate the data of the individual files
+        TauValuesVector = [];
+        TauSignalsVector = [];
+        TimeStep1control = [];
+        TimeStep2control = [];
         
-        %Get file extension of loaded file and corresponding complementary
-        [Path,Name,FileExtension] = fileparts(File);
-        FullBaseName = fullfile(Path,Name);
-        if strcmp(FileExtension,'.DSC')
-            ComplementaryFileExtension = '.DTA';
-        else
-            ComplementaryFileExtension = '.DSC';
-        end
-        %Check that the complementary BES3T file is on the same folder
-        if ~exist([FullBaseName ComplementaryFileExtension],'file')
-            error('Error: Complementary %s file not found. Make sure it is on the same folder as the %s file.',ComplementaryFileExtension,FileExtension)
-        end
-        
-        %Check if easyspin installed. If not use local eprload function copy
-        if getpref('hyscorean','easyspin_installed')
-            [~,~,BrukerParameters] = eprload(File);
-            ExtractedData = eprload(File);
-        else
-            [~,~,BrukerParameters] = eprload_hyscorean(File);
-            ExtractedData = eprload_hyscorean(File);
-        end
-        
-        if isvector(ExtractedData)
+        for fileIdx = 1:length(FileNames)
             
-            % Non-uniform sampled data
-            %--------------------------------------------------------------------
-            NUSflag = true;
+            %Load file with eprload from Easyspin
+            File = FileNames{fileIdx};
             
-            %Check that the additional .XGF file is on the same folder
-            if ~exist([FullBaseName '.XGF'],'file')
-                error(sprtinf('Error: Complementary .XGF file not found. Make sure it is on the same folder as the %s file.',FileExtension))
+            %Get file extension of loaded file and corresponding complementary
+            [Path,Name,FileExtension] = fileparts(File);
+            FullBaseName = fullfile(Path,Name);
+            if strcmp(FileExtension,'.DSC')
+                ComplementaryFileExtension = '.DTA';
+            else
+                ComplementaryFileExtension = '.DSC';
+            end
+            %Check that the complementary BES3T file is on the same folder
+            if ~exist([FullBaseName ComplementaryFileExtension],'file')
+                error('Error: Complementary %s file not found. Make sure it is on the same folder as the %s file.',ComplementaryFileExtension,FileExtension)
             end
             
             %Check if easyspin installed. If not use local eprload function copy
             if getpref('hyscorean','easyspin_installed')
-                [Abscissa,Ordinate,BrukerParameters] = eprload(File);
+                [~,~,BrukerParameters] = eprload(File);
+                ExtractedData = eprload(File);
             else
-                [Abscissa,Ordinate,BrukerParameters] = eprload_hyscorean(File);
+                [~,~,BrukerParameters] = eprload_hyscorean(File);
+                ExtractedData = eprload_hyscorean(File);
             end
-            %Decode the t1 and t2 timings from abscissa
-            t2Timings = floor(Abscissa);
-            t1Timings = round(10000*(Abscissa - t2Timings));
             
-            %Get unique t1 and t2 timings
-            t1Unique = unique(t1Timings);
-            t2Unique = unique(t2Timings);
-            
-            %Get effective dwell time up to 1ns resolution
-            DwellTime1 = min(round(diff(t1Unique)));
-            DwellTime2 = min(round(diff(t2Unique)));
-            %         EffectiveDwellTime = min(DwellTime1,DwellTime2);
-            
-            %Get grid dimensions from maximal timing
-            MaximalTiming1 = max(round(t1Unique));
-            MaximalTiming2 = max(round(t2Unique));
-            Dimension1 = MaximalTiming1/DwellTime1;
-            Dimension2 = MaximalTiming2/DwellTime2;
-            
-            %Construct NUS grid from timings
-            Pos1 = 1 + t1Timings/DwellTime1;
-            Pos2 = 1 + t2Timings/DwellTime2;
-            NUSgrid = zeros(Dimension1,Dimension2);
-            for i=1:length(t1Timings)
-                NUSgrid(Pos1(i),Pos2(i)) = 1;
-            end
-            SamplingDensity = length(find(NUSgrid==1))/numel(NUSgrid);
-            %Get tau-values for this measurement
-            CommentVar = BrukerParameters.CMNT;
-            TauDefinition = CommentVar(findstr(CommentVar,'Tau values:'):end);
-            StrPos = findstr(TauDefinition,'|');
-            TauValues = zeros(length(StrPos)-1,1);
-            for i=1:length(StrPos)-1
-                TauValues(i)  = str2double(TauDefinition(StrPos(i)+1:StrPos(i+1)-1));
-            end
-            if isempty(TauValues)
-                TauValues = inputdlg('Tau-values could not be extracted. Input:');
-                TauValues = str2double(TauValues{1});
-            end
-            %Construct 2D unfolded signals
-            FoldingFactor = length(TauValues);
-            TauSignals = nan(FoldingFactor,Dimension1,Dimension2);
-            for TauIndex = 1:FoldingFactor
+            if isvector(ExtractedData)
+                
+                % Non-uniform sampled data
+                %--------------------------------------------------------------------
+                NUSflag = true;
+                
+                %Check that the additional .XGF file is on the same folder
+                if ~exist([FullBaseName '.XGF'],'file')
+                    error(sprtinf('Error: Complementary .XGF file not found. Make sure it is on the same folder as the %s file.',FileExtension))
+                end
+                
+                %Check if easyspin installed. If not use local eprload function copy
+                if getpref('hyscorean','easyspin_installed')
+                    [Abscissa,Ordinate,BrukerParameters] = eprload(File);
+                else
+                    [Abscissa,Ordinate,BrukerParameters] = eprload_hyscorean(File);
+                end
+                %Decode the t1 and t2 timings from abscissa
+                t2Timings = floor(Abscissa);
+                t1Timings = round(10000*(Abscissa - t2Timings));
+                
+                %Get unique t1 and t2 timings
+                t1Unique = unique(t1Timings);
+                t2Unique = unique(t2Timings);
+                
+                %Get effective dwell time up to 1ns resolution
+                DwellTime1 = min(round(diff(t1Unique)));
+                DwellTime2 = min(round(diff(t2Unique)));
+                %         EffectiveDwellTime = min(DwellTime1,DwellTime2);
+                
+                %Get grid dimensions from maximal timing
+                MaximalTiming1 = max(round(t1Unique));
+                MaximalTiming2 = max(round(t2Unique));
+                Dimension1 = MaximalTiming1/DwellTime1;
+                Dimension2 = MaximalTiming2/DwellTime2;
+                
+                %Construct NUS grid from timings
+                Pos1 = 1 + t1Timings/DwellTime1;
+                Pos2 = 1 + t2Timings/DwellTime2;
+                NUSgrid = zeros(Dimension1,Dimension2);
                 for i=1:length(t1Timings)
-                    TauSignals(TauIndex,Pos1(i),Pos2(i)) = Ordinate(i);
+                    NUSgrid(Pos1(i),Pos2(i)) = 1;
                 end
-            end
-            
-            %Construct time axes
-            TimeStep1 = DwellTime1/1000;
-            TimeStep2 = DwellTime2/1000;
-            TimeAxis1 = 0:TimeStep1:MaximalTiming1/1000;
-            TimeAxis2 = 0:TimeStep2:MaximalTiming1/1000;
-            
-        else
-            
-            % Uniform sampled data
-            %--------------------------------------------------------------------
-            NUSflag  = false;
-            
-            %Get dimensionality
-            [Dimension1,Dimension2] = size(ExtractedData);
-            
-            %Get time-resolution
-            TimeStep1 = BrukerParameters.XWID/(BrukerParameters.XPTS - 1)/1000;
-            TimeStep2 = BrukerParameters.YWID/(BrukerParameters.YPTS - 1)/1000;
-            
-            %Check for folded tau-dimensions
-            if Dimension1 ~= Dimension2
-                %Make default that second dimension is the largest
-                if Dimension1 > Dimension2
-                    ExtractedData = ExtractedData';
-                    [Dimension1,Dimension2] = size(ExtractedData);
+                SamplingDensity = length(find(NUSgrid==1))/numel(NUSgrid);
+                %Get tau-values for this measurement
+                CommentVar = BrukerParameters.CMNT;
+                TauDefinition = CommentVar(findstr(CommentVar,'Tau values:'):end);
+                StrPos = findstr(TauDefinition,'|');
+                TauValues = zeros(length(StrPos)-1,1);
+                for i=1:length(StrPos)-1
+                    TauValues(i)  = str2double(TauDefinition(StrPos(i)+1:StrPos(i+1)-1));
                 end
-                FoldingFactor = Dimension2/Dimension1;
-                TauSignals = zeros(FoldingFactor,Dimension1,Dimension1);
-                StartPosition = 1;
-                %Extract the additional dimension from the folded dimension
-                for FoldingIndex=1:FoldingFactor
-                    TauSignals(FoldingIndex,:,:)=ExtractedData(1:end,StartPosition:Dimension2/FoldingFactor*FoldingIndex);
-                    StartPosition = Dimension2/FoldingFactor*FoldingIndex + 1;
+                if isempty(TauValues)
+                    TauValues = inputdlg('Tau-values could not be extracted. Input:');
+                    TauValues = str2double(TauValues{1});
                 end
+                %Construct 2D unfolded signals
+                FoldingFactor = length(TauValues);
+                TauSignals = nan(FoldingFactor,Dimension1,Dimension2);
+                for TauIndex = 1:FoldingFactor
+                    for i=1:length(t1Timings)
+                        TauSignals(TauIndex,Pos1(i),Pos2(i)) = Ordinate(i);
+                    end
+                end
+                
+                %Construct time axes
+                TimeStep1 = DwellTime1/1000;
+                TimeStep2 = DwellTime2/1000;
+                TimeAxis1 = 0:TimeStep1:MaximalTiming1/1000;
+                TimeAxis2 = 0:TimeStep2:MaximalTiming1/1000;
+                
             else
-                TauSignals(1,:,:) = ExtractedData;
+                
+                % Uniform sampled data
+                %--------------------------------------------------------------------
+                NUSflag  = false;
+                
+                %Get dimensionality
+                [Dimension1,Dimension2] = size(ExtractedData);
+                
+                %Get time-resolution
+                TimeStep1 = BrukerParameters.XWID/(BrukerParameters.XPTS - 1)/1000;
+                TimeStep2 = BrukerParameters.YWID/(BrukerParameters.YPTS - 1)/1000;
+                
+                %Check for folded tau-dimensions
+                if Dimension1 ~= Dimension2
+                    %Make default that second dimension is the largest
+                    if Dimension1 > Dimension2
+                        ExtractedData = ExtractedData';
+                        [Dimension1,Dimension2] = size(ExtractedData);
+                    end
+                    FoldingFactor = Dimension2/Dimension1;
+                    TauSignals = zeros(FoldingFactor,Dimension1,Dimension1);
+                    StartPosition = 1;
+                    %Extract the additional dimension from the folded dimension
+                    for FoldingIndex=1:FoldingFactor
+                        TauSignals(FoldingIndex,:,:)=ExtractedData(1:end,StartPosition:Dimension2/FoldingFactor*FoldingIndex);
+                        StartPosition = Dimension2/FoldingFactor*FoldingIndex + 1;
+                    end
+                else
+                    TauSignals(1,:,:) = ExtractedData;
+                end
+                
+                try
+                    [TauValues] = brukertaus(BrukerParameters);
+                catch
+                    TauValues = inputdlg('Tau-values could not be extracted. Input:');
+                    TauValues = str2double(TauValues{1});
+                end
+                
+                %Control consistency between files 
+                if isempty(TimeStep1control)
+                TimeStep1control =  TimeStep1;
+                TimeStep2control =  TimeStep2;
+                Size2control = size(TauSignals,2);
+                Size1control = size(TauSignals,3);
+                else
+                    if TimeStep1control~=TimeStep1 || TimeStep2control~=TimeStep2
+                        error('Time steps are not consistent between files.')
+                    end
+                    if Size1control~=size(TauSignals,2) || Size2control~=size(TauSignals,3)
+                        error('Signal dimensions are not consistent between files.')
+                    end
+                end
+                
+                %Collect tau-values of multiple files
+                TauValuesVector(end+1:end+length(TauValues)) = TauValues;
+                TauSignalsVector(end+1:end+size(TauSignals,1),:,:) =  TauSignals;
+
             end
             
-            try
-                [TauValues] = brukertaus(BrukerParameters);
-            catch
-                TauValues = inputdlg('Tau-values could not be extracted. Input:');
-                TauValues = str2double(TauValues{1});     
-            end
+        end
+        
+        %If multiple files were loaded then the tau-values are in another array
+        if ~isempty(TauValuesVector)
+            TauValues = TauValuesVector;
+            TauSignals = TauSignalsVector;
         end
         
         TimeAxis1 = linspace(0,TimeStep1*size(TauSignals,2),size(TauSignals,2));
