@@ -218,6 +218,10 @@ for i=1:Size
     end
 end
 
+if iscell(Exp) && numel(Exp)==1
+    Exp = Exp{1};
+end
+    
 %Evaluate the spin system definition to get the Sys and Vary variables
 StringForEval = SpinSystemInput{1};
 try
@@ -225,6 +229,12 @@ try
         eval(StringForEval(i,:))
     end
 catch
+end
+
+if ~iscell(Exp)
+    tmp = Exp;
+    Exp = {};
+    Exp{1} = tmp;
 end
 
 %Check if any changes/additions to the Opt structure are requested
