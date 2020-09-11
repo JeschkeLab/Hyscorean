@@ -4156,14 +4156,12 @@ set(ExperimentalInset1,'YData',Data_cut)
 
 %Apply weighting to all other experimental spectra
 FitData.WeightsMap = WeightsMap;
-for i=1:length(FitData.UnweightedExpSpecScaled)
-    WeightedExpSpectrum = FitData.UnweightedExpSpecScaled{i}.*WeightsMap;
+WeightedExpSpectrum = FitData.UnweightedExpSpecScaled{FitData.CurrentSpectrumDisplay}.*WeightsMap;
 WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
-    FitData.ExpSpecScaled{i} = WeightedExpSpectrum;
-    WeightedExpSpectrum = FitData.UnweightedExpSpec{i}.*WeightsMap;
+FitData.ExpSpecScaled{FitData.CurrentSpectrumDisplay} = WeightedExpSpectrum;
+WeightedExpSpectrum = FitData.UnweightedExpSpec{FitData.CurrentSpectrumDisplay}.*WeightsMap;
 WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
-    FitData.ExpSpec{i} = WeightedExpSpectrum;
-end
+FitData.ExpSpec{FitData.CurrentSpectrumDisplay} = WeightedExpSpectrum;
 
 return
 %==========================================================================
