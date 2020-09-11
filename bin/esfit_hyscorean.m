@@ -1351,7 +1351,12 @@ try
         SpectraConfined = {};
         SpectraExcluded = {};
         EasySpinInfo = easyspininfo;
-        EasySpinVersion = EasySpinInfo.Version;
+        try
+            % Version request this way exists from 6.0.0 beyond
+            EasySpinVersion = EasySpinInfo.Version;
+        catch
+            EasySpinVersion = 5;
+        end
         %Loop over all field positions (i.e. different files/spectra)
         parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
             
@@ -1437,7 +1442,7 @@ try
             % (SimSystems{s}.weight is taken into account in the simulation function)
             BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
             if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
-                BestSpecScaled{Index} = reshape(BestSpecScaled{Index},size(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
+                BestSpecScaled{Index} = reshape(BestSpecScaled{Index},size(FitData.ExpSpec{Index},1),size(FitData.ExpSpec{Index},2));
             end
             BestSpec{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpec{Index},FitOpts.Scaling);
             if length(FitData.ExpSpec)~=BestSpec{Index}
@@ -1612,8 +1617,12 @@ SpectraConfined = {};
 SimulationNotSuccesful = true;
 
 EasySpinInfo = easyspininfo;
-EasySpinVersion = EasySpinInfo.Version;
-
+try
+    % Version request this way exists from 6.0.0 beyond
+    EasySpinVersion = EasySpinInfo.Version;
+catch
+    EasySpinVersion = 5;
+end
 while SimulationNotSuccesful
     
     %Loop over all field positions (i.e. different files/spectra)
