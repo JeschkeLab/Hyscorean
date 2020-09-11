@@ -114,7 +114,7 @@ end
 MaxDimension = max(SpectrumDimensions);
 for Index = 1:numSpec
   if SpectrumDimensions2(Index)<max(SpectrumDimensions2)
-    Opt{Index}.ZeroFillFactor = Opt{SpectrumDimensions2 == max(SpectrumDimensions2)}.ZeroFillFactor;
+    Opt{Index}.ZeroFillFactor = Opt{find(SpectrumDimensions2 == max(SpectrumDimensions2),1)}.ZeroFillFactor;
     ZeroFilling = MaxDimension - SpectrumDimensions(Index);
     Opt{Index}.TimeStepFactor = SpectrumDimensions(Index)/(SpectrumDimensions(Index) + ZeroFilling);
     ZeroFilledSpectrum = zeros(SpectrumDimensions(Index) + ZeroFilling, SpectrumDimensions(Index) + ZeroFilling);
