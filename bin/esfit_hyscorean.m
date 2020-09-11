@@ -1385,7 +1385,7 @@ try
             %Use same apodization window as experimental data
             tdx = apodizationWin(tdx,FitData.SimOpt{Index}.WindowType,FitData.SimOpt{Index}.WindowDecay1,FitData.SimOpt{Index}.WindowDecay2);
             %Fourier transform with same zerofilling as experimental data
-            Spectrum = fftshift(fft2(tdx,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints,FitData.SimOpt{Index}.ZeroFillFactor*FitData.Exp{Index}.nPoints));
+            Spectrum = fftshift(fft2(tdx,size(ExpSpec{Index},1),size(ExpSpec{Index},2)));
             %Symmetrize the spectrum if needed
             switch FitData.SimOpt{Index}.Symmetrization
                 case 'Diagonal'
@@ -1437,7 +1437,7 @@ try
             % (SimSystems{s}.weight is taken into account in the simulation function)
             BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
             if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
-                BestSpecScaled{Index} = reshape(BestSpecScaled{Index},length(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
+                BestSpecScaled{Index} = reshape(BestSpecScaled{Index},size(FitData.ExpSpec{Index}),length(FitData.ExpSpec{Index}));
             end
             BestSpec{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpec{Index},FitOpts.Scaling);
             if length(FitData.ExpSpec)~=BestSpec{Index}
@@ -1650,7 +1650,7 @@ while SimulationNotSuccesful
         %Use same apodization window as experimental data
         tdx = apodizationWin(tdx,SimOpt{Index}.WindowType,SimOpt{Index}.WindowDecay1,SimOpt{Index}.WindowDecay2);
         %Fourier transform with same zerofilling as experimental data
-        Spectrum = fftshift(fft2(tdx,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints,SimOpt{Index}.ZeroFillFactor*Exp{Index}.nPoints));
+        Spectrum = fftshift(fft2(tdx,size(ExpSpec{Index},1),size(ExpSpec{Index},2)));
         switch SimOpt{Index}.Symmetrization
             case 'Diagonal'
                 Spectrum = (Spectrum.*Spectrum').^0.5;
@@ -1699,10 +1699,6 @@ while SimulationNotSuccesful
         %   Spectrum = Spectrum.*FitData.WeightsMap;
         Spectrum = Spectrum/max(max(abs(Spectrum)));
         simspec{Index} = Spectrum;
-        
-        % Scale simulated spectrum to experimental spectrum
-        %   simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},ScalingOption);
-        simspec{Index}  = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
         
         %Compute the RMSD for this simulation
         rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
@@ -4162,10 +4158,10 @@ set(ExperimentalInset1,'YData',Data_cut)
 FitData.WeightsMap = WeightsMap;
 for i=1:length(FitData.UnweightedExpSpecScaled)
     WeightedExpSpectrum = FitData.UnweightedExpSpecScaled{i}.*WeightsMap;
-    WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
+WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
     FitData.ExpSpecScaled{i} = WeightedExpSpectrum;
     WeightedExpSpectrum = FitData.UnweightedExpSpec{i}.*WeightsMap;
-    WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
+WeightedExpSpectrum = WeightedExpSpectrum/max(max(abs(WeightedExpSpectrum)));
     FitData.ExpSpec{i} = WeightedExpSpectrum;
 end
 
