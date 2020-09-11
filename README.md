@@ -13,11 +13,11 @@ Requirements
 
 The following programs/packages are required in order to run Hyscorean:
 
- * MATLAB *(required)*
+ * MATLAB 2016b-2019b *(required)*
  * Report Generator *(optional)*
  * Parallel Computing Toolbox *(optional)*
  * Image Processing Toolbox *(optional)*
- * Easyspin (optional)
+ * Easyspin 5.2 -6.0 (optional)
  
  *(required)* - Required for running minimal functionality <br>
  *(optional)* - Required for additional functionality
