@@ -7,17 +7,19 @@ if isfield(BrukerParameters,'PlsSPELPrgTxt')
     %--------------------------------------------------------------
     
     %Extract the PulseSpel code for the experiment
+    PulseSpelExp = BrukerParameters.PlsSPELEXPSlct;
     PulseSpelProgram = BrukerParameters.PlsSPELPrgTxt;
+    %Find Indices to only scan executed PulseSpel experiment
+    ProgStartIndex = strfind(PulseSpelProgram,PulseSpelExp);
+    ProgEndIndex = ProgStartIndex -1 + strfind(PulseSpelProgram(ProgStartIndex:end),'end exp');
     %Identify the tau definition lines
-    TauDefinitionIndexes = strfind(PulseSpelProgram,'d1=');
+    TauDefinitionIndexes = ProgStartIndex -1 + strfind(PulseSpelProgram(ProgStartIndex:ProgEndIndex),'d1=');
+    if isempty(TauDefinitionIndexes)
+        TauDefinitionIndexes = ProgStartIndex -1 + strfind(PulseSpelProgram(ProgStartIndex:ProgEndIndex),'d1 = ');
+    end
     %Extract the tau-values
     for i=1:length(TauDefinitionIndexes)
-        Shift = 3;
-        while ~isspace(PulseSpelProgram(TauDefinitionIndexes(i) + Shift))
-            TauString(Shift - 2) =  PulseSpelProgram(TauDefinitionIndexes(i) + Shift);
-            Shift = Shift + 1;
-        end
-        TauValues(i)  = str2double(TauString);
+        TauValues(i) = sscanf(PulseSpelProgram(TauDefinitionIndexes(i):TauDefinitionIndexes(i)+10),'d1%*[ =]%d');
     end
     
     if ~exist('TauValues')
