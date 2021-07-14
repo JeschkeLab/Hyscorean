@@ -1709,6 +1709,10 @@ while SimulationNotSuccesful
         Spectrum = Spectrum/max(max(abs(Spectrum)));
         simspec{Index} = Spectrum;
         
+        % rescale spectrum before RMSD computation
+        simspec{Index} = rescale_mod(simspec{Index},ExpSpec{Index},ScalingOption);
+        simspec{Index} = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
+        
         %Compute the RMSD for this simulation
         rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
         rmsd = rmsd + rmsd_individual{Index};
