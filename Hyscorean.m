@@ -224,6 +224,13 @@ set(handles.MultiTauDimensions,'enable','on');
 set(handles.MultiTauDimensions,'Value',1)
 set(handles.MultiTauDimensions,'String',handles.Selections);
 
+%Set Freq. Axis Limit
+XUpperLimit_dt = handles.Data.TimeStep1;
+if XUpperLimit_dt ~= 0
+    XUpperLimit = round(1/(2*XUpperLimit_dt)/10)*10;
+    set(handles.XUpperLimit,'String',num2str(XUpperLimit));
+end
+
 %Set the edit boxes depending on the signal size to the corresponding value
 set(handles.ZeroFilling1,'String',size(handles.Data.TauSignals,2));
 set(handles.ZeroFilling2,'String',size(handles.Data.TauSignals,3));
