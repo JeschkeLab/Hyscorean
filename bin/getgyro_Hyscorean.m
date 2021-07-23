@@ -1,9 +1,7 @@
-function gyromagneticRatio = getgyro_Hyscorean(NucleifromList)
+function gyromagneticRatio = getgyro_Hyscorean(NucleifromList, IsotopeTags)
 %Gyromagnetic ratios in MHz/T
 
-load isotopesData
-
-gyromagneticRatio = gvalues(NucleifromList); 
+gyromagneticRatio = IsotopeTags(NucleifromList).gn;
 
 gyromagneticRatio = 5.050783746100000e-27*abs(gyromagneticRatio)/planck/1e6;
 
