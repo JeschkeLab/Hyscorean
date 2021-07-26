@@ -11,6 +11,9 @@ if isfield(BrukerParameters,'PlsSPELPrgTxt')
     PulseSpelProgram = BrukerParameters.PlsSPELPrgTxt;
     %Find Indices to only scan executed PulseSpel experiment
     ProgStartIndex = strfind(PulseSpelProgram,PulseSpelExp);
+    if isempty(ProgStartIndex) % in case exp. name is not defined in PulseSpel
+        ProgStartIndex = 1;
+    end
     ProgEndIndex = ProgStartIndex -1 + strfind(PulseSpelProgram(ProgStartIndex:end),'end exp');
     %Identify the tau definition lines
     TauDefinitionIndexes = ProgStartIndex -1 + strfind(PulseSpelProgram(ProgStartIndex:ProgEndIndex),'d1=');

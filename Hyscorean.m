@@ -135,7 +135,7 @@ function LoadButton_Callback(hObject, eventdata, handles)
 %Inform the user that loading is under progress
 set(handles.LoadedData, 'String', 'Loading...');drawnow;
 
-%ASk the user to load the files via OS window
+%Ask the user to load the files via OS window
 [handles.FileNames,handles.FilePaths,CancelFlag] = multiload_mod;
 
 %If laoding canceled just break the function
@@ -223,6 +223,13 @@ TauValues = handles.Data.TauValues;
 set(handles.MultiTauDimensions,'enable','on');
 set(handles.MultiTauDimensions,'Value',1)
 set(handles.MultiTauDimensions,'String',handles.Selections);
+
+%Set Freq. Axis Limit
+XUpperLimit_dt = handles.Data.TimeStep1;
+if XUpperLimit_dt ~= 0
+    XUpperLimit = round(1/(2*XUpperLimit_dt)/10)*10;
+    set(handles.XUpperLimit,'String',num2str(XUpperLimit));
+end
 
 %Set the edit boxes depending on the signal size to the corresponding value
 set(handles.ZeroFilling1,'String',size(handles.Data.TauSignals,2));
@@ -781,7 +788,7 @@ return
 %==========================================================================
 function AddHelpLine_Callback(hObject, eventdata, handles)
 %Get gyromagnetic ratio from selected nuclei
-gyromagneticRatio = getgyro_Hyscorean(get(handles.AddTagList,'Value'));
+gyromagneticRatio = getgyro_Hyscorean(get(handles.AddTagList,'Value'),handles.IsotopeTags);
 %Get center field in gauss
 try
   if isfield(handles.Data,'BrukerParameters')
@@ -868,18 +875,22 @@ function AddTagList_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
   set(hObject,'BackgroundColor','white');
 end
-load isotopesdata
-set(hObject,'string',names);
 
-Names = get(hObject,'string');
-Colors = white(length(Names))-1;
-for i=1:length(Names)
-  
-  Position1 = strfind(Names{i},num2str(i));
-  
-  IsotopeTags(i).isotope = Names{i}(Position1:end);
-  IsotopeTags(i).name = Names{i}(1:Position1-1);
-  IsotopeTags(i).Color =  uint8(Colors(i,:) * 255 + 0.5);
+data = ReadDataTable_Hyscorean;
+
+set(hObject,'string',data.Element);
+
+data.Element = get(hObject,'string');
+Colors = white(length(data.Element))-1;
+j = 1;
+for i=1:length(data.Element)
+    if (data.Spin(i) ~= 0) && (data.Nucleons(i) ~= 0)
+        IsotopeTags(j).isotope = num2str(data.Nucleons(i));
+        IsotopeTags(j).name = data.Element{i};
+        IsotopeTags(j).Color =  uint8(Colors(i,:) * 255 + 0.5);
+        IsotopeTags(j).gn = data.gn(i);
+        j = j + 1;
+    end
 end
 
 ListBoxStrings = cell(numel( IsotopeTags ),1);
@@ -1151,7 +1162,7 @@ return
 
 %==========================================================================
 function ZoomButton_Callback(hObject, eventdata, handles)
-zoom
+zoom on
 return
 %==========================================================================
 

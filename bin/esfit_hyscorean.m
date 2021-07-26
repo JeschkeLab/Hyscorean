@@ -1438,7 +1438,7 @@ try
             %Weight the simulated spectrum
             %   Spectrum = Spectrum.*FitData.WeightsMap;
             Spectrum = Spectrum/max(max(abs(Spectrum)));
-            BestSpec{Index} = Spectrum;
+            BestSpec{Index} = abs(Spectrum);
             % (SimSystems{s}.weight is taken into account in the simulation function)
             BestSpecScaled{Index} = rescale_mod(BestSpec{Index},FitData.ExpSpecScaled{Index},FitOpts.Scaling);
             if length(FitData.ExpSpec{Index})~=BestSpecScaled{Index}
@@ -1708,6 +1708,10 @@ while SimulationNotSuccesful
         %   Spectrum = Spectrum.*FitData.WeightsMap;
         Spectrum = Spectrum/max(max(abs(Spectrum)));
         simspec{Index} = Spectrum;
+        
+        % rescale spectrum before RMSD computation
+        simspec{Index} = rescale_mod(abs(simspec{Index}),ExpSpec{Index},ScalingOption);
+        simspec{Index} = reshape(simspec{Index},length(ExpSpec{Index}),length(ExpSpec{Index}));
         
         %Compute the RMSD for this simulation
         rmsd_individual{Index} = norm(simspec{Index} - ExpSpec{Index})/sqrt(numel(ExpSpec{Index}));
