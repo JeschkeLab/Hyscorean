@@ -1122,7 +1122,12 @@ elseif isfield(handles.Data,'AWG_Parameters')
   FirstPulseLength = handles.Data.AWG_Parameters.events{1}.pulsedef.tp/1000;
 end
 %Set the excitation bandwidth [GHz] to the inverse of the first pulse employed
-Exp.ExciteWidth = 1/FirstPulseLength;
+if isnan(FirstPulseLength)
+    warning('Could not read pulse length from descriptor file. Assuming infinite excitation bandwidth.')
+    Exp.ExciteWidth = 1e9
+else
+    Exp.ExciteWidth = 1/FirstPulseLength;
+end
 %Compute the corrected magnetic field [mT]
 Offset = str2double(get(handles.FieldOffset,'string'));
 Exp.Field = Exp.Field + 0.1*Offset;
@@ -1141,7 +1146,7 @@ if ~iscell(handles.FilePaths.Files)
 else
   Opt.FilePaths = handles.FilePaths.Path;
 end
-Opt.nKnots = 181;
+Opt.GridSize = 181;
 Opt.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 Opt.FreqLim = str2double(get(handles.XUpperLimit,'string'));
 Opt.WindowType = handles.WindowTypeString;
@@ -1462,6 +1467,5 @@ if get(hObject,'value')
 end
 
 return
-%==========================================================================
-=======
-=======
+%==============================================================================
+
