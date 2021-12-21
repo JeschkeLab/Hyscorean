@@ -83,7 +83,12 @@ for Index = 1:numSpec
     Exp{Index}.mwFreq = DataForFitting.mwFreq;
   end
   %Knots set to this minimum to ensure good fits of highly anysotropic spectra
-  Opt{Index}.nKnots = 181;
+  %JS nKnots does not work for the newest Easyspin version for saffron anymore
+  if isfield(InputSystem, 'Opt.GridSize')
+    Opt{Index}.GridSize = InputSystem.Opt.GridSize; 
+  else
+    Opt{Index}.GridSize = 181;
+  end
   
   %Fill known signal processing parameters
   Opt{Index}.ZeroFillFactor = DataForFitting.ZeroFillFactor;

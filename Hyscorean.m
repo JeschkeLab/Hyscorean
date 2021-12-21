@@ -1141,7 +1141,7 @@ if ~iscell(handles.FilePaths.Files)
 else
   Opt.FilePaths = handles.FilePaths.Path;
 end
-Opt.nKnots = 181;
+Opt.GridSize = 181;
 Opt.ZeroFillFactor = length(handles.Processed.Signal)/length(handles.Data.PreProcessedSignal);
 Opt.FreqLim = str2double(get(handles.XUpperLimit,'string'));
 Opt.WindowType = handles.WindowTypeString;
