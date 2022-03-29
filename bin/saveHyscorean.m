@@ -227,8 +227,9 @@ if getpref('hyscorean','reportlicense')
         reportdata.NbScansDone = Param.NbScansDone;
         reportdata.VideoGain = Param.VideoGain;
         reportdata.VideoBandwidth = Param.VideoBandwidth;
-    end
     
+ 
+	
     if handles.Data.NUSflag
         reportdata.XDimension = handles.Data.NUS.Dimension1;
         reportdata.YDimension = handles.Data.NUS.Dimension2;
@@ -238,6 +239,8 @@ if getpref('hyscorean','reportlicense')
         reportdata.YDimension = BrukerParameters.YPTS;
         reportdata.NUSflag = false;
     end
+	
+	end									   
     
 
 %Get AWG spectrometer-specific parameters and variables
