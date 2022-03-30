@@ -17,11 +17,11 @@ function Blindspot_simulator(FrequencyAxis1,FrequencyAxis2,Spectrum,SpecLim)
 % the Free Software Foundation.
 %==========================================================================
 %Check inputs
-if nargin<2
+if nargin<3
   Spectrum = nan(length(FrequencyAxis1),length(FrequencyAxis2));
   warning('off','all')
 end
-if nargin<3
+if nargin<4
   SpecLim = max(FrequencyAxis1);
 end
 TauValues = []; 
