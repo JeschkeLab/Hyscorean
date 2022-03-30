@@ -1101,7 +1101,13 @@ return
 
 %==========================================================================
 function BlindSpotsSimulator_Callback(hObject, eventdata, handles)
-Blindspot_simulator(handles.Processed.axis1,handles.Processed.axis2,handles.Processed.spectrum,str2double(get(handles.XUpperLimit,'string')))
+if isfield(handles,'Processed')
+    Blindspot_simulator(handles.Processed.axis1,handles.Processed.axis2,handles.Processed.spectrum,str2double(get(handles.XUpperLimit,'string')))
+else
+    xaxis = linspace(handles.mainPlot.XLim(1),handles.mainPlot.XLim(2));
+    yaxis = linspace(handles.mainPlot.YLim(1),handles.mainPlot.YLim(2));
+    Blindspot_simulator(xaxis,yaxis)
+end
 return
 %==========================================================================
 

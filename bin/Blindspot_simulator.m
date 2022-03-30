@@ -46,23 +46,25 @@ else
   clf(Figure);
 end
 set(gcf,'NumberTitle','off','Name','HYSCORE Blind spot simulator','Position',[Position(1) Position(2) 985 445])
-%Contruct slider
+%Construct slider
 SliderHandle = uicontrol('units','normalized','tag','slider','position',[0.04 0.08 0.025 0.90],'Style','slider','value',100,...
-                    'min',100,'max',350,'sliderstep',[1/250 1/250],'callback',{@BlindspotsSpoter});
+                    'min',80,'max',350,'sliderstep',[1/270 1/270],'callback',{@BlindspotsSpoter});
 %Construct pushbutton
 uicontrol('units','normalized','string','Add Tau','position',[0.015 0.01 0.08 0.06],...
           'Style','pushbutton','callback',{@addTau,SliderHandle});
 
-%Construct pushbutton
-uicontrol('units','normalized','string','Overlap experimental spectrum','position',[0.1 0.01 0.25 0.06],...
-          'Style','checkbox','Tag','displaySpectrum','callback',{@BlindspotsSpoter,SliderHandle});        
+%Construct pushbutton (only if experimental spectrum is loaded)
+if nargin > 2
+    uicontrol('units','normalized','string','Overlap experimental spectrum','position',[0.1 0.01 0.25 0.06],...
+          'Style','checkbox','Tag','displaySpectrum','callback',{@BlindspotsSpoter,SliderHandle});   
+end
       
 %Plot the experimental contour spectrum already and just make it (in)-visible later
 [~,ContourHandle] = contour(SimData.FrequencyAxis1,SimData.FrequencyAxis2,SimData.Spectrum,40,'LineWidth',1,'Color','k');
 SimData.ConoturHandle =  ContourHandle;
 
 %Plot with lowest tau value to construct and initialize the plot
-FirstTauValue = 100/1000;
+FirstTauValue = 80/1000;
 BlindSpotsAxis1 = linspace(min(SimData.FrequencyAxis1),max(SimData.FrequencyAxis1),80);
 BlindSpotsAxis2 = linspace(min(SimData.FrequencyAxis2),max(SimData.FrequencyAxis2),80);
 Dimension1 = length(BlindSpotsAxis1);
