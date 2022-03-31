@@ -46,6 +46,7 @@ function output = uwb_eval( arg1, arg2 )
 %                           further processing.
 %   options.find_echo:      Wether (1) or not (0) to search for the echo
 %                           window. 
+%   options.echopos:        Use fixed echo position. Requires find_echo = 0
 %   options.ref_echo:       Automatic search of the echo window and phasing
 %                           of data is performed based on the echo at
 %                           datapoint ref_echo. UWB_EVAL chooses ref_echo
@@ -364,6 +365,7 @@ for ii=1:length(RawData)
     
     % Truncate data according to range of echo 
     TruncatedData = RawData{ii}(EchoMaxRange,:);
+
     % Calculate analytical signal by Hilbert transform
     HilbertData = conj(hilbert(TruncatedData));
 
@@ -472,6 +474,9 @@ for ii=1:length(RawData)
         if isfield(options,'find_echo') && options.find_echo == 0
             e_idx = floor(size(DownconvertedData,1)/2);
         end
+        if isfield(options,'echopos') && isfield(options,'find_echo') && options.find_echo == 0
+            e_idx = options.echopos;
+        end
         
         % here the final range...
         RangeEcho = (e_idx-WindowLength/2+1:e_idx+WindowLength/2).';
@@ -519,6 +524,8 @@ for ii=1:length(RawData)
     DataAveraged(1:WindowLength,:,:) = DataAveraged(1:WindowLength,:,:) + bsxfun(@times,DownconvertedData(RangeEcho,:,:),exp(-1i*CorrectionPhase));
     
 end
+
+
 % keyboard
 % flip back 2D data?
 if flipback
