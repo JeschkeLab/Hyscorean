@@ -1168,13 +1168,26 @@ return
 
 %==========================================================================
 function ZoomButton_Callback(hObject, eventdata, handles)
-zoom on
+z = zoom;
+z.ActionPostCallback = {@zoompostcallback,eventdata,handles};
+z.Enable = 'On';
 return
 %==========================================================================
 
 %==========================================================================
+function zoompostcallback(hObject,~,eventdata,handles)
+xax = get(handles.mainPlot,'XLim');
+yax = get(handles.mainPlot,'YLim');
+if yax(1) < 0
+    yax(1) = 0.0;
+end
+set(handles.mainPlot,'YLim',yax);
+return												  							   
+%==========================================================================
+
+%==========================================================================
 function ZoomOutButton_Callback(hObject, eventdata, handles)
-zoom off
+z.Enable = 'Off';
 Upperlimit = str2double(get(handles.XUpperLimit,'string'));
 set(handles.mainPlot,'xlim',[-Upperlimit Upperlimit],'ylim',[0 Upperlimit])
 return
