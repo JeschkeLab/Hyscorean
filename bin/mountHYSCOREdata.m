@@ -361,6 +361,12 @@ switch FileExtension
         %Integrate the echos
         options.status = handles.ProcessingInfo;
         [IntegratedData] = integrateEcho(DataForInegration,'gaussian',options);
+        if isnan(IntegratedData)
+            h = warndlg({'Default gaussian echo integration failed.',...
+            ' Switching to boxcar echo integration.'},'Warning');
+            waitfor(h);
+            [IntegratedData] = integrateEcho(DataForInegration,'boxcar',options); % use boxcar if gaussian fails
+        end
         
         %Restructure the integrated data by sorting to corresponding taus
         [Dimension1,Dimension2] = size(IntegratedData.Integral);

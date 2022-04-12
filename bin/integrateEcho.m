@@ -3,7 +3,7 @@ function [Data] = integrateEcho(Data,Integration,options)
 % Hyscorean Detached Signal Monitoring 
 %==========================================================================
 % This function is responsible for integrating the echoes obtained from 
-% echo-dtected experiments. The echoes can be integrated directly by boxcar
+% echo-detected experiments. The echoes can be integrated directly by boxcar
 % integration or by fitting a gaussian to the echo and integrating the echo
 % multiplied with the fit.
 % In Hyscorean this method is used for integrating echoes detected on the
@@ -59,7 +59,14 @@ switch Integration
     AverageEchoFitted = zeros(size(AverageEcho));
     FitTimeAxis = EchoAxis(TimeIndex:end - TimeIndex);
     FitData = abs(squeeze(AverageEcho(TimeIndex:end - TimeIndex,Pos,Pos2)));
-    GaussianWindow = fit(FitTimeAxis,FitData,'gauss1');
+    try
+        GaussianWindow = fit(FitTimeAxis,FitData,'gauss1');
+    catch err_message
+        warning('Gaussian integration failed, returning to switch to boxcar integration.');
+        Data = NaN;
+        return;
+    end
+    
     %Normalize window
     GaussianWindow = GaussianWindow(EchoAxis)/max(GaussianWindow(EchoAxis));
     %Apply to first echo
