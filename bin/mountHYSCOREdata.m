@@ -1,4 +1,3 @@
-
 function MountedData = mountHYSCOREdata(FileNames,handles)
 %==========================================================================
 % Hyscorean Mounter
@@ -212,6 +211,7 @@ switch FileExtension
         MountedData.TimeStep2 = TimeStep2;
         MountedData.TimeAxis1 = TimeAxis1;
         MountedData.TimeAxis2 = TimeAxis2;
+        MountedData.exptype = 'HYSCORE';
         if NUSflag
             MountedData.NUSgrid = NUSgrid;
             MountedData.NUS.SamplingDensity  = SamplingDensity;
@@ -227,51 +227,74 @@ switch FileExtension
         % AWG Spectrometer Files
         %------------------------------------------------------------------------
     case '.mat'
+        
+        %Initiate the status bar in the Hyscorean gui
+        set(handles.ProcessingInfo, 'String','Status: Checking data...'); drawnow;
+      
+        
         NFiles = length(str2double(FileNames));
         %Preallocate first time axis vector
         TimeAxis1 = zeros(NFiles,1);
         % Preprocess measurement data of first file with uwb_eval and set up data container
         Measurement = load(FileNames{1});
-        %Check if data is NUS and proceed
-        if isfield(Measurement.hyscore,'NUS')
+        expstruct = eval(append('Measurement.',Measurement.expname));
+        
+        
+        % Check if data is NUS and proceed
+        if isfield(expstruct,'NUS')
             isNUS = true;
         else
             isNUS = false;
             MountedData.NUSflag = isNUS;
         end
         
+        
+        % Evaluate experiment type and set up the time axis
         if isNUS
             %Extract time axes directly from the sampling grid
-            TimeAxis1 = Measurement.hyscore.NUS.t1Timings;
-            TimeAxis2 = Measurement.hyscore.NUS.t2Timings;
-            SamplingGrid = Measurement.hyscore.NUS.SamplingGrid;
-        else
+            exptype = '4pHYSCORE NUS';
+            TimeAxis1 = expstruct.NUS.t1Timings;
+            TimeAxis2 = expstruct.NUS.t2Timings;
+            SamplingGrid = expstruct.NUS.SamplingGrid; 
+        elseif length(expstruct.events) > 5 % case for 6pHYSCORE
             %Get timings and set up t_2 axis and zero time
-            TimeAxis2 = (Measurement.hyscore.parvars{2}.axis - Measurement.hyscore.deadtime); % adjust t_2 axis to zero time
-            TimeAxis1(1) = Measurement.hyscore.events{3}.t - Measurement.hyscore.hyscore_t1.strt(1);  % first element of t1 vector from file name
+            exptype = '6pHYSCORE';
+            TimeAxis2 = expstruct.parvars{2}.axis;                          % adjust t_2 axis to zero time
+            TimeAxis1(1) = expstruct.events{4}.t - expstruct.events{3}.t;   % first element of t1 vector from file name
+        else                                % case for 4pHYSCORE
+            %Get timings and set up t_2 axis and zero time
+            exptype = '4pHYSCORE';
+            TimeAxis2 = expstruct.parvars{2}.axis;                          % adjust t_2 axis to zero time
+            TimeAxis1(1) = expstruct.events{3}.t - expstruct.events{2}.t;   % first element of t1 vector from file name
         end
+        % --- Note: other HYSCORE variants need to be established here ---
+ 
         
         % Evaluate data from the AWG spectrometer
         options.plot = 0;
-        OutputUWB = uwb_eval(FileNames{1},options);
+        OutputUWB = uwb_eval(FileNames{1},options);                     
+        [Dimension3, Dimension2] = size(OutputUWB.dta_avg);             % Dimension3: echo axis size, Dimension2: t2 axis size
+        EchoAxis = OutputUWB.t_ax;                                      % time axis of echo
+        TauValues = zeros(1,NFiles);                                    
+        TauValues(1) = expstruct.events{2}.t;                           % Get tau value of first file
+        TimeAxis2array = zeros(NFiles,Dimension2);
+        TimeAxis2array(1,:) = TimeAxis2;
         
-        [Dimension1, Dimension2] = size(OutputUWB.dta_avg);
-        % Get time axis of echo
-        EchoAxis = OutputUWB.t_ax;
-        %Get first tau value
-        TauValues = zeros(1,NFiles);
-        TauValues(1) = Measurement.hyscore.tau;
-        
-        set(handles.ProcessingInfo, 'String','Status: Checking data...'); drawnow;
-        % Check consistency of echo dimension and get tau values
+        % Check consistency of echo dimension, get tau values and t1-axis position for each file
         for iFile = 2:NFiles
             OutputUWB = uwb_eval(FileNames{iFile},options);
-            if Dimension1 > size(OutputUWB.dta_avg,1)
-                %If a file should contain fewer points, reduce dimension
-                Dimension1 = size(OutputUWB.dta_avg,1);
+            if Dimension3 > size(OutputUWB.dta_avg,1)
+                Dimension3 = size(OutputUWB.dta_avg,1);                 % If the echo axis has fewer points, reduce Dimension3
             end
-            %Get current tau value
-            TauValues(iFile) = OutputUWB.exp.tau;
+            TauValues(iFile) = OutputUWB.exp.events{2}.t;               % Get current tau value
+            TimeAxis2array(iFile,:) = OutputUWB.exp.parvars{2}.axis;
+            % Get the position of the trace in the t1-dimension
+            if exptype == '6pHYSCORE'       % 6pHYSCORE
+                TimeAxis1(iFile) = OutputUWB.exp.events{4}.t - OutputUWB.exp.events{3}.t;      
+            else                            % 4pHYSCORE (with and without NUS)
+                TimeAxis1(iFile) = OutputUWB.exp.events{3}.t - OutputUWB.exp.events{2}.t;
+            end
+            % ---- Note: other HYSCORE variants need to be implemented here -----
         end
         %Get unique tau values and folding factor
         UniqueTaus = unique(TauValues);
@@ -501,6 +524,7 @@ switch FileExtension
         MountedData.NUSgrid = NUSgrid;
         MountedData.NUSflag = NUSflag;
         MountedData.isNotIntegrated  = false;
+        MountedData.exptype = 'HYSCORE';
         
     otherwise
         error('Unvalid extension: Please check your loaded files. Allowed extensions: .DSC .DTA .mat .txt')
