@@ -51,9 +51,9 @@ Data = handles.Data;
 %Get the combination of tau-values chosen by user
 TauIndexes  = handles.Data.Combinations(CombinationsSelection,:);
 handles.currentTaus = handles.Data.TauValues(TauIndexes(TauIndexes~=0));
-if isfield(handles.Data.correctprocessing)
+if isfield(handles.Data, 'correctprocessing')
     if handles.Data.correctprocessing == false
-    warndlg('Inconsistent time axis for different tau-values can lead to incorrect FT of echo data','warning');
+        warndlg('Inconsistent time axis for different tau-values can lead to incorrect FT of echo data','warning');
     end
 end
 handles.currentIndexes = TauIndexes(TauIndexes~=0);
