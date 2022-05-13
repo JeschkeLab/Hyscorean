@@ -51,6 +51,9 @@ Data = handles.Data;
 %Get the combination of tau-values chosen by user
 TauIndexes  = handles.Data.Combinations(CombinationsSelection,:);
 handles.currentTaus = handles.Data.TauValues(TauIndexes(TauIndexes~=0));
+if handles.Data.correctprocessing == false
+    warndlg('Inconsistent time axis for different tau-values can lead to incorrect FT of echo data','warning');
+end
 handles.currentIndexes = TauIndexes(TauIndexes~=0);
 %If first time or user has changed selection then continue
 if handles.TauSelectionSwitch
@@ -63,9 +66,10 @@ if handles.TauSelectionSwitch
   for TauIndex = 1:length(handles.currentTaus)
     CurrentTauIntegral = squeeze(Data.TauSignals(handles.currentIndexes(TauIndex),:,:));
     %Combine signals in time-domain
-    Data.Integral  = Data.Integral  + CurrentTauIntegral/max(max(CurrentTauIntegral));
+    %Data.Integral  = Data.Integral  + CurrentTauIntegral/max(max(CurrentTauIntegral));
+    Data.Integral  = Data.Integral  + CurrentTauIntegral;
   end
-  %Cosntruct appropiate time axis
+  %Construct appropiate time axis
   Data.TimeAxis1 = linspace(0,Data.TimeStep1*size(Data.Integral,1),size(Data.Integral,1));
   Data.TimeAxis2 = linspace(0,Data.TimeStep2*size(Data.Integral,2),size(Data.Integral,2));
   %Set tau selection icon to check
