@@ -10,7 +10,8 @@ function output = uwb_eval( arg1, arg2 )
 %
 % The output is a structure of the following form:
 %   output.dta_ev:          Integrated echo transients
-%   output.dta_avg:         Full echo transient, all averages combined
+%   output.dta_avg:         Full echo transient, all averages combined, but
+%                           downconverted with LO
 %   output.nAvgs:           number of averages of experiment
 %   output.dta_x:           Cell of indirect dimensions of the experiment
 %   output.t_ax:            Time axis of the echo transients
@@ -46,7 +47,6 @@ function output = uwb_eval( arg1, arg2 )
 %                           further processing.
 %   options.find_echo:      Wether (1) or not (0) to search for the echo
 %                           window. 
-%   options.echopos:        Use fixed echo position. Requires find_echo = 0
 %   options.ref_echo:       Automatic search of the echo window and phasing
 %                           of data is performed based on the echo at
 %                           datapoint ref_echo. UWB_EVAL chooses ref_echo
@@ -365,7 +365,6 @@ for ii=1:length(RawData)
     
     % Truncate data according to range of echo 
     TruncatedData = RawData{ii}(EchoMaxRange,:);
-
     % Calculate analytical signal by Hilbert transform
     HilbertData = conj(hilbert(TruncatedData));
 
@@ -524,8 +523,6 @@ for ii=1:length(RawData)
     DataAveraged(1:WindowLength,:,:) = DataAveraged(1:WindowLength,:,:) + bsxfun(@times,DownconvertedData(RangeEcho,:,:),exp(-1i*CorrectionPhase));
     
 end
-
-
 % keyboard
 % flip back 2D data?
 if flipback
@@ -541,16 +538,16 @@ output.t_ax = EchoTimeAxis;
 output.dta_ev = dta_ev;
 output.exp = estr;
 output.det_frq = DetectionFrequency;
-output.echopos = EchoPosition;
+output.echopos = e_idx;
 output.corr_phase = CorrectionPhase;
 output.dig_level = DigitizerLevel;
+output.evlen = WindowLength;
 
 plotresult = 1;
 if isfield(options,'plot')
     plotresult = options.plot;
 end
     
-
 if plotresult
     if ExperimentDimensions == 1
         figure(1); clf; pcolor(output.t_ax,output.dta_x{1},real(output.dta_avg).'); shading flat
