@@ -267,7 +267,7 @@ end
 try
 set(handles.ProcessingInfo, 'String', 'Status: Processing...');drawnow;
 [handles] = processHYSCORE(handles);
-updateHyscoreanGUI(handles,handles.Processed)
+[handles] = updateHyscoreanGUI(handles,handles.Processed);
 catch Error  
   %Should some error occur inform the user and return
   w = errordlg(sprintf('The processing stopped due to an error : \n %s \n Please check your input. If this error persists restart the program.',Error.message),'Error','modal');
@@ -440,7 +440,7 @@ return
 
 %==========================================================================
 function XUpperLimit_Callback(hObject, eventdata, handles)
-updateHyscoreanGUI(handles,handles.Processed)
+[handles] = updateHyscoreanGUI(handles,handles.Processed)
 guidata(hObject, handles);
 return
 %==========================================================================
@@ -749,7 +749,7 @@ end
 
 set(handles.ProcessingInfo, 'String', 'Status: Rendering...');drawnow;
 try
-updateHyscoreanGUI(handles,handles.Processed)
+[handles] = updateHyscoreanGUI(handles,handles.Processed)
 catch
 end
 set(handles.ProcessingInfo, 'String', 'Status: Finished');drawnow;
@@ -780,7 +780,10 @@ return
 
 %==========================================================================
 function ImposeBlindSpots_Callback(hObject, eventdata, handles)
-updateHyscoreanGUI(handles,handles.Processed);
+if handles.Data.exptype == '6pHYSCORE'
+    warndlg('Blindspot simulation uses only 2nd tau-value of loaded 6pHYSCORE and gives blindspots of a 4pHYSCORE','warning');
+end
+[handles] = updateHyscoreanGUI(handles,handles.Processed);
 guidata(hObject, handles);
 return
 %==========================================================================
@@ -994,7 +997,7 @@ end
 if str2double(get(hObject,'String')) >= str2double(get(handles.MaximalContourLevel,'String'))
   set(hObject,'String',str2double(get(handles.MaximalContourLevel,'String'))-0.5)
 end
-updateHyscoreanGUI(handles,handles.Processed)  
+[handles] = updateHyscoreanGUI(handles,handles.Processed)  
 guidata(hObject, handles);
 return
 %==========================================================================
@@ -1007,7 +1010,7 @@ end
 if str2double(get(hObject,'String')) <= str2double(get(handles.MinimalContourLevel,'String'))
   set(hObject,'String',str2double(get(handles.MinimalContourLevel,'String'))+0.5)
 end
-updateHyscoreanGUI(handles,handles.Processed)  
+[handles] = updateHyscoreanGUI(handles,handles.Processed)  
 guidata(hObject, handles);
 return
 %==========================================================================
@@ -1102,7 +1105,10 @@ return
 %==========================================================================
 function BlindSpotsSimulator_Callback(hObject, eventdata, handles)
 if isfield(handles,'Processed')
-    Blindspot_simulator(handles.Processed.axis1,handles.Processed.axis2,handles.Processed.spectrum,str2double(get(handles.XUpperLimit,'string')))
+    if handles.Data.exptype == '6pHYSCORE'
+        warndlg('Blindspot simulation uses only 2nd tau-value of loaded 6pHYSCORE and gives blindspots of a 4pHYSCORE','warning');
+    end
+    Blindspot_simulator(handles.Processed.axis1,handles.Processed.axis2,handles.Processed.spectrum,str2double(get(handles.XUpperLimit,'string')),handles.Processed.ContourLevels);
 else
     xaxis = linspace(handles.mainPlot.XLim(1),handles.mainPlot.XLim(2));
     yaxis = linspace(handles.mainPlot.YLim(1),handles.mainPlot.YLim(2));
