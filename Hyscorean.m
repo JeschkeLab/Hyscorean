@@ -1113,6 +1113,9 @@ return
 
 %==========================================================================
 function EasyspinFitButton_Callback(hObject, eventdata, handles)
+if handles.Data.exptype == '6pHYSCORE'
+    warndlg('Fitting is programmed for 4P HYSCORE, fitting of loaded 6P HYSCORE might lead to errors','warning');
+end
 
 %Fill known experimental parameters
 Exp.Sequence = 'HYSCORE';
