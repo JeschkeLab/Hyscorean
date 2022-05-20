@@ -30,6 +30,7 @@ switch FileExtension
         
         %Prepare containers to temporarily allocate the data of the individual files
         TauValuesVector = [];
+        FirstTauValuesVector = [];
         TauSignalsVector = [];
         TimeStep1control = [];
         TimeStep2control = [];
@@ -132,6 +133,8 @@ switch FileExtension
                 TimeAxis1 = 0:TimeStep1:MaximalTiming1/1000;
                 TimeAxis2 = 0:TimeStep2:MaximalTiming1/1000;
                 
+                exptype = '4pHYSCORE NUS';
+                
             else
                 
                 % Uniform sampled data
@@ -165,9 +168,9 @@ switch FileExtension
                 end
                 
                 try
-                    [TauValues] = brukertaus(BrukerParameters);
+                    [TauValues,FirstTauValues,exptype] = brukertaus(BrukerParameters);
                 catch
-                    TauValues = inputdlg('Tau-values could not be extracted. Input:');
+                    TauValues = inputdlg('Tau-values could not be extracted. Input (only for 4P HYSCORE and 1 tau-value):');
                     TauValues = str2double(TauValues{1});
                 end
                 
@@ -188,6 +191,7 @@ switch FileExtension
                 
                 %Collect tau-values of multiple files
                 TauValuesVector(end+1:end+length(TauValues)) = TauValues;
+                FirstTauValuesVector(end+1:end+length(TauValues)) = FirstTauValues;
                 TauSignalsVector(end+1:end+size(TauSignals,1),:,:) =  TauSignals;
 
             end
@@ -197,6 +201,7 @@ switch FileExtension
         %If multiple files were loaded then the tau-values are in another array
         if ~isempty(TauValuesVector)
             TauValues = TauValuesVector;
+            FirstTauValues = FirstTauValuesVector;
             TauSignals = TauSignalsVector;
         end
         
@@ -206,12 +211,15 @@ switch FileExtension
         %Construct output structure
         MountedData.TauSignals = TauSignals;
         MountedData.TauValues = TauValues;
+        if exptype == '6pHYSCORE'
+            MountedData.FirstTauValues = FirstTauValues;
+        end
         MountedData.BrukerParameters = BrukerParameters;
         MountedData.TimeStep1 = TimeStep1;
         MountedData.TimeStep2 = TimeStep2;
         MountedData.TimeAxis1 = TimeAxis1;
         MountedData.TimeAxis2 = TimeAxis2;
-        MountedData.exptype = 'HYSCORE';
+        MountedData.exptype = exptype;
         if NUSflag
             MountedData.NUSgrid = NUSgrid;
             MountedData.NUS.SamplingDensity  = SamplingDensity;
