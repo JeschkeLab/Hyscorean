@@ -283,8 +283,14 @@ switch FileExtension
         OutputUWB = uwb_eval(FileNames{1},options);                     
         [Dimension3, Dimension2] = size(OutputUWB.dta_avg);             % Dimension3: echo axis size, Dimension2: t2 axis size
         EchoAxis = OutputUWB.t_ax;                                      % time axis of echo
-        TauValues = zeros(1,NFiles);                                    
-        TauValues(1) = expstruct.events{2}.t;                           % Get tau value of first file
+        TauValues = zeros(1,NFiles);                                    % Storage for tau-values of each file
+        if exptype == '6pHYSCORE'
+            FirstTauValues = zeros(1,NFiles);                               % Storage of tau-values between the first 2 pulses of each file
+            FirstTauValues(1) = expstruct.events{2}.t;  
+            TauValues(1) = expstruct.parvars{1,2}.strt(2) - expstruct.parvars{1,2}.strt(1);  
+        else
+            TauValues(1) = expstruct.events{2}.t;                              
+        end
         TimeAxis2array = zeros(NFiles,Dimension2);
         TimeAxis2array(1,:) = TimeAxis2;
         
@@ -294,13 +300,15 @@ switch FileExtension
             if Dimension3 > size(OutputUWB.dta_avg,1)
                 Dimension3 = size(OutputUWB.dta_avg,1);                 % If the echo axis has fewer points, reduce Dimension3
             end
-            TauValues(iFile) = OutputUWB.exp.events{2}.t;               % Get current tau value
             TimeAxis2array(iFile,:) = OutputUWB.exp.parvars{2}.axis;
-            % Get the position of the trace in the t1-dimension
+            % Get the position of the trace in the t1-dimension and all tau-values
             if exptype == '6pHYSCORE'       % 6pHYSCORE
-                TimeAxis1(iFile) = OutputUWB.exp.events{4}.t - OutputUWB.exp.events{3}.t;      
+                TimeAxis1(iFile) = OutputUWB.exp.events{4}.t - OutputUWB.exp.events{3}.t;
+                TauValues(iFile) = expstruct.parvars{1,2}.strt(2) - expstruct.parvars{1,2}.strt(1);
+                FirstTauValues(iFile) = OutputUWB.exp.events{2}.t;   
             else                            % 4pHYSCORE (with and without NUS)
                 TimeAxis1(iFile) = OutputUWB.exp.events{3}.t - OutputUWB.exp.events{2}.t;
+                TauValues(iFile) = OutputUWB.exp.events{2}.t;
             end
             % ---- Note: other HYSCORE variants need to be implemented here -----
         end
@@ -318,11 +326,18 @@ switch FileExtension
             % sort with respect to tauvalues
             [TauValuessorted, fileposition] = sort(TauValues);          % store the sorting information in fileposition array
             TimeAxis1sorted = TimeAxis1(fileposition);                  % sort timeaxis points accordingly
+            if exptype == '6pHYSCORE'
+                FirstTauValues = FirstTauValues(fileposition);
+                UniqueFirstTaus = [];
+            end
             TimeAxis2array(:,:) = TimeAxis2array(fileposition,:);
             TimeAxis1construct = cell(FoldingFactor,1);                 % construct a virtual timeaxis for each tau value
             % sort each tau-value with respect to t1 axis
             strt = 1;
             for i = 1:FoldingFactor
+                if exptype == '6pHYSCORE'
+                    UniqueFirstTaus(i) = FirstTauValues(strt);
+                end
                 entriespertau(i) = sum(TauValues == UniqueTaus(i));     % determine the number of traces stored for the tau value
                 last = strt + entriespertau(i) - 1;
                 index = strt:last;                                      % select start and end position in the array for the tau value
@@ -503,6 +518,9 @@ switch FileExtension
         end
         MountedData.TauSignals = TauSignals;
         MountedData.TauValues = UniqueTaus;
+        if exptype == '6pHYSCORE'
+            MountedData.FirstTauValues = UniqueFirstTaus;
+        end
         MountedData.AverageEchos = AverageEchos;
         MountedData.AWG_Parameters = AWG_Parameters;
         MountedData.TimeAxis1 = TimeAxis1;
