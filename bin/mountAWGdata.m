@@ -248,6 +248,12 @@ if options.find_echo == 0
     if ~isnan(echopos)
         options.echopos = echopos;
         handles.echopos{tauindex} = echopos;
+        if echopos < evlen/2 || echopos  + evlen/2 > handles.Data.Dimension3
+            warndlg('Processing not possible since evaluation window extends to regions outside the measured trace','warning');
+            set(handles.remount_toggle,'value',0);
+            set(handles.remount_toggle,'Enable','on');
+            return;
+        end
     end
 end
 
