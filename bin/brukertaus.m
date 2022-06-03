@@ -26,7 +26,7 @@ if isfield(BrukerParameters,'PlsSPELPrgTxt')
     end
     
     % Find the indices for the second tau-values if 6pHYSCORE is loaded
-    if PulseSpelExp == '6P HYSCORE'
+    if strcmp(PulseSpelExp,'6P HYSCORE') 
         TauDefinitionIndexes2 = ProgStartIndex -1 + strfind(PulseSpelProgram(ProgStartIndex:ProgEndIndex),'d2=');
         if isempty(TauDefinitionIndexes2)
             TauDefinitionIndexes2 = ProgStartIndex -1 + strfind(PulseSpelProgram(ProgStartIndex:ProgEndIndex),'d2 = ');
@@ -37,17 +37,17 @@ if isfield(BrukerParameters,'PlsSPELPrgTxt')
     end
     
     %Extract the tau-values
-    if PulseSpelExp ~= '6P HYSCORE'     % 4pHYSCORE
-        for i=1:length(TauDefinitionIndexes)
-            TauValues(i) = sscanf(PulseSpelProgram(TauDefinitionIndexes(i):TauDefinitionIndexes(i)+10),'d1%*[ =]%d');
-        end
-        TauValues2 = [];    
-    else                                % 6pHYSCORE
+    if strcmp(PulseSpelExp,'6P HYSCORE')    % 6pHYSCORE
         for i=1:length(TauDefinitionIndexes)
             % Store 2nd tau-values as TauValues and the 1st tauvalues as FirstTauValues
             TauValues(i) = sscanf(PulseSpelProgram(TauDefinitionIndexes2(i):TauDefinitionIndexes2(i)+10),'d2%*[ =]%d');
             FirstTauValues(i) = sscanf(PulseSpelProgram(TauDefinitionIndexes(i):TauDefinitionIndexes(i)+10),'d1%*[ =]%d');
         end  
+    else                                % 4pHYSCORE
+        for i=1:length(TauDefinitionIndexes)
+            TauValues(i) = sscanf(PulseSpelProgram(TauDefinitionIndexes(i):TauDefinitionIndexes(i)+10),'d1%*[ =]%d');
+        end
+        FirstTauValues = NaN;
     end
     
     if ~exist('TauValues')
@@ -55,7 +55,7 @@ if isfield(BrukerParameters,'PlsSPELPrgTxt')
         PulseSpelVariables = BrukerParameters.PlsSPELGlbTxt;
         %Identify the tau definition lines
         TauDefinitionIndexes = strfind(PulseSpelVariables,'d1 ');
-        if PulseSpelExp == '6P HYSCORE'
+        if strcmp(PulseSpelExp,'6P HYSCORE') 
              TauDefinitionIndexes2 = strfind(PulseSpelVariables,'d2 ');
         end
        
@@ -67,9 +67,9 @@ if isfield(BrukerParameters,'PlsSPELPrgTxt')
                 Shift = Shift + 1;
             end
             TauValues(i)  = str2double(TauString);
-            FirstTauValues = [];
+            FirstTauValues = NaN;
             % If experiment is 6P HYSCORE: Overwrite TauValues with the tau-values between 4. and 5. pulse after storing them in FirstTauValues-vector
-            if PulseSpelExp == '6P HYSCORE'
+            if strcmp(PulseSpelExp,'6P HYSCORE')
                 FirstTauValues = TauValues;
                 while ~isspace(PulseSpelVariables(TauDefinitionIndexes2(i) + Shift))
                     TauString2(Shift - 2) =  PulseSpelVariables(TauDefinitionIndexes2(i) + Shift);
@@ -94,7 +94,7 @@ else
 end
 
 % Store the experiment type
-if BrukerParameters.PlsSPELEXPSlct == '6P HYSCORE'
+if strcmp(BrukerParameters.PlsSPELEXPSlct,'6P HYSCORE') 
     exptype = '6pHYSCORE';
 else
     exptype = '4pHYSCORE';
