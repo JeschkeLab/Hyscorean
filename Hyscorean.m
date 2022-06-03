@@ -1177,13 +1177,26 @@ return
 
 %==========================================================================
 function ZoomButton_Callback(hObject, eventdata, handles)
-zoom on
+z = zoom;
+z.ActionPostCallback = {@zoompostcallback,eventdata,handles};
+z.Enable = 'On';
 return
 %==========================================================================
 
 %==========================================================================
+function zoompostcallback(hObject,~,eventdata,handles)
+xax = get(handles.mainPlot,'XLim');
+yax = get(handles.mainPlot,'YLim');
+if yax(1) < 0
+    yax(1) = 0.0;
+end
+set(handles.mainPlot,'YLim',yax);
+return												  							   
+%==========================================================================
+
+%==========================================================================
 function ZoomOutButton_Callback(hObject, eventdata, handles)
-zoom off
+z.Enable = 'Off';
 Upperlimit = str2double(get(handles.XUpperLimit,'string'));
 set(handles.mainPlot,'xlim',[-Upperlimit Upperlimit],'ylim',[0 Upperlimit])
 return
@@ -1386,8 +1399,10 @@ if get(hObject,'value')
     AxisPos = (ScreenPos - Transform(1:2))./Transform(3:4);
     %Get axis values
     AxesYLim=get(handles.mainPlot,'YLim');
-    AxesValuesSpan=AxesYLim(2)-AxesYLim(1);
-    
+	AxesXLim=get(handles.mainPlot,'XLim');
+    AxesValuesYSpan=AxesYLim(2)-AxesYLim(1);
+    AxesValuesXSpan = AxesXLim(2)-AxesXLim(1);
+	
     %Check if graphics handles exist and delete them 
     if exist('AnnotationHandle','var')
       delete(AnnotationHandle)
@@ -1402,36 +1417,38 @@ if get(hObject,'value')
         AxisPos(2)>=0 &&  AxisPos(2)<=1
       
       %Compute the frequency coordinates from relative axis position
-      y = AxisPos(2)*AxesValuesSpan;
+      y = AxisPos(2)*AxesValuesYSpan+AxesYLim(1);
+      x = AxisPos(1)*AxesValuesXSpan+AxesXLim(1);
       %Differentiate between positive and negative quadrants
-      if AxisPos(1)>0.5
+      if  x > 0
         Sign = -1;
-        x = (2*AxisPos(1)-1)*AxesValuesSpan;
+											
         %Get diagonal reflection values
         x2 = y;
         y2 = x;
         SideOffset = 1;
       else
         Sign = 1;
-        x = -(1-2*AxisPos(1))*AxesValuesSpan;
+											 
         %Get diagonal reflection values
         x2 = -y;
         y2 = -x;
         SideOffset = 0;
       end
-      %Compute distance between current points
-      Distance = norm([x, y] - [x2, y2]);
+      %Compute horizontal distance between current points
+      Distance = norm([x, y] - [x2, y2])/sqrt(2);
       %Compute ratio for adapting to frequency limit changes
       xyLimRatio = str2double(handles.XUpperLimit.String)/20;
       
       %Prepare datatip
       SideOffset = SideOffset*xyLimRatio*11;
-      dim = [x + 0.5*Sign*xyLimRatio - SideOffset  y-2.5*xyLimRatio  11*abs(xyLimRatio) 3.5*abs(xyLimRatio)];
-      str = sprintf('\\nu_1 = %.2f  \\nu_2 = %.2f',x,y);
-      str2 = sprintf('\\Delta = %.2f MHz',Distance);
+      dim = [AxesXLim(1)+AxesValuesXSpan*0.62 AxesYLim(1) + AxesValuesYSpan*0.02 AxesValuesXSpan*0.37 AxesValuesYSpan*0.17];
+      str = sprintf('\\nu_1 = %.2f MHz \\nu_2 = %.2f MHz',x,y);
+      str2 = sprintf('\\Delta_\\nu = %.2f MHz',Distance);
       RectangleHandle = rectangle(handles.mainPlot,'Position',dim,'FaceColor','r');
-      AnnotationHandle = text(handles.mainPlot,x + 0.5*Sign*xyLimRatio + 0.5*xyLimRatio - SideOffset,y,str,'FontSize',13,'Color','w','FontWeight','bold');
-      AnnotationHandle2 = text(handles.mainPlot,x + 0.5*Sign*xyLimRatio + 0.5*xyLimRatio - SideOffset,y - 1.5*abs(xyLimRatio),str2,'FontSize',13,'Color','w','FontWeight','bold');
+      AnnotationHandle = text(handles.mainPlot,AxesXLim(1)+AxesValuesXSpan*0.63,AxesYLim(1) + AxesValuesYSpan*0.13,str,'FontSize',13,'Color','w','FontWeight','bold');
+      AnnotationHandle2 = text(handles.mainPlot,AxesXLim(1)+AxesValuesXSpan*0.63, AxesYLim(1) + AxesValuesYSpan*0.07,str2,'FontSize',13,'Color','w','FontWeight','bold');
+	  
       %Plot line and points
       Xaxis = handles.Processed.axis1;
       if x>0
