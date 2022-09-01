@@ -10,18 +10,21 @@ function output = uwb_eval( arg1, arg2 )
 %
 % The output is a structure of the following form:
 %   output.dta_ev:          Integrated echo transients
-%   output.dta_avg:         Full echo transient, all averages combined, but
-%                           downconverted with LO
+%   output.dta_avg:         Full downconverted echo transient, all averages combined,
+												 
 %   output.nAvgs:           number of averages of experiment
 %   output.dta_x:           Cell of indirect dimensions of the experiment
 %   output.t_ax:            Time axis of the echo transients
 %   output.exp:             The experiment data structure
 %   output.det_frq:         The downconversion frequency/ies used by
 %                           UWB_EVAL
-%   output.echopos:         The position of the echo
+%   output.echopos:         The final position of the echo in trace of length evlen
+%   output.echopos_org:     The position of the echo in the measured transient
 %   output.corr_phase:      The phase used to correct the echo
 %   output.dig_level:       Fraction of fullscale vertical digitizer level 
 %                           required to digitize the echo. 
+%   output.evlen:           Length of the window to store the echo
+%                           transient and perform the integration.
 % 
 % Options may be provided, which facilitates the calls
 % UWB_EVAL('filename',options), UWB_EVAL(options), UWB_EVAL(data,options)
@@ -47,6 +50,7 @@ function output = uwb_eval( arg1, arg2 )
 %                           further processing.
 %   options.find_echo:      Wether (1) or not (0) to search for the echo
 %                           window. 
+%   options.echopos:        Use fixed echo position. Requires find_echo = 0																		   
 %   options.ref_echo:       Automatic search of the echo window and phasing
 %                           of data is performed based on the echo at
 %                           datapoint ref_echo. UWB_EVAL chooses ref_echo
@@ -336,7 +340,11 @@ end
 %% get out all echoes
 % where is the echo expected?
 %   -> make a symmetric window about it to search for it (ran_echomax)
-EchoPosition = estr.events{estr.det_event}.det_len/2 - estr.events{estr.det_event}.det_pos*fsmp;
+if isfield(options,'find_echo') && options.find_echo == 0 && isfield(options,'echopos') && options.echopos ~= 0
+    EchoPosition = options.echopos;
+else
+    EchoPosition = estr.events{estr.det_event}.det_len/2 - estr.events{estr.det_event}.det_pos*fsmp;
+end
 Distance2Position = min([EchoPosition,estr.events{estr.det_event}.det_len-EchoPosition]);
 EchoMaxRange = (EchoPosition-Distance2Position+1:EchoPosition+Distance2Position).';
 
@@ -478,9 +486,12 @@ for ii=1:length(RawData)
         end
         
         % here the final range...
-        RangeEcho = (e_idx-WindowLength/2+1:e_idx+WindowLength/2).';
+        RangeEcho = (e_idx-WindowLength/2+1:e_idx+WindowLength/2).';        % position in the original data
+        % shift to fit RangeEcho at the into the already symmetrically windowed DownconvertedData
+        shiftRangeEcho = EchoMaxRange(1) - 1;                               
+        RangeEcho = RangeEcho - shiftRangeEcho;
         % ... and a check wether this is applicable
-        if ~(RangeEcho(1) > 0 && RangeEcho(end) <= size(DownconvertedData,1))
+        if ~(RangeEcho(1) > 0 && RangeEcho(end) - RangeEcho(1) <= size(DownconvertedData,1))
             error(['Echo position at ' num2str(e_idx) ' with evaluation length of ' num2str(WindowLength) ' is not valid, since the dataset has only ' num2str(size(DownconvertedData,1)) ' points.']);
         end
         
@@ -539,6 +550,7 @@ output.dta_ev = dta_ev;
 output.exp = estr;
 output.det_frq = DetectionFrequency;
 output.echopos = e_idx;
+output.echopos_org = EchoPosition;
 output.corr_phase = CorrectionPhase;
 output.dig_level = DigitizerLevel;
 output.evlen = WindowLength;
