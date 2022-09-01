@@ -248,7 +248,7 @@ if options.find_echo == 0
     if ~isnan(echopos)
         options.echopos = echopos;
         handles.echopos{tauindex} = echopos;
-        if echopos < evlen/2 || echopos  + evlen/2 > handles.Data.Dimension3
+        if echopos < evlen/2 || echopos  + evlen/2 > length(handles.Data.EchoAxisfordta)
             warndlg('Processing not possible since evaluation window extends to regions outside the measured trace','warning');
             set(handles.remount_toggle,'value',0);
             set(handles.remount_toggle,'Enable','on');
@@ -284,6 +284,12 @@ if inttype == 1     % use of integrate_echo
     DataForIntegration.Dimension2 = Dimension2;
     DataForIntegration.isNotIntegrated  = true;
     [IntegratedData] = integrateEcho(DataForIntegration,'gaussian',options);
+    if ~isstruct(IntegratedData) && isnan(IntegratedData)
+        h = warndlg({'Default gaussian echo integration failed.',...
+            ' Switching to boxcar echo integration.'},'Warning');
+        waitfor(h);
+        [IntegratedData] = integrateEcho(DataForIntegration,'boxcar',options); % use boxcar if gaussian fails
+    end
     % Storing the signals of the integragtion, the window function and the echo axis 
     % (now maybe of a different length than before when all tau-values were processed together) 
     handles.Data.TauSignals(tauindex,:,:) = IntegratedData.Integral(:,:)';

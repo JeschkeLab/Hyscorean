@@ -479,7 +479,7 @@ switch FileExtension
             h = warndlg({'Default gaussian echo integration failed.',...
                 ' Switching to boxcar echo integration.'},'Warning');
             waitfor(h);
-            [IntegratedData] = integrateEcho(DataForInegration,'boxcar',options); % use boxcar if gaussian fails
+            [IntegratedData] = integrateEcho(DataForIntegration,'boxcar',options); % use boxcar if gaussian fails
         end
         
         TauSignals = zeros(FoldingFactor,Dimension2,Dimension2); 
