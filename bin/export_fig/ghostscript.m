@@ -96,7 +96,7 @@ function path_ = gs_path
             default_location = 'C:\Program Files (x86)\gs\'; % Possible location on 64-bit systems
             dir_list = dir(default_location);
         end
-        executable = {'\bin\gswin32c.exe', '\bin\gswin64c.exe'};
+        executable = {[filesep 'bin' filesep 'gswin32c.exe'], [filesep 'bin' filesep 'gswin64c.exe']};
         ver_num = 0;
         % If there are multiple versions, use the newest
         for a = 1:numel(dir_list)
