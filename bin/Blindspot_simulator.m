@@ -1,4 +1,4 @@
-function Blindspot_simulator(FrequencyAxis1,FrequencyAxis2,Spectrum,SpecLim)
+function Blindspot_simulator(FrequencyAxis1,FrequencyAxis2,Spectrum,SpecLim,spccontourlevels)
 %==========================================================================
 % HYSCORE blind spot simulator
 %==========================================================================
@@ -17,11 +17,11 @@ function Blindspot_simulator(FrequencyAxis1,FrequencyAxis2,Spectrum,SpecLim)
 % the Free Software Foundation.
 %==========================================================================
 %Check inputs
-if nargin<2
+if nargin<3
   Spectrum = nan(length(FrequencyAxis1),length(FrequencyAxis2));
   warning('off','all')
 end
-if nargin<3
+if nargin<4
   SpecLim = max(FrequencyAxis1);
 end
 TauValues = []; 
@@ -34,6 +34,7 @@ SimData.FrequencyAxis2 = FrequencyAxis2;
 SimData.Spectrum = abs(Spectrum/max(max(abs(Spectrum))));
 SimData.TauValues = TauValues;
 SimData.SpecLim = SpecLim;
+SimData.spccontourlevels = spccontourlevels/max(abs(spccontourlevels));         % contourlevels to get the same exp. plot as in main gui
 
 %Get relative position of the Hyscorean figure
 Position = get(gcf,'Position');
@@ -46,37 +47,39 @@ else
   clf(Figure);
 end
 set(gcf,'NumberTitle','off','Name','HYSCORE Blind spot simulator','Position',[Position(1) Position(2) 985 445])
-%Contruct slider
-SliderHandle = uicontrol('units','normalized','tag','slider','position',[0.04 0.08 0.025 0.90],'Style','slider','value',100,...
-                    'min',100,'max',350,'sliderstep',[1/250 1/250],'callback',{@BlindspotsSpoter});
+%Construct slider
+SliderHandle = uicontrol('units','normalized','tag','slider','position',[0.04 0.08 0.025 0.90],'Style','slider','value',80,...
+                    'min',80,'max',350,'sliderstep',[1/270 1/270],'callback',{@BlindspotsSpoter});
 %Construct pushbutton
 uicontrol('units','normalized','string','Add Tau','position',[0.015 0.01 0.08 0.06],...
           'Style','pushbutton','callback',{@addTau,SliderHandle});
 
-%Construct pushbutton
-uicontrol('units','normalized','string','Overlap experimental spectrum','position',[0.1 0.01 0.25 0.06],...
-          'Style','checkbox','Tag','displaySpectrum','callback',{@BlindspotsSpoter,SliderHandle});        
+%Construct pushbutton (only if experimental spectrum is loaded)
+if nargin > 2
+    uicontrol('units','normalized','string','Overlap experimental spectrum','position',[0.1 0.01 0.25 0.06],...
+          'Style','checkbox','Tag','displaySpectrum','callback',{@BlindspotsSpoter,SliderHandle});   
+end
       
 %Plot the experimental contour spectrum already and just make it (in)-visible later
-[~,ContourHandle] = contour(SimData.FrequencyAxis1,SimData.FrequencyAxis2,SimData.Spectrum,40,'LineWidth',1,'Color','k');
-SimData.ConoturHandle =  ContourHandle;
+[~,ContourHandle] = contour(SimData.FrequencyAxis1,SimData.FrequencyAxis2,SimData.Spectrum,SimData.spccontourlevels,'LineWidth',1,'Color','k');
+SimData.ContourHandle =  ContourHandle;
 
 %Plot with lowest tau value to construct and initialize the plot
-FirstTauValue = 100/1000;
+FirstTauValue = 80/1000;
 BlindSpotsAxis1 = linspace(min(SimData.FrequencyAxis1),max(SimData.FrequencyAxis1),80);
 BlindSpotsAxis2 = linspace(min(SimData.FrequencyAxis2),max(SimData.FrequencyAxis2),80);
 Dimension1 = length(BlindSpotsAxis1);
 Dimension2 = length(BlindSpotsAxis2);
-BlinSpotsMap = zeros(Dimension1,Dimension2);
+BlindSpotsMap = zeros(Dimension1,Dimension2);
 
 %Compute blindspots along each dimension
-BlinSpots1=sin(2*pi*BlindSpotsAxis1*FirstTauValue/2);
-BlinSpots2=sin(2*pi*BlindSpotsAxis2*FirstTauValue/2); 
+BlindSpots1=sin(2*pi*BlindSpotsAxis1*FirstTauValue/2);
+BlindSpots2=sin(2*pi*BlindSpotsAxis2*FirstTauValue/2); 
 %Get 2D-blindspots map contribution
-BlinSpotsContribution=(BlinSpots1'*BlinSpots2)/4;
-BlinSpotsMap = BlinSpotsMap +  BlinSpotsContribution;
+BlindSpotsContribution=(BlindSpots1'*BlindSpots2)/4;
+BlindSpotsMap = BlindSpotsMap +  BlindSpotsContribution;
 %Update the display
-plotBlindSpots(BlindSpotsAxis1,BlindSpotsAxis2,BlinSpotsMap)
+plotBlindSpots(BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap)
 %Display also tau values employed currently
 title(sprintf('\\tau = [ %.0f ] ns ',FirstTauValue*1000))
 end  
@@ -95,17 +98,17 @@ BlindSpotsAxis1 = linspace(min(SimData.FrequencyAxis1),max(SimData.FrequencyAxis
 BlindSpotsAxis2 = linspace(min(SimData.FrequencyAxis2),max(SimData.FrequencyAxis2),80);
 Dimension1 = length(BlindSpotsAxis1);
 Dimension2 = length(BlindSpotsAxis2);
-BlinSpotsMap = zeros(Dimension1,Dimension2);
+BlindSpotsMap = zeros(Dimension1,Dimension2);
 for i=1:length(TauValues)
   %Compute blindspots along each dimension
-  BlinSpots1=sin(2*pi*BlindSpotsAxis1*TauValues(i)/2);
-  BlinSpots2=sin(2*pi*BlindSpotsAxis2*TauValues(i)/2);
+  BlindSpots1=sin(2*pi*BlindSpotsAxis1*TauValues(i)/2);
+  BlindSpots2=sin(2*pi*BlindSpotsAxis2*TauValues(i)/2);
   %Get 2D-blindspots map contribution
-  BlinSpotsContribution=(BlinSpots1'*BlinSpots2)/4;
-  BlinSpotsMap = BlinSpotsMap +  BlinSpotsContribution;
+  BlindSpotsContribution=(BlindSpots1'*BlindSpots2)/4;
+  BlindSpotsMap = BlindSpotsMap +  BlindSpotsContribution;
 end
 %Update the display
-plotBlindSpots(BlindSpotsAxis1,BlindSpotsAxis2,BlinSpotsMap)
+plotBlindSpots(BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap)
 %Update the tau values employed on the display
 TauValuesString = '[';
 for i=1:length(TauValues)
@@ -141,24 +144,27 @@ function plotBlindSpots(BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap)
 global SimData
 %Check if user requests spectrum to be displayed
 if get(findobj('tag','displaySpectrum'),'Value')
-  %If yes use a transparent colormap
-  BlindSpotsMap = BlindSpotsMap/max(max(BlindSpotsMap));
+  % Normalize Blindspot map (so that it has the same intensities as exp. spectrum)
+  % VisibilityFactor: decrease blindspot intensity and make exp spectrum more visible
+  VisibilityFactor = 0.6;                           
+  BlindSpotsMapNormalized = BlindSpotsMap/max(max(BlindSpotsMap))*VisibilityFactor;
   colormap('hot')
   hold on
-  BlindSpots = pcolor(BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap');
-  alpha(BlindSpots,0.7);
+  BlindSpots = pcolor(BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMapNormalized');
+  alpha(BlindSpots,0.7);            
   shading interp,
   %And make spectrum visible again and bring it on top
-  SimData.ConoturHandle.Visible = 'on';
-  uistack( SimData.ConoturHandle,'top');
+  SimData.ContourHandle.Visible = 'on';
+  uistack( SimData.ContourHandle,'top');
 else
   %If not then use normal colormap
-  hold on
-  pcolor(BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap')
+  hold on;
+  BlindSpotsMapNormalized = BlindSpotsMap/max(max(BlindSpotsMap));
+  BlindSpots = pcolor(BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMapNormalized');
   shading interp
   colormap hot
   %And make spectrum invisible
-  SimData.ConoturHandle.Visible = 'off';
+  SimData.ContourHandle.Visible = 'off';
 end
 %Configure axis
 xlim([-SimData.SpecLim SimData.SpecLim])

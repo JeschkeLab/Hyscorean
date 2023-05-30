@@ -1,4 +1,3 @@
-
 function MountedData = mountHYSCOREdata(FileNames,handles)
 %==========================================================================
 % Hyscorean Mounter
@@ -31,6 +30,7 @@ switch FileExtension
         
         %Prepare containers to temporarily allocate the data of the individual files
         TauValuesVector = [];
+        FirstTauValuesVector = [];
         TauSignalsVector = [];
         TimeStep1control = [];
         TimeStep2control = [];
@@ -133,6 +133,8 @@ switch FileExtension
                 TimeAxis1 = 0:TimeStep1:MaximalTiming1/1000;
                 TimeAxis2 = 0:TimeStep2:MaximalTiming1/1000;
                 
+                exptype = '4pHYSCORE NUS';
+                
             else
                 
                 % Uniform sampled data
@@ -166,9 +168,9 @@ switch FileExtension
                 end
                 
                 try
-                    [TauValues] = brukertaus(BrukerParameters);
+                    [TauValues,FirstTauValues,exptype] = brukertaus(BrukerParameters);
                 catch
-                    TauValues = inputdlg('Tau-values could not be extracted. Input:');
+                    TauValues = inputdlg('Tau-values could not be extracted. Input (only for 4P HYSCORE and 1 tau-value):');
                     TauValues = str2double(TauValues{1});
                 end
                 
@@ -189,6 +191,7 @@ switch FileExtension
                 
                 %Collect tau-values of multiple files
                 TauValuesVector(end+1:end+length(TauValues)) = TauValues;
+                FirstTauValuesVector(end+1:end+length(TauValues)) = FirstTauValues;
                 TauSignalsVector(end+1:end+size(TauSignals,1),:,:) =  TauSignals;
 
             end
@@ -198,6 +201,7 @@ switch FileExtension
         %If multiple files were loaded then the tau-values are in another array
         if ~isempty(TauValuesVector)
             TauValues = TauValuesVector;
+            FirstTauValues = FirstTauValuesVector;
             TauSignals = TauSignalsVector;
         end
         
@@ -207,11 +211,15 @@ switch FileExtension
         %Construct output structure
         MountedData.TauSignals = TauSignals;
         MountedData.TauValues = TauValues;
+        if exptype == '6pHYSCORE'
+            MountedData.FirstTauValues = FirstTauValues;
+        end
         MountedData.BrukerParameters = BrukerParameters;
         MountedData.TimeStep1 = TimeStep1;
         MountedData.TimeStep2 = TimeStep2;
         MountedData.TimeAxis1 = TimeAxis1;
         MountedData.TimeAxis2 = TimeAxis2;
+        MountedData.exptype = exptype;
         if NUSflag
             MountedData.NUSgrid = NUSgrid;
             MountedData.NUS.SamplingDensity  = SamplingDensity;
@@ -227,151 +235,255 @@ switch FileExtension
         % AWG Spectrometer Files
         %------------------------------------------------------------------------
     case '.mat'
+        
+        %Initiate the status bar in the Hyscorean gui
+        set(handles.ProcessingInfo, 'String','Status: Checking data...'); drawnow;
+      
+        
         NFiles = length(str2double(FileNames));
         %Preallocate first time axis vector
         TimeAxis1 = zeros(NFiles,1);
         % Preprocess measurement data of first file with uwb_eval and set up data container
         Measurement = load(FileNames{1});
-        %Check if data is NUS and proceed
-        if isfield(Measurement.hyscore,'NUS')
+        expstruct = eval(append('Measurement.',Measurement.expname));
+        
+        
+        % Check if data is NUS and proceed
+        if isfield(expstruct,'NUS')
             isNUS = true;
         else
             isNUS = false;
             MountedData.NUSflag = isNUS;
         end
         
+        
+        % Evaluate experiment type and set up the time axis
         if isNUS
             %Extract time axes directly from the sampling grid
-            TimeAxis1 = Measurement.hyscore.NUS.t1Timings;
-            TimeAxis2 = Measurement.hyscore.NUS.t2Timings;
-            SamplingGrid = Measurement.hyscore.NUS.SamplingGrid;
-        else
+            exptype = '4pHYSCORE NUS';
+            TimeAxis1 = expstruct.NUS.t1Timings;
+            TimeAxis2 = expstruct.NUS.t2Timings;
+            SamplingGrid = expstruct.NUS.SamplingGrid; 
+        elseif length(expstruct.events) > 5 % case for 6pHYSCORE
             %Get timings and set up t_2 axis and zero time
-            TimeAxis2 = (Measurement.hyscore.parvars{2}.axis - Measurement.hyscore.deadtime); % adjust t_2 axis to zero time
-            TimeAxis1(1) = Measurement.hyscore.events{3}.t - Measurement.hyscore.hyscore_t1.strt(1);  % first element of t1 vector from file name
+            exptype = '6pHYSCORE';
+            TimeAxis2 = expstruct.parvars{2}.axis;                          % adjust t_2 axis to zero time
+            TimeAxis1(1) = expstruct.events{4}.t - expstruct.events{3}.t;   % first element of t1 vector from file name
+        else                                % case for 4pHYSCORE
+            %Get timings and set up t_2 axis and zero time
+            exptype = '4pHYSCORE';
+            TimeAxis2 = expstruct.parvars{2}.axis;                          % adjust t_2 axis to zero time
+            TimeAxis1(1) = expstruct.events{3}.t - expstruct.events{2}.t;   % first element of t1 vector from file name
         end
+        % --- Note: other HYSCORE variants need to be established here ---
+ 
         
         % Evaluate data from the AWG spectrometer
         options.plot = 0;
-        OutputUWB = uwb_eval(FileNames{1},options);
+        OutputUWB = uwb_eval(FileNames{1},options);                     
+        [Dimension3, Dimension2] = size(OutputUWB.dta_avg);             % Dimension3: echo axis size, Dimension2: t2 axis size
+        EchoAxis = OutputUWB.t_ax;                                      % time axis of echo
+        TauValues = zeros(1,NFiles);                                    % Storage for tau-values of each file
+        if exptype == '6pHYSCORE'
+            FirstTauValues = zeros(1,NFiles);                               % Storage of tau-values between the first 2 pulses of each file
+            FirstTauValues(1) = expstruct.events{2}.t;  
+            TauValues(1) = expstruct.parvars{1,2}.strt(2) - expstruct.parvars{1,2}.strt(1);  
+        else
+            TauValues(1) = expstruct.events{2}.t;                              
+        end
+        TimeAxis2array = zeros(NFiles,Dimension2);
+        TimeAxis2array(1,:) = TimeAxis2;
         
-        [Dimension1, Dimension2] = size(OutputUWB.dta_avg);
-        % Get time axis of echo
-        EchoAxis = OutputUWB.t_ax;
-        %Get first tau value
-        TauValues = zeros(1,NFiles);
-        TauValues(1) = Measurement.hyscore.tau;
-        
-        set(handles.ProcessingInfo, 'String','Status: Checking data...'); drawnow;
-        % Check consistency of echo dimension and get tau values
+        % Check consistency of echo dimension, get tau values and t1-axis position for each file
         for iFile = 2:NFiles
             OutputUWB = uwb_eval(FileNames{iFile},options);
-            if Dimension1 > size(OutputUWB.dta_avg,1)
-                %If a file should contain fewer points, reduce dimension
-                Dimension1 = size(OutputUWB.dta_avg,1);
+            if Dimension3 > size(OutputUWB.dta_avg,1)
+                Dimension3 = size(OutputUWB.dta_avg,1);                 % If the echo axis has fewer points, reduce Dimension3
             end
-            %Get current tau value
-            TauValues(iFile) = OutputUWB.exp.tau;
+            TimeAxis2array(iFile,:) = OutputUWB.exp.parvars{2}.axis;
+            % Get the position of the trace in the t1-dimension and all tau-values
+            if exptype == '6pHYSCORE'       % 6pHYSCORE
+                TimeAxis1(iFile) = OutputUWB.exp.events{4}.t - OutputUWB.exp.events{3}.t;
+                TauValues(iFile) = expstruct.parvars{1,2}.strt(2) - expstruct.parvars{1,2}.strt(1);
+                FirstTauValues(iFile) = OutputUWB.exp.events{2}.t;   
+            else                            % 4pHYSCORE (with and without NUS)
+                TimeAxis1(iFile) = OutputUWB.exp.events{3}.t - OutputUWB.exp.events{2}.t;
+                TauValues(iFile) = OutputUWB.exp.events{2}.t;
+            end
+            % ---- Note: other HYSCORE variants need to be implemented here -----
         end
-        %Get unique tau values and folding factor
-        UniqueTaus = unique(TauValues);
-        FoldingFactor = numel(UniqueTaus);
         
-        OutputUWB = uwb_eval(FileNames{1},options);
-        %Adjust to consistent dimensions
-        OutputUWB.dta_avg = OutputUWB.dta_avg(1:Dimension1,:);
+		% Get unique tau values and folding factor										 
+        UniqueTaus = unique(TauValues);                                 
+        FoldingFactor = numel(UniqueTaus);                              % FoldingFactor = # of different TauValues
+        correctprocessing = true;                                       % check variable, if processing can be performed correctly
+        taumissing = '';                                                % String with tau values, which do not have all necessary traces stored
+        entriespertau = zeros(FoldingFactor,1);                         % #traces stored for each tau value
+        
+        
+        if  ~isNUS
+            % sort Files with respect to tau values and t1 axis + Check for TimeAxis inconsistencies
+            % sort with respect to tauvalues
+            [TauValuessorted, fileposition] = sort(TauValues);          % store the sorting information in fileposition array
+            TimeAxis1sorted = TimeAxis1(fileposition);                  % sort timeaxis points accordingly
+            if exptype == '6pHYSCORE'
+                FirstTauValues = FirstTauValues(fileposition);
+                UniqueFirstTaus = [];
+            end
+            TimeAxis2array(:,:) = TimeAxis2array(fileposition,:);
+            TimeAxis1construct = cell(FoldingFactor,1);                 % construct a virtual timeaxis for each tau value
+            % sort each tau-value with respect to t1 axis
+            strt = 1;
+            for i = 1:FoldingFactor
+                if exptype == '6pHYSCORE'
+                    UniqueFirstTaus(i) = FirstTauValues(strt);
+                end
+                entriespertau(i) = sum(TauValues == UniqueTaus(i));     % determine the number of traces stored for the tau value
+                last = strt + entriespertau(i) - 1;
+                index = strt:last;                                      % select start and end position in the array for the tau value
+                [TimeAxis1sorted(index),position] = sort(TimeAxis1sorted(index));   % sort the timeaxis1 entries of the tau value
+                fileposition(index) = fileposition(index(position));                % store the information in the fileposition array
+
+           % Create the virtual timeaxis for later mounting procedure
+                if entriespertau(i) < Dimension2
+                     taumissing = append(taumissing, ' ', num2str(UniqueTaus(i)));          % Store that traces are missing for warning              
+                     if entriespertau(i) > 1                                                % Construct time axis from the first 2 t1 points
+                        InitialTimeStep = TimeAxis1sorted(strt+1) - TimeAxis1sorted(strt);
+                        TimeAxis1construct{i} = TimeAxis1sorted(strt):InitialTimeStep:(TimeAxis1sorted(strt)+InitialTimeStep*(Dimension2-1));
+                     else                                                                   % Warning if only one trace is loaded
+                        warnstr = append('Only one trace loaded for tau value ',num2str(UniqueTaus(i)), ' ns and t1 axis could not be constructed');
+                        warndlg(warnstr,'Warning');
+                        TimeAxis1construct{i} = TimeAxis1sorted(strt);
+                        correctprocessing = false;
+                     end
+                else                                                                        % If all traces are loaded, use the existing t1 axis
+                    TimeAxis1construct{i} = TimeAxis1sorted(index);
+                end
+
+                % Check if t1 axis has the same values as t2 timeaxis
+                if sum(ismembertol(TimeAxis1sorted(index),TimeAxis2array(strt,:))) < entriespertau(i)
+                    warnstr = append('t1 axis does not have the same values as the t2 axis for tau = ',num2str(UniqueTaus(i)), ' ns');
+                    warndlg(warnstr,'Warning');
+                    correctprocessing = false;
+                end
+
+                % Evaluate if all time axes start at the same value
+                % if not -> FT transformation might lead to wrong results in processHYSCORE.m
+                 if sum(ismembertol(TimeAxis2array(strt,:),TimeAxis2)) < Dimension2
+                    warnstr = append('t2 axis for tau value ', num2str(UniqueTaus(i)), ' ns does not match with t2 axis of ', num2str(UniqueTaus(1)), ' ns');
+                    warndlg(warnstr,'Warning');
+                    correctprocessing = false;
+                end
+                strt = last + 1;
+            end
+
+            if ~strcmp(taumissing,'')                                       % Display warning if traces are missing
+                 warnstr = append('Not enough traces for correct HYSCORE spectrum with tau-value',taumissing);
+                 warndlg(warnstr,'Warning');
+                 correctprocessing = false;
+            end
+
+            % Sort the stored FileNames as done before
+            FileNamessorted = FileNames(fileposition);
+
+        end
+
+        % Set up arrays for uwb_eval output and filtering
         if isNUS
-            AverageEchos = zeros(Dimension1, size(SamplingGrid,2), size(SamplingGrid,1)*FoldingFactor);
+            AverageEchos = zeros(Dimension3, size(SamplingGrid,2), size(SamplingGrid,1)*FoldingFactor); % Storage for filtered Echos
         else
-            AverageEchos = zeros(Dimension1, Dimension2, NFiles);
+            UnfilteredEchos = cell(Dimension2*FoldingFactor,1);         % Storage of downconverted, unfiltered echos
+            AverageEchos = cell(Dimension2*FoldingFactor,1);            % Storage of filtered echos
+            corr_phase = zeros(Dimension2*FoldingFactor,1);             % Vector of phase corrections for each trace
+            Echopos = zeros(Dimension2*FoldingFactor,1);                % Vector of the echo position from uwb_eval for each trace
+            evlen = zeros(Dimension2*FoldingFactor,1);                  % Vector of the evaluation length from uwb_eval for each trace
+            dta = cell(Dimension2*FoldingFactor,1);                     % Cell array for original echo data
+            TimeAxis1ordered = zeros(Dimension2*FoldingFactor,1);       % TimeAxis1 with values only for existing traces, others have 0 entries
+            FileNamesordered = cell(Dimension2*FoldingFactor,1);        % Cell array with the filenames sorted with respect to the tau and t1 value
+            dim1indexlist = zeros(NFiles,1);                            % Vector of indices, which indicate where each file went during sorting
         end
-        EchoAxis = EchoAxis(1:Dimension1);
-        
-        
+        EchoAxis = EchoAxis(1:Dimension3);                              % Reduce EchoAxis dimension to Dimension3
+        Filtering = true;
+   
+
         %Set up filtering
-        SamplingRateMHZ = 1/(EchoAxis(2) - EchoAxis(1))*1e3; % sampling rate from time axis
+        SamplingRateMHZ = 1/(EchoAxis(2) - EchoAxis(1))*1e3;            % sampling rate from time axis
         try
             CutoffFrequencyMHZ = filter_freq;
         catch
-            CutoffFrequencyMHZ = SamplingRateMHZ/30; %cutoff frequency
+            CutoffFrequencyMHZ = SamplingRateMHZ/30;                    % cutoff frequency
         end
         %Butterworth IIR filter
         FilterCutoffFrequency = CutoffFrequencyMHZ/(SamplingRateMHZ/2);
         FilterOrder = 2;
         [NumeratorCoefficients,DenominatorCoefficients] = butter(FilterOrder,FilterCutoffFrequency);
-        
-        % write traces of the first file to matrix
-        Filtering = true;
-        if Filtering
-            FilteredEchos = filtfilt(NumeratorCoefficients,DenominatorCoefficients,OutputUWB.dta_avg);
-        else
-            FilteredEchos = OutputUWB.dta_avg;
-        end
-        if isNUS
-            currentT2SamplingScheme = SamplingGrid(:,1)==1;
-            AverageEchos(:,currentT2SamplingScheme,1) = FilteredEchos;
-        else
-            AverageEchos(:,:,1) = FilteredEchos;
-        end
-        
-        % Repeat for remaining files
-        for iFile = 2:NFiles
+
+        % Evaluation with uwb_eval and filtering of each trace, storing data in correct order in arrays for mountHYSCOREdata gui
+        for iFile = 1:NFiles
             set(handles.ProcessingInfo, 'String', sprintf('Status: Mounting file %i/%i',iFile,NFiles)); drawnow;
-            OutputUWB = uwb_eval(FileNames{iFile},options);
-            %Get general AWG paremeters
-            AWG_Parameters = OutputUWB.exp;
-            OutputUWB.dta_avg = OutputUWB.dta_avg(1:Dimension1,:);
-            % Write traces
-            if Filtering
+            OutputUWB = uwb_eval(FileNamessorted{iFile},options);             % Evaluate file with uwb_eval
+            AWG_Parameters = OutputUWB.exp;                             % Store general experiment parameters
+			AWG_Parameters.nu_obs = OutputUWB.det_frq;								 
+            OutputUWB.dta_avg = OutputUWB.dta_avg(1:Dimension3,:);      
+            
+            if Filtering                                                % Filtering
                 FilteredEchos = filtfilt(NumeratorCoefficients,DenominatorCoefficients,OutputUWB.dta_avg);
             else
                 FilteredEchos = OutputUWB.dta_avg;
             end
-            currentT1 = AWG_Parameters.events{3}.t-AWG_Parameters.hyscore_t1.strt(1);
+            
             if isNUS
+                currentT1 = AWG_Parameters.events{3}.t-AWG_Parameters.hyscore_t1.strt(1);   % might not be stored in file
                 TauPosition = find(UniqueTaus == TauValues(iFile));
                 GridPosition = find(TimeAxis1==currentT1);
                 currentT2SamplingScheme = SamplingGrid(:,GridPosition)==1;
-                AverageEchos(:,currentT2SamplingScheme,GridPosition + (TauPosition-1)*size(SamplingGrid,1)) = FilteredEchos;
+                AverageEchos(:,currentT2SamplingScheme,GridPosition + (TauPosition-1)*size(SamplingGrid,1)) = FilteredEchos; % not corrected to cell
             else
-                AverageEchos(:,:,iFile) = FilteredEchos;
+                % store data in sorted order in the appropriate arrays for mountHYSCOREdata gui
+                if NFiles < FoldingFactor * Dimension2
+                    tauindex = find(TauValuessorted(iFile) == UniqueTaus);
+                    t1index = find(abs(TimeAxis1construct{tauindex} - TimeAxis1sorted(iFile)) < 0.1);
+                    if isempty(t1index)
+                        errordlg('t1 axis was not constructed correctly, probably because one of the first two traces of one tau value is missing','error');
+                    end
+                    dim1index = (tauindex-1)*Dimension2 + t1index;
+                else
+                    dim1index = iFile;
+                end
+                dim1indexlist(iFile) = dim1index;
+                UnfilteredEchos{dim1index} = OutputUWB.dta_avg;
+                AverageEchos{dim1index} = FilteredEchos;
+                corr_phase(dim1index) = OutputUWB.corr_phase;
+                dtastruct = load(FileNamessorted{iFile},'dta');
+                dta{dim1index} = dtastruct.dta;
+                Echopos(dim1index) = OutputUWB.echopos;
+                evlen(dim1index) = OutputUWB.evlen;
+                FileNamesordered{dim1index} = FileNamessorted{iFile};
+                TimeAxis1ordered(dim1index) = TimeAxis1sorted(iFile);
             end
-            %If not NUS then keep constructing the t1-axis
-            if ~isNUS
-                TimeAxis1(iFile) = currentT1;
-            end
-            %Get tau values
-            TauValues(iFile) =  OutputUWB.exp.tau;   % absolute time of first echo
         end
         
-        %In case something goes wrong and NaNs are formed set them to void
-        TimeAxis1(~any(~isnan(TimeAxis1), 1)) = [];
         
-        %Mount Data structure for integration
-        DataForInegration.AverageEcho = AverageEchos;
-        DataForInegration.TimeAxis1 = TimeAxis1;
-        DataForInegration.TimeAxis2 = TimeAxis2;
-        DataForInegration.EchoAxis = EchoAxis;
-        DataForInegration.TimeStep1 = (DataForInegration.TimeAxis1(2) - DataForInegration.TimeAxis1(1))/1000;
-        DataForInegration.TimeStep2 = (DataForInegration.TimeAxis2(2) - DataForInegration.TimeAxis2(1))/1000;
-        DataForInegration.isNotIntegrated  = true;
-        %Debugging (to be erased)
-        %     options.fignum = 123213123;surfslices(EchoAxis,TimeAxis2,TimeAxis1,AverageEchos,options)
+        % In case something goes wrong and NaNs are formed set them to void
+        TimeAxis1(~any(~isnan(TimeAxis1), 1)) = [];             % Still necessary?
         
-        %Integrate the echos
+        
+        % Mount Data structure for integration and integrate it with integrateEcho
+        DataForIntegration.AverageEcho = AverageEchos;
+        DataForIntegration.EchoAxis = EchoAxis;
+        DataForIntegration.isNotIntegrated  = true;
+        DataForIntegration.Dimension2 = Dimension2;
         options.status = handles.ProcessingInfo;
-        [IntegratedData] = integrateEcho(DataForInegration,'gaussian',options);
-        
-        %Restructure the integrated data by sorting to corresponding taus
-        [Dimension1,Dimension2] = size(IntegratedData.Integral);
-        %Ensure that folded dimension is the second one
-        if Dimension1 > Dimension2
-            IntegratedData.Integral = IntegratedData.Integral';
-            [Dimension1,~] = size(IntegratedData.Integral);
+        [IntegratedData] = integrateEcho(DataForIntegration,'gaussian',options);
+        if ~isstruct(IntegratedData) && isnan(IntegratedData)
+            h = warndlg({'Default gaussian echo integration failed.',...
+                ' Switching to boxcar echo integration.'},'Warning');
+            waitfor(h);
+            [IntegratedData] = integrateEcho(DataForIntegration,'boxcar',options); % use boxcar if gaussian fails
         end
-        TauSignals = zeros(FoldingFactor,Dimension1,Dimension1);
         
-        %Loop through all tau-values found in the data
+        TauSignals = zeros(FoldingFactor,Dimension2,Dimension2); 
+        %Loop through all tau-values and store integrated data at the correct position in TauSignals
         if isNUS
             StartPosition = 1;
             %Extract the additional dimensions from the folded dimension
@@ -381,33 +493,60 @@ switch FileExtension
             end
         else
             for Index = 1:FoldingFactor
-                %Get all integrals corresponding to current tau-value
-                CurrentTauIntegral = IntegratedData.Integral(:,TauValues == UniqueTaus(Index));
-                %Check if the current integral matrix has the expected size
-                if size(CurrentTauIntegral,2) ~= Dimension1
-                    %If not, tau-value measurement is not consistent with rest
-                    ZeroFiller = size(squeeze(TauSignals(Index,:,:))) - size(IntegratedData.Integral(:,TauValues == UniqueTaus(Index)));
-                    %Just append zeroes to the signal to ensure consistency of dimensions
-                    CurrentTauIntegral(:,end+1:end+ZeroFiller(2)) = 0;
-                end
-                %Otherwise just save on corresponding matrix
-                TauSignals(Index,:,:) = CurrentTauIntegral;
+                TauSignals(Index,:,:) = IntegratedData.Integral(:,1+(Index-1)*Dimension2:Index*Dimension2)';
             end
+            
+            TimeAxis1 = TimeAxis1ordered;
+            % Get the time axis for plotting the original echos before downconversion
+            exp = load(FileNames{1},'conf');
+            fsmp = exp.conf.std.dig_rate;
+            dtatimeaxis = linspace(0,size(dta{1},1)-1,size(dta{1},1))./fsmp; 
         end
         
-        %Mount data structure with integrated signals
+        % Mount data structure with integrated signals
+        if ~isNUS
+            MountedData.WindowFunction = IntegratedData.WindowFunction;
+            MountedData.dta = dta;
+            MountedData.EchoAxisfordta = dtatimeaxis;
+            MountedData.FilterCutoffFrequency = FilterCutoffFrequency;
+            MountedData.dim1indexlist = dim1indexlist;
+            MountedData.corr_phase = corr_phase;
+            MountedData.UnfilteredEchos = UnfilteredEchos;
+            MountedData.evlen = evlen;
+            MountedData.Echopos = Echopos;
+            MountedData.Dimension3 = Dimension3;
+        end
         MountedData.TauSignals = TauSignals;
-        MountedData.TauValues = unique(TauValues);
+        MountedData.TauValues = UniqueTaus;
+        if exptype == '6pHYSCORE'
+            MountedData.FirstTauValues = UniqueFirstTaus;
+        end
+        MountedData.AverageEchos = AverageEchos;
         MountedData.AWG_Parameters = AWG_Parameters;
-        MountedData.TimeStep1 = DataForInegration.TimeStep1;
-        MountedData.TimeStep2 = DataForInegration.TimeStep2;
         MountedData.TimeAxis1 = TimeAxis1;
         MountedData.TimeAxis2 = TimeAxis2;
+        MountedData.TimeStep1 = (TimeAxis1(2) - TimeAxis1(1))/1000;
+        MountedData.TimeStep2 = (TimeAxis2(2) - TimeAxis2(1))/1000;
+        MountedData.EchoAxis = EchoAxis;
         MountedData.NUSflag = isNUS;
+        MountedData.correctprocessing = correctprocessing;
+        MountedData.exptype = exptype;
+        MountedData.isNotIntegrated  = false;
         if MountedData.NUSflag
             MountedData.NUSgrid = AWG_Parameters.NUS.SamplingGrid;
             MountedData.NUS = AWG_Parameters.NUS;
         end
+     
+        
+        % set up of mount AWG data gui here
+        if ~isNUS
+            setappdata(0,'MountedData',MountedData)
+            setappdata(0,'FileNames',FileNamesordered)
+            mountAWGdata();
+            uiwait;
+            MountedData = getappdata(0,'MountedData');
+        end
+        
         
         %------------------------------------------------------------------------
         % ASCII format
@@ -495,6 +634,7 @@ switch FileExtension
         MountedData.NUSgrid = NUSgrid;
         MountedData.NUSflag = NUSflag;
         MountedData.isNotIntegrated  = false;
+        MountedData.exptype = 'HYSCORE';
         
     otherwise
         error('Unvalid extension: Please check your loaded files. Allowed extensions: .DSC .DTA .mat .txt')

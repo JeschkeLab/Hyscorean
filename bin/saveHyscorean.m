@@ -193,8 +193,8 @@ if getpref('hyscorean','reportlicense')
     TimeAxis2 = handles.Processed.TimeAxis2(1:length(handles.Processed.TimeAxis2)-str2double(get(handles.ZeroFilling2,'String')));
     Window2 = Window2/max(Window2);
     Window1 = Window1/max(Window1);
-    Window1 = Window1';
-    Window1 = Window2';
+%     Window1 = Window1';
+    Window2 = Window2';
     if WindowDecay1>=length(TimeAxis1)
         Window1=Window1(1:length(TimeAxis1));
     else
@@ -227,8 +227,9 @@ if getpref('hyscorean','reportlicense')
         reportdata.NbScansDone = Param.NbScansDone;
         reportdata.VideoGain = Param.VideoGain;
         reportdata.VideoBandwidth = Param.VideoBandwidth;
-    end
     
+ 
+	
     if handles.Data.NUSflag
         reportdata.XDimension = handles.Data.NUS.Dimension1;
         reportdata.YDimension = handles.Data.NUS.Dimension2;
@@ -238,6 +239,8 @@ if getpref('hyscorean','reportlicense')
         reportdata.YDimension = BrukerParameters.YPTS;
         reportdata.NUSflag = false;
     end
+	
+	end									   
     
 
 %Get AWG spectrometer-specific parameters and variables
@@ -248,22 +251,26 @@ if isfield(handles.Data,'AWG_Parameters')
     end
     reportdata.NUSflag  = AWG_Parameters.NUS_flag;
     reportdata.Pulse90Length  = AWG_Parameters.events{1}.pulsedef.tp;
-    reportdata.Pulse180Length  = AWG_Parameters.events{3}.pulsedef.tp;
+    if handles.Data.exptype == '6pHYSCORE'
+        reportdata.Pulse180Length  = AWG_Parameters.events{4}.pulsedef.tp;
+    else
+        reportdata.Pulse180Length  = AWG_Parameters.events{3}.pulsedef.tp;
+    end
     reportdata.MW_Frequency = AWG_Parameters.LO + AWG_Parameters.nu_obs;
     reportdata.ShotRepTime = AWG_Parameters.reptime/1e6;
     reportdata.ShotsPerLoop = AWG_Parameters.shots;
-    reportdata.NbScansDone = AWG_Parameters.store_avgs;
+    reportdata.NbScansDone = AWG_Parameters.avgs;
     reportdata.CenterField = round(AWG_Parameters.B,0);
     if AWG_Parameters.NUS_flag
         reportdata.XDimension = AWG_Parameters.NUS.Dimension1;
         reportdata.YDimension = AWG_Parameters.NUS.Dimension2;
         reportdata.NUSgrid = AWG_Parameters.NUS.SamplingGrid;
     else
-        reportdata.XDimension = AWG_Parameters.hyscore_t1.dim;
-        reportdata.YDimension = AWG_Parameters.hyscore_t2.dim;
+        reportdata.XDimension = size(TimeAxis1,2);
+        reportdata.YDimension = size(TimeAxis2,2);
     end
-    reportdata.VideoGain = NaN;
-    reportdata.VideoBandwidth = NaN;
+    reportdata.VideoGain = AWG_Parameters.VideoGain;
+    reportdata.VideoBandwidth = '-';
 end
 
 %Get NUS-specific parameters and variables
@@ -335,6 +342,7 @@ set(handles.ProcessingInfo, 'String', 'Status: Saving session 80%'); drawnow;
 
 try
     %Collect necessary data for the fitting module
+    DataForFitting.Exptype = handles.Data.exptype;
     DataForFitting.Spectrum = handles.Processed.spectrum;
     DataForFitting.TauValues = handles.Data.TauValues/1000;
     DataForFitting.TimeStep1 = handles.Data.TimeStep1;
@@ -367,6 +375,7 @@ try
     DataForFitting.L2GParameters.tauFactor1 = str2double(get(handles.L2G_tau,'string'));
     DataForFitting.L2GParameters.sigmaFactor1 = str2double(get(handles.L2G_sigma,'string'));
     DataForFitting.Symmetrization = handles.SymmetrizationString;
+    DataForFitting.Exptype = handles.Data.exptype;
     
     %Send settings structure to base workspace
     assignin('base', 'DataForFitting', DataForFitting);

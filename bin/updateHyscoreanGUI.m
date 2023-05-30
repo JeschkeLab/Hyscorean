@@ -1,4 +1,4 @@
-function updateHyscoreanGUI(handles,Processed)
+function [handles] = updateHyscoreanGUI(handles,Processed)
 %==========================================================================
 % Updater of the HYSCOREAN GUI
 %==========================================================================
@@ -134,6 +134,7 @@ try
     ContourLevelIncrement = (MaximalContourLevel - MinimalContourLevel)/Levels;
     ContourLevels = MinimalContourLevel:ContourLevelIncrement:MaximalContourLevel;
   end
+  handles.Processed.ContourLevels = ContourLevels;
   
   %If blindspots are to be plotted, superimpose them to the spectrum
   if get(handles.ImposeBlindSpots,'Value')
