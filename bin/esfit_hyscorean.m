@@ -1350,18 +1350,12 @@ try
         ExpSpec = FitData.ExpSpec;
         SpectraConfined = {};
         SpectraExcluded = {};
-        EasySpinInfo = easyspininfo;
-        try
-            % Version request this way exists from 6.0.0 beyond
-            EasySpinVersion = EasySpinInfo.Version;
-        catch
-            EasySpinVersion = 5;
-        end
+        nargouts = length(strsplit(regexp(help('saffron'), '(?<=\()[^)]*(?=\))', 'match', 'once'),','));
         %Loop over all field positions (i.e. different files/spectra)
         parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
             
             %Run saffron for a given field position
-            if str2double(EasySpinVersion(1))>5
+            if nargouts==3
                 %Refactoring of saffron in EasySpin 6.0.0 changed
                 [ts,~,out] = saffron(fs,FitData.Exp{Index},FitData.SimOpt{Index});
                 t1 = ts{1};
@@ -1616,20 +1610,15 @@ SpectraConfined = {};
 
 SimulationNotSuccesful = true;
 
-EasySpinInfo = easyspininfo;
-try
-    % Version request this way exists from 6.0.0 beyond
-    EasySpinVersion = EasySpinInfo.Version;
-catch
-    EasySpinVersion = 5;
-end
+% Get the number of outputs in saffron from its docs
+nargouts = length(strsplit(regexp(help('saffron'), '(?<=\()[^)]*(?=\))', 'match', 'once'),','));
 while SimulationNotSuccesful
     
     %Loop over all field positions (i.e. different files/spectra)
     parfor (Index = 1:numSpec,FitData.CurrentCoreUsage)
         
         %Run saffron for a given field position
-        if str2double(EasySpinVersion(1))>5
+        if nargouts==3
             %Refactoring of saffron in EasySpin 6.0.0 changed
             [ts,~,out] = saffron(SimSystems{1},Exp{Index},SimOpt{Index});
             t1 = ts{1};

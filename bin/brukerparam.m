@@ -22,8 +22,13 @@ if isfield(BrukerParameters,'PlsSPELGlbTxt')
     Centerfield = str2double(CenterfieldString(1:strfind(CenterfieldString,' G')));
     Param.Centerfield = 0.1*Centerfield; %mT
     Param.mwFreq = BrukerParameters.MWFQ/1e9;
+    try
     Param.Pulse90 = str2double(Pulse90String)/1000;
     Param.Pulse180 = str2double(Pulse180String)/1000;
+    catch 
+    Param.Pulse90 = nan;
+    Param.Pulse180 = nan;
+    end
     Param.ShotRepTime = str2double(BrukerParameters.ShotRepTime(1:strfind(BrukerParameters.ShotRepTime,' ')));
     Param.ShotsPerLoop = BrukerParameters.ShotsPLoop;
     Param.NbScansDone = BrukerParameters.NbScansDone;
