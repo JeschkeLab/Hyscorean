@@ -137,9 +137,11 @@ try
   
   %If blindspots are to be plotted, superimpose them to the spectrum
   if get(handles.ImposeBlindSpots,'Value')
-    [BlindSpotsMap,BlindSpotsAxis1,BlindSpotsAxis2] = imposeBlindSpots(handles);
-    BlindSpotsMap = BlindSpotsMap/max(max(BlindSpotsMap))*max(max(Spectrum)); colormap('hot')
-    BlindSpots = pcolor(handles.mainPlot,BlindSpotsAxis1,BlindSpotsAxis2,BlindSpotsMap);shading(handles.mainPlot,'flat'),
+    [BlindSpots,nu1,nu2] = imposeBlindSpots(handles);
+    BlindSpots = abs(BlindSpots);
+    BlindSpots = BlindSpots/max(BlindSpots(:))*max(Spectrum(:));
+    colormap('hot')
+    BlindSpots = pcolor(handles.mainPlot,nu1,nu2,BlindSpots);shading(handles.mainPlot,'flat'),
     alpha(BlindSpots,0.7);
     hold(handles.mainPlot,'on')
   end
